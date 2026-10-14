@@ -1,8 +1,8 @@
-export type WindowKind='world'|'scripts'|'controller'|'learn'|'docs'|'console'|'overview'|'settings';
+export type WindowKind='world'|'scripts'|'controller'|'learn'|'docs'|'python'|'console'|'overview'|'settings';
 export type ViewTab='code'|'docs'|'notes'|'output';
 export type WindowState={id:string;kind:WindowKind;controllerId?:string;x:number;y:number;width:number;height:number;minimized:boolean;maximized:boolean;z:number;tab:ViewTab};
 export type WorkspaceState={windows:WindowState[];focus:string|null;nextZ:number};
-const titles:Record<WindowKind,string>={world:'World View',scripts:'Script Explorer',controller:'Python Controller',learn:'Learn Python',docs:'Documentation Library',console:'Runtime Console',overview:'Colony Overview',settings:'Settings'};
+const titles:Record<WindowKind,string>={world:'World View',scripts:'Script Explorer',controller:'Python Controller',learn:'Learn Python',docs:'Game API',python:'Python Reference',console:'Runtime Console',overview:'Colony Overview',settings:'Settings'};
 export function windowTitle(w:WindowState,filename?:string){return w.kind==='controller'?filename??titles.controller:titles[w.kind];}
 export function newWorkspace():WorkspaceState{
  return {nextZ:5,focus:'world',windows:[
@@ -15,7 +15,7 @@ export function upsertWindow(state:WorkspaceState,kind:WindowKind,controllerId?:
  const existing=state.windows.find(w=>w.id===id);
  if(existing)return {nextZ:state.nextZ+1,focus:id,windows:state.windows.map(w=>w.id===id?{...w,minimized:false,z:state.nextZ}:w)};
  const w:WindowState={id,kind,controllerId,x:65+state.windows.length*22,y:44+state.windows.length*20,
-  width:kind==='controller'?650:kind==='docs'?550:410,height:kind==='controller'?530:420,
+  width:kind==='controller'?650:kind==='python'?785:kind==='docs'?550:410,height:kind==='controller'?530:kind==='python'?600:420,
   minimized:false,maximized:false,z:state.nextZ,tab:'code'};
  return {nextZ:state.nextZ+1,focus:id,windows:[...state.windows,w]};
 }
@@ -32,7 +32,7 @@ export function parseWorkspace(value:unknown):WorkspaceState{
  if(!value||typeof value!=='object')return newWorkspace();
  const v=value as Partial<WorkspaceState>;
  if(!Array.isArray(v.windows)||!Number.isInteger(v.nextZ))return newWorkspace();
- const kinds=['world','scripts','controller','learn','docs','console','overview','settings'];
+ const kinds=['world','scripts','controller','learn','docs','python','console','overview','settings'];
  const valid=v.windows.filter(w=>w&&typeof w.id==='string'&&kinds.includes(w.kind)
   &&['x','y','width','height','z'].every(k=>Number.isFinite(w[k as keyof WindowState]))
   &&w.width>=240&&w.height>=180&&w.width<=3000&&w.height<=2200).slice(0,40);
