@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { applyCommands, catchUp, createWorld, stepWorld, worldSnapshot } from './engine/world';
-import { WIDTH } from './engine/types';
 import type { Campaign, ScriptFile, WorldState } from './engine/types';
 import { starterScripts } from './defaults';
 import { PythonRuntime } from './runtime/client';
