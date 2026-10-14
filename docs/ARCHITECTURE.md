@@ -10,6 +10,7 @@ One continuous civilization advances from settlement through kingdom, industry, 
 - `src/runtime/`: real Python through a Pyodide Web Worker. Observes snapshots and submits commands; does not own world state.
 - `src/docs/api.ts`: centralized API reference used by contextual documentation and CodeMirror completion.
 - `src/learning/`: progression-based teaching modules with real gameplay outcome checks.
+- `src/docs/python.ts` and `src/components/PythonReference.tsx`: a separate, ungated Python language handbook; `src/docs/api.ts` remains strictly the game API registry.
 - `src/workspace/`: window state management and desktop/mobile presentation. Window visibility must never control script execution.
 - `src/components/PythonEditor.tsx`: CodeMirror UI, separated from the runtime.
 - `src/storage/`: new v0.2 IndexedDB campaign save, import/export, and separate window layout preferences.
@@ -34,6 +35,8 @@ Run Now does not enable scheduled execution. Pausing the simulation does not pre
 Future development: an event min-heap, explicit execution budgets for large organizations, per-object event subscriptions, deterministic command transactions, batch optimization and multi-resolution world simulation.
 
 ## Learning design
+
+The Python Reference handbook is available independently of guided lessons or save progress. It documents Python concepts, not world-specific method contracts; each entry has explanation, standalone example and common pitfalls. Its topics and search are validated by automated tests.
 
 Learners first print a value, inspect attributes, issue NPC orders, observe ticks, use conditions, loop through collections, use persisted dictionary state, then schedule programs. Lessons verify actual execution output or changed world state; they are not mandatory progression gates.
 
