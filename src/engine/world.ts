@@ -126,9 +126,12 @@ export function applyCommands(previous: WorldState, commands: ScriptCommand[]): 
     if (!unit) { messages.push('Unknown worker: ' + String(cmd.workerId)); continue; }
     if (cmd.action === 'assign') {
       if (cmd.resource === 'wood' || cmd.resource === 'stone' || cmd.resource === 'idle') {
-        unit.policy = cmd.resource === 'idle' ? null : cmd.resource;
-        unit.task = null;
-        messages.push(unit.name + ': ' + (unit.policy ? 'automating ' + unit.policy : 'standing by'));
+        const nextPolicy = cmd.resource === 'idle' ? null : cmd.resource;
+        if (unit.policy !== nextPolicy) {
+          unit.policy = nextPolicy;
+          unit.task = null;
+          messages.push(unit.name + ': ' + (unit.policy ? 'automating ' + unit.policy : 'standing by'));
+        }
       } else messages.push('Invalid resource assignment for ' + unit.name);
     } else if (cmd.action === 'order') {
       if (cmd.task === 'deposit') unit.task = { kind: 'deposit', x: 3, y: 5 };
