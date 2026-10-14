@@ -1,36 +1,29 @@
-import type { ScriptFile } from './engine/types';
-
-export const STARTER_CODE = `# CODE EMPIRE — FIRST AUTOMATION
-# This is real Python, running in your browser.
-# Edit this script, then press RUN SCRIPT.
-#
-# Available API:
-# world.workers()          -> list of worker objects
-# world.stockpile("wood")  -> amount in settlement storage
-# world.assign(id, "wood") -> standing forestry job
-# world.assign(id, "stone")-> standing mining job
-# world.assign(id, "idle") -> clear standing job
-# world.order(id, "deposit")
-# world.order(id, "gather", resource="wood")
-# world.order(id, "move", x=6, y=3)
-# world.log("message")
-#
-# Persistent dict "memory" survives script executions.
-
-def on_tick(world, memory):
-    for worker in world.workers():
-        if worker.role == "Forester":
-            world.assign(worker.id, "wood")
-        elif worker.role == "Miner":
-            world.assign(worker.id, "stone")
-
-    memory["runs"] = memory.get("runs", 0) + 1
-    if memory["runs"] == 1:
-        print("Our first automation has begun!")
-    if world.stockpile("wood") >= 60:
-        world.log("Forestry target reached: 60 wood.")
-`;
-
-export function starterScripts(): ScriptFile[] {
-  return [{ path: 'main.py', source: STARTER_CODE, enabled: true, interval: 6, nextRun: 0, memory: {} }];
+import type { Controller } from './engine/types';
+const npc = (id: string, owner: string, filename: string, source: string): Controller => ({
+  id, ownerEntityId: owner, ownerType: 'npc', filename, source, notes: '',
+  enabled: false, intervalTicks: 6, nextRunTick: 1, memory: {},
+  lastStatus: 'idle', lastError: null, lastOutput: [], executions: 0
+});
+export function starterControllers(): Controller[] {
+  return [
+    npc('ctrl_000001','npc_000001','ada.py',
+      '# Ada is your first programmable settler.\n# Start with the Learn Python window!\n\ndef on_tick(self, world, memory):\n    print("Hello, Empire!")\n'),
+    npc('ctrl_000002','npc_000002','bram.py',
+      '# Bram is a miner. Customize his behavior.\n\ndef on_tick(self, world, memory):\n    self.order("gather", resource="stone")\n'),
+    npc('ctrl_000003','npc_000003','cora.py',
+      '# Cora awaits your instructions.\n\ndef on_tick(self, world, memory):\n    pass\n'),
+    {
+      id:'ctrl_000004', ownerEntityId:'farm_000001', ownerType:'farm',
+      filename:'first_light_farm.py', source:'# Farms can produce food or rest.\n\ndef on_tick(self, world, memory):\n    self.set_mode("food")\n',
+      notes:'Food production is calculated once every game day.', enabled:true,
+      intervalTicks:24, nextRunTick:24, memory:{}, lastStatus:'idle', lastError:null, lastOutput:[], executions:0
+    },
+    {
+      id:'ctrl_000005', ownerEntityId:null, ownerType:'global', filename:'main.py',
+      source:'# Global scripts can coordinate multiple entities.\n# Enable automatic execution whenever you are ready.\n\ndef on_tick(world, memory):\n    pass\n',
+      notes:'Global scripts receive world and memory, but no self object.',
+      enabled:false, intervalTicks:12, nextRunTick:1, memory:{}, lastStatus:'idle',
+      lastError:null, lastOutput:[], executions:0
+    }
+  ];
 }

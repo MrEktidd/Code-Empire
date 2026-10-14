@@ -2,75 +2,80 @@
 
 **Program a civilization from its first settlement to the stars.**
 
-Code-Empire is an open-source browser-first programming and simulation game. Write real Python in a virtual project, automate settlers, and gradually build systems sophisticated enough to govern kingdoms, industries, planets and (eventually) galaxies.
+Code-Empire is an open-source browser-based Python coding game. Program individual settlers, learn Python through real simulation challenges, and eventually build automated organizations, kingdoms, industries and interstellar civilizations.
 
-**Current status:** Foundation **v0.1.0** — the first playable settlement slice. The later eras are planned, not implemented.
+**Current release:** v0.2 — **The Programmer's Workbench**. Kingdoms, industrial research and galactic exploration are future goals.
 
 ## Play
 
-After GitHub Pages is enabled under **Settings → Pages → Build and deployment → GitHub Actions**, the live build will appear at:
+After GitHub Pages is configured to use GitHub Actions: https://mrektidd.github.io/Code-Empire/
 
-https://mrektidd.github.io/Code-Empire/
+The main menu offers **New Empire**, **Continue Campaign**, and **Import Campaign**. New games begin in the settlement age with three NPCs and a farm. The default workbench opens a world map, script explorer, and **Learn Python** academy.
 
-The deployment workflow runs on every push to `main`, and pull requests receive build/test checks without deploying.
+## Learn Python: Start here
 
-## Local development
+1. Open **Learn Python** (✧) in the left navigation rail.
+2. Follow the sequential hands-on lessons. They introduce `print()`, functions, attributes, methods, ticks, conditionals, loops, dictionaries, and scheduling.
+3. Open Ada's controller `ada.py`, edit real Python, and click **Run Script**.
+4. See printed messages in its **Output** tab. The system checks game results, not simply text patterns.
+5. Use the contextual **Docs** tab for exact methods available to the currently selected entity. Show a hint or load a worked example if needed.
+6. Toggle **Auto-run** and choose an execution interval to automate an object.
+7. Select NPCs or the farm on the world map to open their individual script windows.
 
-Requirements: Node.js 22+ and npm.
+The lessons are optional and can be completed while experimenting with the rest of the simulation. This is a learning prototype, not yet a complete Python course.
+
+## Object controllers
+
+Every programmable object has an **immutable entity ID** and its own Python script:
+
+- Ada: `npc_000001` → `ada.py`
+- Bram: `npc_000002` → `bram.py`
+- Cora: `npc_000003` → `cora.py`
+- First Light Farm: `farm_000001` → `first_light_farm.py`
+
+Controller files may be renamed without changing their identity or the objects they control. A separate global `main.py` controller can coordinate the whole world.
+
+```python
+def on_tick(self, world, memory):
+    if world.stockpile("wood") < 100:
+        self.assign("wood")
+    else:
+        self.assign("idle")
+```
+
+A farm controller can issue `self.set_mode("food")` or `self.set_mode("rest")`. The farm independently generates daily resources.
+
+Scripts are proposed actions: Python cannot directly overwrite the authoritative game state. Controller executions, memory, notes, source and schedules persist in IndexedDB.
+
+## Workspace
+
+Desktop script windows support dragging, resizing, maximizing, minimizing and restoring via the taskbar. The left navigation rail opens the world, scripts, documentation, academy, overview and console. Script windows contain **Code / Docs / Notes / Output** tabs.
+
+On mobile, windows become full-screen panels selectable from the taskbar.
+
+The Python editor uses CodeMirror 6 with highlighting, auto-indentation, line numbers, brackets, search and API completion. Documentation entries use the same centralized API registry as editor completion.
+
+## Simulation, offline progress and safety
+
+One tick is one game hour. Due controllers execute in deterministic order with a per-execution timeout and command cap. Commands are validated at the end of each execution batch; the first valid command to an object takes precedence when there are conflicts.
+
+Offline progress is limited to 336 hours at **one simulated hour per real minute away**. This only advances established, engine-managed worker policies and production. Player Python **does not execute** in the background while the browser is closed.
+
+Campaigns autosave in browser IndexedDB. Export JSON backups often; website storage can be cleared. v0.2 deliberately begins with a new save schema and **does not import or migrate v0.1 saves**.
+
+Pyodide runs real Python in a Web Worker and loads from a pinned CDN URL. A worker prevents normal UI blocking but is **not a hardened security sandbox**. Do not paste scripts from untrusted sources.
+
+## Development
+
+Requires Node.js 22+ and npm:
 
 ```bash
 npm install
 npm run dev
-```
-
-Test and build:
-
-```bash
 npm run check
 npm run build
 ```
 
-## How to play Foundation 0.1
+GitHub Actions checks PRs, then deploys `main` to GitHub Pages. For local testing use the development server rather than opening `index.html` directly.
 
-1. Open `main.py` and use **Run script** to initialize the demonstration forestry and mining policies.
-2. Play/pause, step through one simulation hour, or increase speed.
-3. Edit `main.py`, add more .py files and change their per-file run frequencies.
-4. Monitor the worker positions, harvested resources, settlement stockpiles and console.
-5. Export your campaign regularly. Browsers may evict IndexedDB data, and data does not automatically sync across devices.
-
-Each game tick represents an hour. While the site is closed, engine-managed standing jobs accumulate up to 336 hours of simulated offline progress (1 game hour per real minute). Player Python does **not** actually execute in the background. Instead, those scripts resume when you return.
-
-Python is loaded on first execution from the pinned Pyodide CDN. An internet connection is needed for the first Python runtime download; subsequent use may benefit from browser cache.
-
-## Current Python API
-
-```python
-def on_tick(world, memory):
-    for worker in world.workers():
-        if worker.role == "Forester":
-            world.assign(worker.id, "wood")
-        elif worker.role == "Miner":
-            world.assign(worker.id, "stone")
-
-    memory["runs"] = memory.get("runs", 0) + 1
-    print(f"Automation ran {memory['runs']} times")
-```
-
-- `world.workers()` — worker snapshots with id, role, position, cargo and policy.
-- `world.stockpile(resource)` — current stored stock.
-- `world.assign(worker_id, "wood" | "stone" | "idle")` — persistent engine-managed orders, including offline catch-up.
-- `world.order(worker_id, "gather", resource="wood")`, `world.order(id, "deposit")`, `world.order(id, "move", x=..., y=...)` — single commands.
-- `world.log(message)` and `print(...)` — console output.
-- `memory` — explicit JSON-serializable per-script memory that survives reloads.
-
-## Development direction
-
-See [architecture](docs/ARCHITECTURE.md). We plan to add a proper event scheduler, script editor tooling, simulation benchmarks, world modules, research, buildings, logistics, NPC settlements and many more interconnected systems.
-
-## Security
-
-Python runs client-side in a Web Worker, not in a secure sandbox. Do not execute code from untrusted sources. The game is not a cloud Python execution service.
-
-## License
-
-MIT. Community contributions, ideas, testing and code review are welcome.
+The project is MIT licensed and welcomes community contributions. See [architecture](docs/ARCHITECTURE.md) for system boundaries.
