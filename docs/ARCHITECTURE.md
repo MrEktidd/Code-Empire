@@ -1,35 +1,54 @@
-# Code-Empire architecture (Foundation 0.1)
+# Code-Empire — Programmer's Workbench v0.2
 
 ## Vision
 
-A single programmable civilization grows from a settlement into kingdoms, industry, orbital settlements, and eventually galactic civilizations. Earlier economic and logistics systems persist as the player's society scales.
+One continuous civilization advances from settlement through kingdom, industry, orbital exploration and eventually interstellar empire. The game is programming-first: writing better software is how the player solves increasingly complex civilizational problems.
 
-## Architectural boundaries
+## Separation of concerns
 
-- `src/engine/`: deterministic, serializable TypeScript world rules. No browser APIs, renderer, or interpreter imports.
-- `src/runtime/`: isolated Python execution through a Pyodide Web Worker. All requests are snapshots; all results are bounded command proposals. It does not directly mutate world objects.
-- `src/storage/`: browser persistence, import/export and schema validation. No simulator-specific UI.
-- `src/App.tsx`: initial UI and orchestration (to be broken into panels as we expand).
-- `src/defaults.ts`: example player scripts.
+- `src/engine/`: deterministic TypeScript simulation, stable identities, commands, scheduler and types.
+- `src/runtime/`: real Python through a Pyodide Web Worker. Observes snapshots and submits commands; does not own world state.
+- `src/docs/api.ts`: centralized API reference used by contextual documentation and CodeMirror completion.
+- `src/learning/`: progression-based teaching modules with real gameplay outcome checks.
+- `src/workspace/`: window state management and desktop/mobile presentation. Window visibility must never control script execution.
+- `src/components/PythonEditor.tsx`: CodeMirror UI, separated from the runtime.
+- `src/storage/`: new v0.2 IndexedDB campaign save, import/export, and separate window layout preferences.
+- `src/App.tsx`: main menu and UI orchestration; progressively split into smaller features as they mature.
 
-## Authoritative simulation
+## Identity and controllers
 
-Each tick represents one game hour. The React rendering cadence is separate. Python scripts have per-file schedules; the core simulation does not run Python synchronously in the rendering thread.
+Objects have immutable IDs like `npc_000001` and `farm_000001`. Controllers have independent immutable IDs, e.g. `ctrl_000001`. Their filenames, display names, and working folders are user-facing metadata, not references or primary keys.
 
-Commands are checked by `applyCommands`. The next milestone will implement an event heap with stable ordering for construction, travel and multiple world-system frequencies, and snapshot/commit conflict handling when several scripts are due simultaneously. The current foundation uses simple hour-based schedules and serial execution.
+Each controller has an owner (or null for global scripts), source, notes, per-script JSON-compatible memory, on/off schedule, interval, next due tick, status, error and recent output.
 
-## Browser persistence
+Each NPC and each operating building receives a default controller automatically. This is the foundation for future organizations, teams, machines, vehicles and space fleets. Objects may eventually be delegated to controllers higher in the organizational hierarchy. Delegation is not yet gameplay in v0.2.
 
-IndexedDB stores one versioned campaign with player scripts, per-script serializable memory, scheduled run times and world state. Source file edits persist independently from Python VM lifetime. Export/import uses JSON. Future save schemas must have migrations and recoverable backups. For multi-year campaigns, use chunked records and periodic snapshots.
+## Execution and scheduling
 
-## Offline progress
+A game tick represents one hour. The simulation clock is independent of frame rate.
 
-Catch-up is capped at 336 simulated hours at 1 hour per real minute. Engine-owned standing orders are processed during catch-up. Arbitrary player Python scripts are not run in the background and are not claimed to have run offline. Their next scheduled run resumes when the player returns. We will later add bounded script replay and analytical production for large-scale catch-up.
+The v0.2 scheduler locates every due controller (bounded batches), sorts by next due tick then controller ID, and runs Python against a consistent world snapshot. Individual failures do not abort unrelated controllers. Successful commands are validated against authoritative simulation state, with first-wins per-entity conflict rules; output and errors are attributed to their originating scripts.
 
-## Security and limits
+Run Now does not enable scheduled execution. Pausing the simulation does not prevent manually running Python. One Web Worker holds a shared Pyodide interpreter while controller scopes and memory are reconstructed separately for each execution. The runtime can be terminated after a timeout, but this is **not** a security sandbox.
 
-Pyodide in a Web Worker keeps Python from blocking the UI. Scripts have a 2-second per-execution wall-clock budget and 64-command limit. A stalled worker is destroyed and recreated. **A Web Worker is not a hostile-code sandbox.** Players should not paste untrusted code, and scripts may have access to browser-side capabilities made available by Pyodide. Avoid storing secrets on the game origin. Content sharing and multiplayer execution need hardened isolation and separate security review.
+Future development: an event min-heap, explicit execution budgets for large organizations, per-object event subscriptions, deterministic command transactions, batch optimization and multi-resolution world simulation.
 
-## Scaling plan
+## Learning design
 
-Introduce entity IDs, spatial partitions, an event min-heap, production batching, and resolution-based simulation LOD before expanding the world beyond one settlement. All domain modules must implement pure state transition functions with deterministic seeds, test fixtures, and explicit save schema versions.
+Learners first print a value, inspect attributes, issue NPC orders, observe ticks, use conditions, loop through collections, use persisted dictionary state, then schedule programs. Lessons verify actual execution output or changed world state; they are not mandatory progression gates.
+
+Contextual Docs show only methods supported by the attached entity type. The world API is versioned and should remain source-compatible once the first stable public API is declared.
+
+## Persistence and offline progression
+
+This version deliberately starts with IndexedDB database `code-empire-v2` and world schema 2; **there is no v0.1 migration**. Source, notes, memory, due times, world state, and tutorial progress are saved. Layout preferences are separate in localStorage. Players can export/import the full campaign as JSON.
+
+Offline catch-up applies engine standing policies only, capped at 336 ticks using one simulated hour for each real minute away. Arbitrary Python is never falsely reported as having run.
+
+## Next era of programming
+
+Organizations will become programmable entities with memberships, labor roles, supervisor ratios and transactional workforce assignments. Individual worker controllers remain inspectable and resumable if delegated to organizations. Shared templates will allow reuse of behaviors without thousands of duplicate source files. The engine must distinguish code reuse, hierarchical delegation and world simulation aggregation.
+
+## Release process
+
+Branches and PRs → TypeScript checking / Vitest → production Vite build → merge to main → GitHub Pages deployment. Release versions and future save migrations must be tracked separately.
