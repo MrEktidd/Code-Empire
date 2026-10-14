@@ -4,7 +4,7 @@
 
 Code-Empire is an open-source browser-based Python coding game. Program individual settlers, learn Python through real simulation challenges, and eventually build automated organizations, kingdoms, industries and interstellar civilizations.
 
-**Current release:** v0.2 — **The Programmer's Workbench**. Kingdoms, industrial research and galactic exploration are future goals.
+**Current release:** v0.2.1 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
 
 ## Play
 
@@ -23,6 +23,14 @@ The main menu offers **New Empire**, **Continue Campaign**, and **Import Campaig
 7. Select NPCs or the farm on the world map to open their individual script windows.
 
 The lessons are optional and can be completed while experimenting with the rest of the simulation. This is a learning prototype, not yet a complete Python course.
+
+## Python Reference — always available
+
+The **Python Reference** is a separate button in the left rail, independent of both **Learn Python** milestones and **Game API**. It has 45 searchable articles across 10 sections on Python syntax, built-in types (int, float, str, bool), lists (the standard Python array-like container), dictionaries, tuples, sets, control flow, functions, modules, exceptions, debugging and readable code.
+
+Every article has plain-language explanations, a runnable Python example, common mistakes and a copy-example control. Search and browse any article immediately—nothing is gated behind lesson progress. The learning academy has a shortcut to relevant reference articles when a concept is introduced.
+
+The **Game API** remains the reference for world-specific commands such as `self.order()` and `world.workers()`. Script-attached Docs tabs still show the APIs available to each entity type. This separation is intentional: Python language concepts are documented independently of Code-Empire systems.
 
 ## Object controllers
 
