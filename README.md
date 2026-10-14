@@ -19,7 +19,7 @@ The deployment workflow runs on every push to `main`, and pull requests receive 
 Requirements: Node.js 22+ and npm.
 
 ```bash
-npm ci
+npm install
 npm run dev
 ```
 
