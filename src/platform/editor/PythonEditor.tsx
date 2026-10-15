@@ -11,7 +11,7 @@ export type Suggestion={label:string;detail?:string;info?:string;type?:string};
 type Props={id:string;source:string;error?:string|null;completions?:Suggestion[];onChange:(source:string)=>void;onRun?:()=>void};
 const editorStateCache=new Map<string,EditorState>();
 const handlers=new Map<string,{onChange:(source:string)=>void;onRun?:()=>void}>();
-const FONT_STORAGE='code-empire-editor-font-size';
+const FONT_STORAGE='programming-platform-editor-font-size';
 function fontSize():number{try{return Math.max(11,Math.min(22,Number(localStorage.getItem(FONT_STORAGE))||13));}catch{return 13;}}
 const BUILTINS=['print','len','range','int','float','str','list','dict','set','tuple','sum','min','max',
  'sorted','enumerate','zip','any','all','isinstance','type','abs','round'].map(label=>({label,type:'function'}));
@@ -44,7 +44,7 @@ export default function PythonEditor({id,source,error,completions=[],onChange,on
   ];
   const state=saved&&saved.doc.toString()===source?saved:EditorState.create({doc:source,extensions});
   const editor=new EditorView({state,parent:host.current});view.current=editor;
-  return()=>{editorStateCache.set(id,editor.state);view.current=null;editor.destroy();};
+  return()=>{editorStateCache.set(id,editor.state);while(editorStateCache.size>40)editorStateCache.delete(editorStateCache.keys().next().value!);handlers.delete(id);view.current=null;editor.destroy();};
  // Preserve the editor between tab switches. Source updates are applied below.
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[id]);
