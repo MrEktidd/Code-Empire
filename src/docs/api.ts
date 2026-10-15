@@ -3,6 +3,10 @@ export type ApiEntry = {
   contexts:('npc'|'farm'|'global')[]; returns:string; note:string;
 };
 export const API:ApiEntry[]=[
+ {name:'Empire.seed_population',signature:'Empire.seed_population(founders)',contexts:['global'],returns:'None',
+  description:'Create the first three named people using a Python list of dictionaries with name and sex keys.',
+  note:'Genesis accepts exactly three unique founders, all at once, and only once. Housing must have room for all three. Names can be changed.',
+  example:'founders = [\n    {"name": "Adam", "sex": "male"},\n    {"name": "Eve", "sex": "female"},\n    {"name": "Alex", "sex": "female"}\n]\nEmpire.seed_population(founders)'},
  {name:'Empire.initialize',signature:'Empire.initialize()',contexts:['global'],returns:'None',
   description:'Initialize a new simulation from main.py after launching the Civilization Initiative software.',
   note:'One-time, validated global command. Re-running cannot replace or reset an active world.',

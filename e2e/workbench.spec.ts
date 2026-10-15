@@ -11,6 +11,29 @@ async function initializeWorld(page: import('@playwright/test').Page){
  await expect(page.getByRole('heading',{name:'INITIALIZING SIMULATION'})).toBeVisible({timeout:75000});
  await expect(page.getByRole('heading',{name:'First Light'})).toBeVisible({timeout:15000});
 }
+test('genesis rejects incomplete list then creates three archived founders',async({page})=>{
+ test.setTimeout(120000);
+ await enterWorkbench(page);
+ await initializeWorld(page);
+ await page.getByRole('button',{name:/OPEN GENESIS.PY/}).click();
+ await expect(page.getByText('Founding Population')).toBeVisible();
+ await page.getByRole('button',{name:/RUN SCRIPT/}).click();
+ await page.getByRole('button',{name:'OUTPUT'}).click();
+ await expect(page.getByText(/Define exactly three founders/)).toBeVisible({timeout:75000});
+ await page.getByRole('button',{name:'CODE',exact:true}).click();
+ const editor=page.locator('.controller-view .cm-content');
+ await editor.fill('founders = [\n    {"name": "Adam", "sex": "male"},\n    {"name": "Eve", "sex": "female"},\n    {"name": "Ada", "sex": "female"},\n]\n\nEmpire.seed_population(founders)\n');
+ await page.getByRole('button',{name:/RUN SCRIPT/}).click();
+ await expect(page.locator('.founder-card')).toHaveCount(3,{timeout:75000});
+ await page.locator('.sidebar').getByRole('button',{name:'Genesis Archive',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Genesis Archive'})).toBeVisible();
+ await expect(page.locator('.genesis-archive .founder-card')).toHaveCount(3);
+ await page.getByRole('button',{name:/MENU/}).last().click();
+ await page.reload();
+ await page.getByRole('button',{name:/CONTINUE CAMPAIGN/}).click();
+ await page.locator('.sidebar').getByRole('button',{name:'Genesis Archive',exact:true}).click();
+ await expect(page.locator('.genesis-archive .founder-card')).toHaveCount(3);
+});
 test('new game opens the workbench and both documentation libraries',async({page})=>{
  await enterWorkbench(page);
  await expect(page.locator('.desktop-window').first()).toBeVisible();

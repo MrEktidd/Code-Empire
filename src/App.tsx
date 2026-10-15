@@ -13,7 +13,7 @@ import {PYTHON_TOPICS} from './content/python/topics';
 import {GAME_DOCUMENTS} from './games/code-empire/docs';
 import {advanceTick,runControllers} from './engine/scheduler';
 import type {Campaign,Controller,ExecutionEntry,WorldState,ScriptCommand} from './engine/types';
-import {initialControllers} from './defaults';
+import {initialControllers,ensureGenesisController,ensureFounderControllers} from './defaults';
 import {PythonRuntime} from './platform/python/PythonRuntime';
 import {loadCampaign,saveCampaign,downloadCampaign,validCampaign,migrateCampaign} from './storage/db';
 import {loadWorkspace,saveWorkspace} from './storage/workspace';
@@ -91,7 +91,11 @@ export default function App(){
  useEffect(()=>{if(screen==='game')saver.current?.markDirty();},[world,controllers,lesson,screen]);
 
  const applyState=useCallback((w:WorldState,c:Controller[],e:ExecutionEntry[],original:Controller[])=>{
-  setWorld(w);setControllers(current=>mergeRuntimeControllers(current,c,original));setEntries(old=>[...old,...e].slice(-130));
+  setWorld(w);setControllers(current=>{
+   const merged=mergeRuntimeControllers(current,c,original);
+   const missing=c.filter(item=>!merged.some(other=>other.id===item.id));
+   return ensureFounderControllers(ensureGenesisController([...merged,...missing],w.phase==='active'&&w.workers.length===0),w);
+  });setEntries(old=>[...old,...e].slice(-130));
   if(w.workers.length) setLesson(old=>Math.min(old+Number(lessonCompleted(old,w,c,e)),LESSONS.length));
  },[]);
  const execute=useCallback(async(manualId?:string)=>{
@@ -109,6 +113,7 @@ export default function App(){
    applyState(result.world,result.controllers,result.entries,c);
    if(w.phase==='dormant'&&result.world.phase==='active'){setLoadingStep(0);setSpeed(0);}
    if(result.entries.some(x=>!x.success))setStatus('Python error — inspect the controller Output tab.');
+   else if(result.entries.some(x=>x.output.some(s=>s.startsWith('Rejected command:'))))setStatus('Command rejected — inspect the controller Output tab.');
    else setStatus(manualId?'Script executed.':'Simulation advanced.');
   }catch(error){setStatus('Runtime issue: '+String(error));setSpeed(0);}
   finally{gate.current=false;setBusy(false);}
@@ -133,7 +138,9 @@ export default function App(){
    const value=await loadCampaign();
    if(!validCampaign(value)){setStatus('No valid campaign to continue.');return;}
    const result=catchUp(value.world,Date.now()-value.savedAt);
-   setWorld(result.world);setControllers(value.controllers);setLesson(value.lessonIndex);
+   setWorld(result.world);
+   setControllers(ensureFounderControllers(ensureGenesisController(value.controllers,result.world.phase==='active'&&result.world.workers.length===0),result.world));
+   setLesson(value.lessonIndex);
    setWorkspace(result.world.phase==='dormant'?startupWorkspace():activeWorkspace());setLoadingStep(-1);
    setOffline(result.hours);setEntries([]);setStatus('Welcome back to First Light!');
    setScreen('game');
@@ -170,7 +177,9 @@ export default function App(){
    const c=imported as Campaign;
    await saveCampaign(c.world,c.controllers,c.lessonIndex);
    sessionVersion.current++;
-   setWorld(c.world);setControllers(c.controllers);setLesson(c.lessonIndex);setEntries([]);
+   setWorld(c.world);
+   setControllers(ensureFounderControllers(ensureGenesisController(c.controllers,c.world.phase==='active'&&c.world.workers.length===0),c.world));
+   setLesson(c.lessonIndex);setEntries([]);
    setSaveExists(true);setWorkspace(c.world.phase==='dormant'?startupWorkspace():activeWorkspace());setLoadingStep(-1);setScreen('game');setSpeed(0);setStatus('Campaign imported.');
   }catch(error){setStatus('Import failed: '+String(error));}
   finally{event.target.value='';}
@@ -210,7 +219,7 @@ export default function App(){
     <p className="boot-footnote">Press ENTER to execute · <button type="button" onClick={()=>setScreen('menu')}>RETURN TO MENU</button></p>
    </section></main>:
    <div className="game-shell"><header className="game-header"><button className="brand-button" onClick={()=>{setSpeed(0);void saver.current?.flush().catch(()=>{});setScreen('menu');}}>⌘ <b>CODE<span>EMPIRE</span></b></button><span>{world.phase==='dormant'?'SIMULATION OFFLINE':'FIRST LIGHT'} <span className="divider">/</span> {world.phase==='dormant'?'AWAITING INITIALIZATION':'SETTLEMENT AGE'}</span><span>DAY {1+Math.floor(world.tick/24)} · {String(world.tick%24).padStart(2,'0')}:00</span><div className="clock-actions"><button disabled={world.phase==='dormant'||loadingStep>=0} className={speed===0?'active':''} onClick={()=>setSpeed(0)}>Ⅱ</button><button disabled={busy||world.phase==='dormant'||loadingStep>=0} onClick={()=>void execute()}>⏭</button>{[1,2,3].map(v=><button key={v} disabled={world.phase==='dormant'||loadingStep>=0} className={speed===v?'active':''} onClick={()=>setSpeed(v)}>{v}×</button>)}</div></header>
-   <div className="game-row"><aside className="sidebar">{(world.phase==='dormant'?[['scripts','⌘','Scripts'],['python','Py','Python Reference'],['docs','▤','Game API']]:[['overview','◫','Overview'],['world','◇','World'],['scripts','⌘','Scripts'],['learn','✧','Learn Python'],['python','Py','Python Reference'],['docs','▤','Game API'],['console','>_','Console'],['settings','⚙','Settings']] as const).map(([kind,icon,label])=><button key={kind} title={label} aria-label={label} onClick={()=>open(kind as WindowKind)}><span>{icon}</span><small>{label}</small></button>)}</aside>
+   <div className="game-row"><aside className="sidebar">{(world.phase==='dormant'?[['scripts','⌘','Scripts'],['python','Py','Python Reference'],['docs','▤','Game API']]:[['overview','◫','Overview'],['world','◇','World'],['archive','▤','Genesis Archive'],['scripts','⌘','Scripts'],['learn','✧','Learn Python'],['python','Py','Python Reference'],['docs','▤','Game API'],['console','>_','Console'],['settings','⚙','Settings']] as const).map(([kind,icon,label])=><button key={kind} title={label} aria-label={label} onClick={()=>open(kind as WindowKind)}><span>{icon}</span><small>{label}</small></button>)}</aside>
    <div className="desktop-area"><WindowManager state={workspace} setState={setWorkspace} title={title} render={render}/>
     {loadingStep>=0&&<div className="initialization-overlay" role="status" aria-live="polite"><div className="initialization-box"><p className="eyebrow">CIVILIZATION INITIATIVE // WORLD GENERATOR</p><h2>INITIALIZING SIMULATION</h2>
      <div className="initialization-progress"><span style={{width:(100*Math.min(loadingStep,BOOT_MESSAGES.length)/BOOT_MESSAGES.length)+'%'}}/></div>

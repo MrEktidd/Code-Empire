@@ -1,5 +1,5 @@
 import { HEIGHT, WIDTH, WORLD_SCHEMA } from './types';
-import type { Building, ScriptCommand, Tile, Worker, WorldState } from './types';
+import type { Building, FounderRecord, ScriptCommand, Tile, Worker, WorldState } from './types';
 
 function random01(seed: number, x: number, y: number): number {
   let n = (seed ^ Math.imul(x + 139, 374761393) ^ Math.imul(y + 53, 668265263)) >>> 0;
@@ -9,7 +9,7 @@ function random01(seed: number, x: number, y: number): number {
 /** Before Empire.initialize() runs, no terrain or people have been generated. */
 export function createPendingWorld(seed = 2048): WorldState {
   return {schema:WORLD_SCHEMA,seed,tick:0,phase:'dormant',housingCapacity:3,tiles:[],
-    workers:[],buildings:[],stocks:{wood:0,stone:0,food:0},totalHarvested:0,events:[]};
+    workers:[],buildings:[],genesisArchive:[],stocks:{wood:0,stone:0,food:0},totalHarvested:0,events:[]};
 }
 
 /** includePrototypeEntities keeps existing v0.2 fixtures and saves testable.
@@ -35,7 +35,7 @@ export function createWorld(seed = 2048, includePrototypeEntities = true): World
   const farm: Building = { id: 'farm_000001', name: 'First Light Farm', type: 'farm', x: 4, y: 7, mode: 'food',
     organizationId: null, controlMode: 'independent' };
   return { schema: WORLD_SCHEMA, seed, tick: 0, phase:'active', housingCapacity:3, tiles,
-    buildings: includePrototypeEntities ? [farm] : [],
+    buildings: includePrototypeEntities ? [farm] : [],genesisArchive:[],
     workers: includePrototypeEntities ? [worker('npc_000001', 'Ada', 'Forester', 3, 5),
       worker('npc_000002', 'Bram', 'Miner', 4, 5),
       worker('npc_000003', 'Cora', 'Generalist', 3, 6)] : [],
@@ -46,6 +46,43 @@ export function createWorld(seed = 2048, includePrototypeEntities = true): World
 }
 export function createCivilizationWorld(seed = 2048): WorldState {
   return createWorld(seed, false);
+}
+/** Genesis is a single all-or-nothing founding event, not repeatable population spawning. */
+export function validateFounderBatch(world:WorldState,raw:unknown):string|null {
+  if(world.phase!=='active')return 'Initialize the simulation first.';
+  if(world.genesisArchive.length>0||world.workers.length>0)return 'Genesis has already established a population.';
+  if(!Array.isArray(raw))return 'founders must be a Python list of dictionaries.';
+  if(raw.length!==3)return 'Define exactly three founders. Add a third dictionary to the founders list.';
+  if(raw.length>world.housingCapacity-world.workers.length)return 'Not enough housing capacity for the founding population.';
+  const names=new Set<string>();
+  for(let i=0;i<raw.length;i++){
+    const person=raw[i];
+    if(!person||typeof person!=='object'||Array.isArray(person))return `Founder ${i+1} must be a dictionary.`;
+    const data=person as Record<string,unknown>;
+    if(typeof data.name!=='string'||data.name.trim().length<1||data.name.trim().length>32||Array.from(data.name).some(char=>char.charCodeAt(0)<32||char.charCodeAt(0)===127))
+      return `Founder ${i+1} needs a name of 1–32 visible characters.`;
+    const key=data.name.trim().toLowerCase();
+    if(names.has(key))return 'Founder names must be unique.';
+    names.add(key);
+    if(data.sex!=='female'&&data.sex!=='male')return `Founder ${i+1} needs sex="female" or sex="male".`;
+    if(Object.keys(data).some(key=>key!=='name'&&key!=='sex'))return `Founder ${i+1} has unsupported keys. Use name and sex.`;
+  }
+  return null;
+}
+export function establishFounders(previous:WorldState,raw:unknown):WorldState {
+  const reason=validateFounderBatch(previous,raw);
+  if(reason)throw new Error(reason);
+  const records=(raw as {name:string;sex:'male'|'female'}[]).map((x,i):FounderRecord=>({
+    id:'npc_'+String(i+1).padStart(6,'0'),name:x.name.trim(),sex:x.sex,createdTick:previous.tick
+  }));
+  const spawn:[[number,number],[number,number],[number,number]]=[[3,6],[4,5],[4,6]];
+  const workers:Worker[]=records.map((f,i)=>({
+    id:f.id,name:f.name,sex:f.sex,role:'Founder',x:spawn[i][0],y:spawn[i][1],
+    carried:0,carrying:null,capacity:6,policy:null,task:null,
+    organizationId:null,controlMode:'independent'
+  }));
+  return {...previous,workers,genesisArchive:records,
+    events:[...previous.events,`Genesis: ${records.map(x=>x.name).join(', ')} became the first inhabitants of First Light.`]};
 }
 function nearest(world: WorldState, unit: Worker, resource: 'wood' | 'stone'): Tile | undefined {
   const type = resource === 'wood' ? 'forest' : 'quarry';
@@ -123,6 +160,15 @@ export function applyCommands(previous: WorldState, commands: ScriptCommand[]): 
       messages.push('Initialize the simulation with Empire.initialize() first.');
       continue;
     }
+    if (cmd.action === 'seed_population') {
+      const reason=validateFounderBatch(world,cmd.founders);
+      if(reason)messages.push('Genesis rejected: '+reason);
+      else{
+        world=establishFounders(world,cmd.founders);
+        messages.push('Genesis complete: '+world.workers.map(x=>x.name).join(', ')+'. Population '+world.workers.length+'/'+world.housingCapacity+'.');
+      }
+      continue;
+    }
     if (cmd.action === 'log') { messages.push(String(cmd.message ?? '').slice(0, 180)); continue; }
     if (cmd.action === 'farm_mode') {
       const farm = world.buildings.find(b => b.id === cmd.buildingId);
@@ -164,7 +210,7 @@ export function worldSnapshot(world: WorldState) {
     phase: world.phase, housing_capacity: world.housingCapacity,
     stocks: { ...world.stocks },
     workers: world.workers.map(w => ({
-      id: w.id, name: w.name, role: w.role, x: w.x, y: w.y,
+      id: w.id, name: w.name, role: w.role, sex:w.sex??null, x: w.x, y: w.y,
       carried: w.carried, carrying: w.carried, cargo_type: w.carrying,
       capacity: w.capacity, policy: w.policy, control_mode: w.controlMode
     })),
