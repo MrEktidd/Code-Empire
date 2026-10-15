@@ -59,7 +59,7 @@ export function validateFounderBatch(world:WorldState,raw:unknown):string|null {
     const person=raw[i];
     if(!person||typeof person!=='object'||Array.isArray(person))return `Founder ${i+1} must be a dictionary.`;
     const data=person as Record<string,unknown>;
-    if(typeof data.name!=='string'||data.name.trim().length<1||data.name.trim().length>32||/[\\x00-\\x1F\\x7F]/.test(data.name))
+    if(typeof data.name!=='string'||data.name.trim().length<1||data.name.trim().length>32||Array.from(data.name).some(char=>char.charCodeAt(0)<32||char.charCodeAt(0)===127))
       return `Founder ${i+1} needs a name of 1–32 visible characters.`;
     const key=data.name.trim().toLowerCase();
     if(names.has(key))return 'Founder names must be unique.';

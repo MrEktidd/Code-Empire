@@ -82,7 +82,7 @@ export function validCampaign(obj:unknown):obj is Campaign{
   [null,'independent','delegated','event_only'].includes(x.controlMode)&&
   (x.task===null||(x.task&&['gather','deposit','move'].includes(x.task.kind)&&grid(x.task.x,x.task.y)))))return false;
  if(!w.genesisArchive.every(a=>a&&typeof a.id==='string'&&ids.has(a.id)&&
-  w.workers.some(w=>w.id===a.id&&w.name===a.name&&w.sex===a.sex)&&
+  (!w.workers.some(w=>w.id===a.id)||w.workers.some(w=>w.id===a.id&&w.name===a.name&&w.sex===a.sex))&&
   typeof a.name==='string'&&a.name.length>0&&a.name.length<=32&&
   (a.sex==='male'||a.sex==='female')&&integer(a.createdTick)&&a.createdTick<=w.tick))return false;
  if(new Set(w.genesisArchive.map(a=>a.id)).size!==w.genesisArchive.length)return false;
