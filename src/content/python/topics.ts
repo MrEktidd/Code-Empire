@@ -324,7 +324,7 @@ export const PYTHON_TOPICS:DocArticle[] = [
     "category": "Collections",
     "title": "Indexing and slicing",
     "summary": "Take an item or subset from strings, lists, and tuples.",
-    "body": "Indices start at 0. Negative indices count from the end. A slice uses [start:stop:step], includes start, and excludes stop. Slicing usually creates a new collection rather than editing the original.\n\nTry changing one value in the example, predict what will happen, and then run it. When the result surprises you, check the data type, operator, or control flow involved.",
+    "body": "Indices start at 0. Negative indices count from the end. A slice uses [start:stop:step], includes start, and excludes stop. Slicing works with [[lists|python:lists]], [[strings|python:strings]], and [[tuples|python:tuples]]. Slicing usually creates a new collection rather than editing the original.\n\nTry changing one value in the example, predict what will happen, and then run it. When the result surprises you, check the data type, operator, or control flow involved.",
     "example": "colors = [\"red\", \"blue\", \"green\", \"yellow\"]\nprint(colors[0])\nprint(colors[-1])\nprint(colors[1:3])\nprint(colors[:2])\nprint(colors[::-1])",
     "tip": "workers[1:3] returns items at positions 1 and 2, not position 3.",
     "related": []
