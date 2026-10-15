@@ -18,10 +18,10 @@ export type WindowContext={
  setWorkspace:Dispatch<SetStateAction<WorkspaceState>>;
  editController:(id:string,change:Partial<Controller>)=>void;
  execute:(id?:string)=>Promise<void>;open:(kind:WindowKind,id?:string)=>void;
- openEntity:(id:string)=>void;openDoc:(scope:DocScope,id:string,popout?:boolean)=>void;
+ openEntity:(id:string)=>void;beginLesson:()=>void;openDoc:(scope:DocScope,id:string,popout?:boolean)=>void;
 };
  export function renderGameWindow(win:WindowState,ctx:WindowContext):ReactNode{
- const {world,controllers,entries,selection,lesson,showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc}=ctx;
+ const {world,controllers,entries,selection,lesson,showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson}=ctx;
   if(win.kind==='world')return <WorldView world={world}selection={selection}onSelect={openEntity}/>;
   if(win.kind==='scripts')return <div className="window-content"><p className="eyebrow">PROJECT EXPLORER</p><p className="muted">Every programmable object gets its own controller automatically. Filenames are editable; IDs are permanent.</p>{controllers.map(c=><button key={c.id} className="file-row" onClick={()=>open('controller',c.id)}><span>⌘</span><span><b>{c.filename}</b><small>{c.ownerEntityId??'Global automation'} · {c.lastStatus}</small></span><span>↗</span></button>)}</div>;
   if(win.kind==='controller'){
