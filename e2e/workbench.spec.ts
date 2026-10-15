@@ -34,3 +34,14 @@ test('continuous simulation saves progress before returning to menu',async({page
  await page.getByRole('button',{name:/CONTINUE CAMPAIGN/}).click();
  await expect(page.locator('.game-shell')).toBeVisible();
 });
+
+test('Python worker executes an NPC controller end-to-end',async({page})=>{
+ test.setTimeout(120000);
+ await page.goto('/');
+ await page.getByRole('button',{name:/NEW EMPIRE/}).click();
+ await page.getByRole('button',{name:'Scripts'}).click();
+ await page.getByRole('button',{name:/ada.py/}).first().click();
+ await page.getByRole('button',{name:/RUN SCRIPT/}).click();
+ await page.getByRole('button',{name:'OUTPUT'}).click();
+ await expect(page.getByText('Hello, Empire!',{exact:false}).last()).toBeVisible({timeout:75000});
+});
