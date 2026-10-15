@@ -1,3 +1,4 @@
+import type {ControllerBase,PythonResult} from '../platform/controllers/types';
 export const WORLD_SCHEMA = 2;
 export const WIDTH = 16;
 export const HEIGHT = 11;
@@ -21,27 +22,16 @@ export type WorldState = {
   tiles: Tile[]; workers: Worker[]; buildings: Building[];
   stocks: Record<Resource, number>; totalHarvested: number; events: string[];
 };
-export type Controller = {
-  id: string; ownerEntityId: string | null; ownerType: 'npc' | 'farm' | 'global';
-  filename: string; source: string; notes: string;
-  enabled: boolean; intervalTicks: number; nextRunTick: number;
-  memory: Record<string, unknown>;
-  lastStatus: 'idle' | 'success' | 'error';
-  lastError: string | null;
-  lastOutput: string[];
-  executions: number;
-};
 export type ScriptCommand = {
   action: 'assign' | 'order' | 'log' | 'farm_mode';
   workerId?: string; buildingId?: string; resource?: string;
   task?: string; mode?: string; message?: string; x?: number; y?: number;
 };
-export type ScriptResult = {
-  commands: ScriptCommand[]; memory: Record<string, unknown>; output: string[];
-};
+export type Controller = ControllerBase<'npc' | 'farm' | 'global'>;
+export type ScriptResult = PythonResult<ScriptCommand>;
 export type ExecutionEntry = {
   tick: number; controllerId: string; filename: string; success: boolean;
-  output: string[]; error?: string; commands: number;
+  output: string[]; error?: string; commands: number; durationMs?: number;
 };
 export type Campaign = {
   schema: number; savedAt: number; world: WorldState;

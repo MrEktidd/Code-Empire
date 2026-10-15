@@ -1,0 +1,36 @@
+/** Code-Empire-only Python game API. The reusable Python runner imports none of this.
+ * world snapshots and validated command proposals are the sole integration surface.
+ */
+export const CODE_EMPIRE_PYTHON_BRIDGE = [
+'class ObjectView:',
+'    def __init__(self, record): self.__dict__.update(record)',
+'    def order(self, task, resource=None, x=None, y=None):',
+'        if not self.id.startswith("npc_"): raise ValueError("Only NPCs can use self.order().")',
+'        commands.append({"action":"order","workerId":self.id,"task":str(task),"resource":resource,"x":x,"y":y})',
+'    def assign(self, resource):',
+'        if not self.id.startswith("npc_"): raise ValueError("Only NPCs can use self.assign().")',
+'        commands.append({"action":"assign","workerId":self.id,"resource":str(resource)})',
+'    def set_mode(self, mode):',
+'        if not self.id.startswith("farm_"): raise ValueError("Only farms can use self.set_mode().")',
+'        if mode == "resting": mode = "rest"',
+'        commands.append({"action":"farm_mode","buildingId":self.id,"mode":str(mode)})',
+'class World:',
+'    def __init__(self, record):',
+'        self.tick=record["tick"];self.day=record["day"];self.hour=record["hour"]',
+'        self._stocks=record["stocks"]',
+'        self._workers=[ObjectView(w) for w in record["workers"]]',
+'        self._buildings=[ObjectView(b) for b in record["buildings"]]',
+'    def workers(self): return list(self._workers)',
+'    def buildings(self): return list(self._buildings)',
+'    def get(self, entity_id): return next((e for e in self._workers+self._buildings if e.id==entity_id),None)',
+'    def stockpile(self, resource): return self._stocks.get(resource,0)',
+'    def assign(self, worker_id, resource):',
+'        commands.append({"action":"assign","workerId":str(worker_id),"resource":str(resource)})',
+'    def order(self, worker_id, task, resource=None, x=None, y=None):',
+'        commands.append({"action":"order","workerId":str(worker_id),"task":str(task),"resource":resource,"x":x,"y":y})',
+'    def log(self, message): commands.append({"action":"log","message":str(message)})',
+'world=World(_ce_snapshot_value)',
+'owner=world.get(_ce_owner) if _ce_owner else None',
+'namespace.update({"world":world,"self":owner})',
+'callback_args=(world,memory) if owner is None else (owner,world,memory)'
+].join('\n');

@@ -6,7 +6,13 @@ type Props={state:WorkspaceState;setState:(updater:(v:WorkspaceState)=>Workspace
 export function WindowManager({state,setState,render,title}:Props){
  const [small,setSmall]=useState(()=>window.matchMedia('(max-width: 760px)').matches);
  const root=useRef<HTMLDivElement>(null);
+ const [bounds,setBounds]=useState({width:1200,height:800});
  useEffect(()=>{const q=window.matchMedia('(max-width: 760px)');const change=()=>setSmall(q.matches);q.addEventListener('change',change);return()=>q.removeEventListener('change',change);},[]);
+ useEffect(()=>{
+   const recalc=()=>{const area=root.current;if(area)setBounds({width:area.clientWidth,height:area.clientHeight});};
+   recalc();window.addEventListener('resize',recalc);
+   return()=>window.removeEventListener('resize',recalc);
+ },[]);
  const move=(e:React.PointerEvent<HTMLDivElement>,w:WindowState,resize:boolean)=>{
   if(small||w.maximized||e.button!==0)return;
   e.preventDefault();e.stopPropagation();
@@ -30,7 +36,10 @@ export function WindowManager({state,setState,render,title}:Props){
  return <div className="desktop-root" ref={root}>
   {visible.map(w=><section aria-label={title(w)} key={w.id}
     className={'desktop-window '+(w.maximized?'window-max ':'')+((small&&selected?.id!==w.id)?'mobile-hidden ':'')}
-    style={small?undefined:{left:w.x,top:w.y,width:w.width,height:w.height,zIndex:w.z} as CSSProperties}
+    style={small?undefined:{left:Math.max(0,Math.min(w.x,Math.max(0,bounds.width-Math.min(w.width,bounds.width)))),
+     top:Math.max(0,Math.min(w.y,Math.max(0,bounds.height-Math.min(w.height,bounds.height)))),
+     width:Math.max(260,Math.min(w.width,bounds.width)),
+     height:Math.max(180,Math.min(w.height,bounds.height)),zIndex:w.z} as CSSProperties}
     onPointerDown={()=>setState(s=>s.focus===w.id?s:focusWindow(s,w.id))}>
     <div className="window-titlebar" onPointerDown={e=>move(e,w,false)}>
       <span className="window-heading"><span className="window-dot"/> {title(w)}</span>

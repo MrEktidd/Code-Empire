@@ -1,68 +1,74 @@
 import { applyCommands, stepWorld, worldSnapshot } from './world';
+import { executeBatch } from '../platform/scheduling/executeBatch';
 import type { Controller, ExecutionEntry, ScriptCommand, ScriptResult, WorldState } from './types';
-
-export type Executor = (source: string, snapshot: ReturnType<typeof worldSnapshot>,
-  memory: Record<string, unknown>, ownerEntityId: string | null) => Promise<ScriptResult>;
-export type TickResult = { world: WorldState; controllers: Controller[]; entries: ExecutionEntry[] };
-
-export function dueControllers(world: WorldState, controllers: Controller[], limit = 16): Controller[] {
-  return controllers.filter(c => c.enabled && c.nextRunTick <= world.tick
-    && (c.ownerEntityId === null || ![...world.workers, ...world.buildings].some(
-      e => e.id === c.ownerEntityId && e.controlMode !== 'independent')))
-    .sort((a,b) => a.nextRunTick - b.nextRunTick || a.id.localeCompare(b.id))
-    .slice(0, limit);
+export type Executor=(source:string,snapshot:ReturnType<typeof worldSnapshot>,memory:Record<string,unknown>,ownerEntityId:string|null)=>Promise<ScriptResult>;
+export type TickResult={world:WorldState;controllers:Controller[];entries:ExecutionEntry[]};
+export function dueControllers(world:WorldState,controllers:Controller[],limit=16):Controller[]{
+ const entities=new Map([...world.workers,...world.buildings].map(e=>[e.id,e.controlMode]));
+ return controllers.filter(c=>c.enabled && c.nextRunTick<=world.tick &&
+  (c.ownerEntityId===null||entities.get(c.ownerEntityId)==='independent'))
+  .sort((a,b)=>a.nextRunTick-b.nextRunTick||a.id.localeCompare(b.id)).slice(0,limit);
 }
-export async function runControllers(world: WorldState, controllers: Controller[], selected: Controller[],
-  executor: Executor): Promise<TickResult> {
-  const snapshot = worldSnapshot(world);
-  const changes = new Map<string, Controller>();
-  const allCommands: { id: string; command: ScriptCommand }[] = [];
-  const entries: ExecutionEntry[] = [];
-  for (const controller of selected) {
-    const next = { ...controller, nextRunTick: world.tick + controller.intervalTicks,
-      executions: controller.executions + 1 };
-    try {
-      const result = await executor(controller.source, snapshot, controller.memory, controller.ownerEntityId);
-      if (!result || !Array.isArray(result.commands) || !Array.isArray(result.output) ||
-        !result.memory || typeof result.memory !== 'object' || Array.isArray(result.memory))
-        throw new Error('Script returned an invalid result');
-      const memoryJson = JSON.stringify(result.memory);
-      if (memoryJson.length > 32768) throw new Error('Persistent memory exceeds 32 KB');
-      next.memory = JSON.parse(memoryJson) as Record<string, unknown>;
-      next.lastStatus = 'success' as const; next.lastError = null;
-      next.lastOutput = result.output.slice(0, 40).map(String);
-      for (const command of result.commands.slice(0, 64)) allCommands.push({ id: controller.id, command });
-      entries.push({ tick: world.tick, controllerId: controller.id, filename: controller.filename,
-        success: true, output: next.lastOutput, commands: result.commands.length });
-    } catch (error) {
-      next.lastStatus = 'error' as const; next.lastError = String(error);
-      next.lastOutput = [];
-      entries.push({ tick: world.tick, controllerId: controller.id, filename: controller.filename,
-        success: false, output: [], error: String(error), commands: 0 });
-    }
-    changes.set(controller.id, next);
-  }
-  // First valid controller command for an entity wins per tick. Log commands never conflict.
-  const claimed = new Set<string>();
-  const accepted: ScriptCommand[] = [];
-  for (const { id, command } of allCommands) {
-    if (!command || typeof command !== 'object') continue;
-    const target = command.action === 'farm_mode' ? command.buildingId :
-      command.action === 'log' ? null : command.workerId;
-    if (target && claimed.has(target)) {
-      const entry = entries.find(e => e.controllerId === id);
-      entry?.output.push('Command conflict: ' + target + ' was already ordered this tick.');
-      continue;
-    }
-    if (target) claimed.add(target);
-    accepted.push(command);
-  }
-  const { world: updated, messages } = applyCommands(world, accepted);
-  if (messages.length) entries.push({ tick: world.tick, controllerId:'engine', filename:'Simulation',
-    success:true, output:messages, commands:0 });
-  return { world: updated, controllers: controllers.map(c => changes.get(c.id) ?? c), entries };
+export function validateCommand(world:WorldState,command:ScriptCommand):string|null{
+ if(!command||typeof command!=='object')return 'Not a command';
+ if(command.action==='log')return typeof command.message==='string' && command.message.length<=180?null:'Log message must be text under 181 characters';
+ if(command.action==='farm_mode'){
+  if(!world.buildings.some(b=>b.id===command.buildingId))return 'Unknown farm';
+  return command.mode==='food'||command.mode==='rest'||command.mode==='resting'?null:'Unknown farm mode';
+ }
+ const worker=world.workers.find(w=>w.id===command.workerId);
+ if(!worker)return 'Unknown worker';
+ if(command.action==='assign')return ['wood','stone','idle'].includes(command.resource??'')?null:'Unknown resource assignment';
+ if(command.action==='order'){
+  if(command.task==='deposit')return null;
+  if(command.task==='gather')return command.resource==='wood'||command.resource==='stone'?null:'Invalid gathering resource';
+  if(command.task==='move')return Number.isInteger(command.x)&&Number.isInteger(command.y)&&command.x!>=0&&command.y!>=0&&command.x!<16&&command.y!<11?null:'Invalid move destination';
+ }
+ return 'Unsupported order';
 }
-export async function advanceTick(world: WorldState, controllers: Controller[], executor: Executor): Promise<TickResult> {
-  const updated = stepWorld(world);
-  return runControllers(updated, controllers, dueControllers(updated, controllers), executor);
+export async function runControllers(world:WorldState,controllers:Controller[],selected:Controller[],executor:Executor,manual=false):Promise<TickResult>{
+ const snapshot=worldSnapshot(world);
+ const requests=selected.map(c=>({id:c.id,source:c.source,memory:c.memory,context:{snapshot,ownerId:c.ownerEntityId}}));
+ const responses=await executeBatch(requests,async(source,ctx,memory)=>{
+   const result=await executor(source,ctx.snapshot,memory,ctx.ownerId);
+   if(!result||!Array.isArray(result.commands)||!Array.isArray(result.output)||!result.memory||
+     typeof result.memory!=='object'||Array.isArray(result.memory))throw Error('Invalid script response');
+   const serialized=JSON.stringify(result.memory);
+   if(serialized.length>32768)throw Error('Persistent controller memory exceeds 32 KB');
+   return {commands:result.commands.slice(0,64),memory:JSON.parse(serialized) as Record<string,unknown>,output:result.output.slice(0,40).map(String)};
+ },8000);
+ const changes=new Map<string,Controller>();
+ const entries:ExecutionEntry[]=[];
+ const pending:{id:string;command:ScriptCommand}[]=[];
+ for(const outcome of responses){
+   const controller=selected.find(c=>c.id===outcome.id)!;
+   const next:Controller={...controller,nextRunTick:manual?controller.nextRunTick:world.tick+controller.intervalTicks,
+    executions:controller.executions+1,lastStatus:outcome.success?'success':'error',
+    lastError:outcome.error??null,lastOutput:outcome.output.slice(0,40)};
+   if(outcome.success)next.memory=outcome.memory??controller.memory;
+   changes.set(controller.id,next);
+   if(outcome.success)for(const command of outcome.commands)pending.push({id:controller.id,command});
+   entries.push({tick:world.tick,controllerId:controller.id,filename:controller.filename,
+     success:outcome.success,output:[...outcome.output],error:outcome.error,commands:outcome.commands.length,
+     durationMs:outcome.elapsedMs});
+ }
+ // The first *valid* proposed command per entity wins. Invalid commands never reserve an entity.
+ const claimed=new Set<string>(),accepted:ScriptCommand[]=[];
+ for(const {id,command} of pending){
+  const entry=entries.find(e=>e.controllerId===id)!;
+  const reason=validateCommand(world,command);
+  if(reason){entry.output.push('Rejected command: '+reason);continue;}
+  const target=command.action==='farm_mode'?command.buildingId:command.action==='log'?undefined:command.workerId;
+  if(target&&claimed.has(target)){entry.output.push('Command conflict: '+target+' was already ordered this tick.');continue;}
+  if(target)claimed.add(target);
+  accepted.push(command);
+ }
+ const committed=applyCommands(world,accepted);
+ if(committed.messages.length)entries.push({tick:world.tick,controllerId:'engine',filename:'Simulation',success:true,
+  output:committed.messages,commands:0});
+ return {world:committed.world,controllers:controllers.map(c=>changes.get(c.id)??c),entries};
+}
+export async function advanceTick(world:WorldState,controllers:Controller[],executor:Executor):Promise<TickResult>{
+ const updated=stepWorld(world);
+ return runControllers(updated,controllers,dueControllers(updated,controllers),executor);
 }

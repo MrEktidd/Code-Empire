@@ -100,8 +100,8 @@ export function applyCommands(previous: WorldState, commands: ScriptCommand[]): 
     if (cmd.action === 'log') { messages.push(String(cmd.message ?? '').slice(0, 180)); continue; }
     if (cmd.action === 'farm_mode') {
       const farm = world.buildings.find(b => b.id === cmd.buildingId);
-      if (!farm || (cmd.mode !== 'food' && cmd.mode !== 'rest')) messages.push('Invalid farm mode command');
-      else { farm.mode = cmd.mode; messages.push(farm.name + ': ' + cmd.mode); }
+      if (!farm || !['food','rest','resting'].includes(cmd.mode??'')) messages.push('Invalid farm mode command');
+      else { farm.mode = cmd.mode === 'resting' ? 'rest' : cmd.mode as 'food'|'rest'; messages.push(farm.name + ': ' + farm.mode); }
       continue;
     }
     const unit = world.workers.find(w => w.id === cmd.workerId);
