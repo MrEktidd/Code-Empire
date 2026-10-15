@@ -41,7 +41,7 @@ export default function DocumentationBrowser({scope,articles,tabs,activeDoc,onCh
  };
  return <div className="documentation-browser">
    <div className="documentation-toolbar">
-    <strong>{scope==='python'?'PYTHON REFERENCE':'CODE-EMPIRE GAME API'}</strong>
+    <strong>{scope==='python'?'PYTHON REFERENCE':'GAME API'}</strong>
     <span>{articles.length} ARTICLES · UNRESTRICTED</span>
    </div>
    <div className="documentation-tabs" role="tablist" aria-label="Open documentation tabs">
@@ -90,9 +90,7 @@ export default function DocumentationBrowser({scope,articles,tabs,activeDoc,onCh
        {active.related.map(x=><button key={docKey(x.scope,x.id)} onClick={()=>navigate(x.scope,x.id)}
           title={'Open '+x.label}>{x.label} ↗</button>)}
       </div></>}
-      <a className="documentation-official" href={scope==='python'?'https://docs.python.org/3/tutorial/':'https://github.com/MrEktidd/Code-Empire'} target="_blank" rel="noreferrer">
-       {scope==='python'?'Official Python documentation ↗':'Code-Empire on GitHub ↗'}
-      </a>
+      {scope==='python'&&<a className="documentation-official" href="https://docs.python.org/3/tutorial/" target="_blank" rel="noreferrer">Official Python documentation ↗</a>}
     </article>
    </div>
  </div>;
