@@ -6,7 +6,7 @@ test('new game opens the workbench and both documentation libraries',async({page
  await expect(page.locator('.desktop-window').first()).toBeVisible();
  await page.getByRole('button',{name:'Python Reference'}).click();
  await expect(page.getByRole('heading',{name:'How Python runs'})).toBeVisible();
- await page.getByRole('button',{name:'Lists',exact:true}).click();
+ await page.getByRole('button',{name:/Lists/}).click();
  await expect(page.getByRole('heading',{name:/Lists/})).toBeVisible();
  await page.getByRole('button',{name:/Pop out/}).click();
  await expect(page.locator('.desktop-window')).toHaveCount(5);
