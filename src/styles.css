@@ -5,3 +5,20 @@
 .alpha-banner{max-width:480px;margin:18px auto;padding:12px 15px;border:1px solid #477969;background:#15392f;color:#c1e8d2;font-size:12px;line-height:1.55}
 .alpha-banner strong{font-size:11px;letter-spacing:1.2px;color:#96e6b4}
 .alpha-banner p{color:#aacbb9;margin:5px 0 0}
+
+/* v0.3.0 — simulation bootstrap */
+.boot-terminal{min-height:100dvh;background:#020503;color:#76f6a1;display:flex;align-items:center;justify-content:center;padding:24px;font-family:Consolas,"Courier New",monospace}
+.boot-screen{max-width:790px;width:100%;line-height:1.8;text-shadow:0 0 8px #2b8e4f66}
+.boot-heading{letter-spacing:3px;opacity:.65;font-size:12px}.boot-screen h1{font-size:clamp(23px,4vw,38px);line-height:1.4;color:#a3ffc4}
+.boot-screen p{font-size:clamp(13px,1.55vw,16px);margin:18px 0}.boot-instruction{color:#d8ffe5}
+.boot-screen form{display:flex;align-items:center;gap:9px;border-bottom:1px solid #25633c;padding:8px 0}
+.boot-screen input{flex:1;min-width:0;background:transparent;border:0;outline:none;color:#bcffcb;font-family:inherit;font-size:17px}
+.boot-cursor{animation:bootblink .8s steps(1) infinite}.boot-error{color:#ff9999}.boot-footnote{opacity:.65;font-size:12px!important}
+.boot-footnote button{background:transparent;border:0;color:inherit;text-decoration:underline;font-family:inherit}
+@keyframes bootblink{50%{opacity:0}}
+.initialization-overlay{position:absolute;inset:0;background:#030b0ef0;z-index:999;display:flex;align-items:center;justify-content:center;padding:16px}
+.initialization-box{background:#0b1a22;border:1px solid #3d635d;padding:30px;width:min(650px,96%);max-height:90%;overflow:auto;font-family:Consolas,monospace}
+.initialization-box h2{font-size:22px;color:#c1fce0}.initialization-box p{font-size:12px;color:#8caaa9;margin:9px 0}
+.initialization-box .initialization-current{color:#b5f7c6}.initialization-progress{height:10px;border:1px solid #426c65;background:#0e292b;margin:18px 0}
+.initialization-progress span{display:block;height:100%;background:#65cda0;transition:width .18s}
+.overview .metrics{margin:12px 0 24px}

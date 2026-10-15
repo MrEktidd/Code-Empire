@@ -4,6 +4,7 @@ import type { Controller, ExecutionEntry, ScriptCommand, ScriptResult, WorldStat
 export type Executor=(source:string,snapshot:ReturnType<typeof worldSnapshot>,memory:Record<string,unknown>,ownerEntityId:string|null)=>Promise<ScriptResult>;
 export type TickResult={world:WorldState;controllers:Controller[];entries:ExecutionEntry[]};
 export function dueControllers(world:WorldState,controllers:Controller[],limit=16):Controller[]{
+ if(world.phase==='dormant')return [];
  const entities=new Map([...world.workers,...world.buildings].map(e=>[e.id,e.controlMode]));
  return controllers.filter(c=>c.enabled && c.nextRunTick<=world.tick &&
   (c.ownerEntityId===null||entities.get(c.ownerEntityId)==='independent'))
@@ -11,6 +12,8 @@ export function dueControllers(world:WorldState,controllers:Controller[],limit=1
 }
 export function validateCommand(world:WorldState,command:ScriptCommand):string|null{
  if(!command||typeof command!=='object')return 'Not a command';
+ if(command.action==='initialize')return world.phase==='dormant'?null:'Simulation is already initialized';
+ if(world.phase==='dormant'&&command.action!=='log')return 'Initialize simulation first';
  if(command.action==='log')return typeof command.message==='string' && command.message.length<=180?null:'Log message must be text under 181 characters';
  if(command.action==='farm_mode'){
   if(!world.buildings.some(b=>b.id===command.buildingId))return 'Unknown farm';
@@ -56,9 +59,12 @@ export async function runControllers(world:WorldState,controllers:Controller[],s
  const claimed=new Set<string>(),accepted:ScriptCommand[]=[];
  for(const {id,command} of pending){
   const entry=entries.find(e=>e.controllerId===id)!;
-  const reason=validateCommand(world,command);
+  const origin=selected.find(c=>c.id===id)!;
+  const reason=command.action==='initialize'&&origin.ownerType!=='global'
+    ? 'Only a global controller can initialize the simulation'
+    : validateCommand(world,command);
   if(reason){entry.output.push('Rejected command: '+reason);continue;}
-  const target=command.action==='farm_mode'?command.buildingId:command.action==='log'?undefined:command.workerId;
+  const target=command.action==='initialize'?'simulation':command.action==='farm_mode'?command.buildingId:command.action==='log'?undefined:command.workerId;
   if(target&&claimed.has(target)){entry.output.push('Command conflict: '+target+' was already ordered this tick.');continue;}
   if(target)claimed.add(target);
   accepted.push(command);

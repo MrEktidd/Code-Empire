@@ -1,5 +1,5 @@
 import type {ControllerBase,PythonResult} from '../platform/controllers/types';
-export const WORLD_SCHEMA = 2;
+export const WORLD_SCHEMA = 3;
 export const WIDTH = 16;
 export const HEIGHT = 11;
 export type Resource = 'wood' | 'stone' | 'food';
@@ -19,11 +19,12 @@ export type Building = {
 };
 export type WorldState = {
   schema: number; seed: number; tick: number;
+  phase: 'dormant' | 'active'; housingCapacity: number;
   tiles: Tile[]; workers: Worker[]; buildings: Building[];
   stocks: Record<Resource, number>; totalHarvested: number; events: string[];
 };
 export type ScriptCommand = {
-  action: 'assign' | 'order' | 'log' | 'farm_mode';
+  action: 'assign' | 'order' | 'log' | 'farm_mode' | 'initialize';
   workerId?: string; buildingId?: string; resource?: string;
   task?: string; mode?: string; message?: string; x?: number; y?: number;
 };

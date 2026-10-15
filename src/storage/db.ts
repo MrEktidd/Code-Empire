@@ -22,10 +22,22 @@ async function withStore<T>(mode:IDBTransactionMode,fn:(s:IDBObjectStore,done:(v
   });
 }
 export async function loadCampaign():Promise<Campaign | undefined>{
-  return withStore<Campaign | undefined>('readonly',(s,done)=>{
+  const raw=await withStore<unknown>('readonly',(s,done)=>{
     const r=s.get(SLOT);
-    r.onsuccess=()=>done(r.result as Campaign | undefined);
+    r.onsuccess=()=>done(r.result);
   });
+  return migrateCampaign(raw);
+}
+/** Upgrade v0.2 saves in memory; the next autosave stores schema 3. */
+export function migrateCampaign(obj:unknown):Campaign|undefined {
+  if(validCampaign(obj))return obj;
+  if(!obj||typeof obj!=='object')return undefined;
+  const old=obj as Partial<Campaign>;
+  if(old.schema!==2||old.world?.schema!==2||!Array.isArray(old.world?.workers))return undefined;
+  const upgraded={...old,schema:WORLD_SCHEMA,
+    world:{...old.world,schema:WORLD_SCHEMA,phase:'active',
+      housingCapacity:Math.max(3,old.world.workers.length)}} as Campaign;
+  return validCampaign(upgraded)?upgraded:undefined;
 }
 export async function saveCampaign(world:WorldState,controllers:Controller[],lessonIndex:number):Promise<void>{
   const campaign:Campaign={schema:WORLD_SCHEMA,savedAt:Date.now(),world,controllers,lessonIndex};
@@ -40,9 +52,13 @@ export function validCampaign(obj:unknown):obj is Campaign{
  if(c.schema!==WORLD_SCHEMA||!Number.isFinite(c.savedAt)||c.savedAt!<0||
   !Number.isInteger(c.lessonIndex)||c.lessonIndex!<0||c.lessonIndex!>10000)return false;
  const w=c.world as WorldState|undefined;
- if(!w||w.schema!==WORLD_SCHEMA||!Number.isInteger(w.tick)||w.tick<0||
-  !Number.isInteger(w.seed)||!Array.isArray(w.tiles)||w.tiles.length!==WIDTH*HEIGHT||
-  !Array.isArray(w.workers)||w.workers.length<1||w.workers.length>100000||
+ if(!w||w.schema!==WORLD_SCHEMA||!['dormant','active'].includes(w.phase)||
+  !Number.isInteger(w.housingCapacity)||w.housingCapacity<3||w.housingCapacity>1000000000||
+  !Number.isInteger(w.tick)||w.tick<0||
+  !Number.isInteger(w.seed)||!Array.isArray(w.tiles)||
+  w.tiles.length!==(w.phase==='dormant'?0:WIDTH*HEIGHT)||
+  !Array.isArray(w.workers)||w.workers.length>100000||
+  (w.phase==='dormant'&&(w.workers.length>0||w.buildings?.length>0||w.tick!==0))||
   !Array.isArray(w.buildings)||w.buildings.length>100000||
   !w.stocks||!['wood','stone','food'].every(k=>Number.isFinite(w.stocks[k as keyof typeof w.stocks])&&w.stocks[k as keyof typeof w.stocks]>=0)||
   !Number.isFinite(w.totalHarvested)||!Array.isArray(w.events)||
@@ -87,6 +103,6 @@ export function validCampaign(obj:unknown):obj is Campaign{
 export function downloadCampaign(world:WorldState,controllers:Controller[],lessonIndex:number){
   const payload:Campaign={schema:WORLD_SCHEMA,savedAt:Date.now(),world,controllers,lessonIndex};
   const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
-  const a=document.createElement('a');a.href=url;a.download='code-empire-v0.2.json';a.click();
+  const a=document.createElement('a');a.href=url;a.download='code-empire-v0.3.json';a.click();
   setTimeout(()=>URL.revokeObjectURL(url),3000);
 }

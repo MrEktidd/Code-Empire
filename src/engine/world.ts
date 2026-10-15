@@ -6,7 +6,16 @@ function random01(seed: number, x: number, y: number): number {
   n = Math.imul(n ^ (n >>> 13), 1274126177);
   return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
 }
-export function createWorld(seed = 2048): WorldState {
+/** Before Empire.initialize() runs, no terrain or people have been generated. */
+export function createPendingWorld(seed = 2048): WorldState {
+  return {schema:WORLD_SCHEMA,seed,tick:0,phase:'dormant',housingCapacity:3,tiles:[],
+    workers:[],buildings:[],stocks:{wood:0,stone:0,food:0},totalHarvested:0,events:[]};
+}
+
+/** includePrototypeEntities keeps existing v0.2 fixtures and saves testable.
+ * New v0.3 simulations create a natural environment without initial citizens.
+ */
+export function createWorld(seed = 2048, includePrototypeEntities = true): WorldState {
   const tiles: Tile[] = [];
   for (let y = 0; y < HEIGHT; y++) for (let x = 0; x < WIDTH; x++) {
     const r = random01(seed, x, y);
@@ -19,18 +28,25 @@ export function createWorld(seed = 2048): WorldState {
   }
   const set = (x: number, y: number, ground: Tile['ground'], remaining = 0) => { tiles[y * WIDTH + x] = { x, y, ground, remaining }; };
   for (let y = 3; y <= 7; y++) for (let x = 2; x <= 5; x++) set(x, y, 'meadow');
-  set(3, 5, 'stockpile'); set(4, 7, 'farm'); set(7, 4, 'forest', 72); set(9, 7, 'quarry', 65);
+  set(3, 5, 'stockpile'); if (includePrototypeEntities) set(4, 7, 'farm'); set(7, 4, 'forest', 72); set(9, 7, 'quarry', 65);
   const worker = (id: string, name: string, role: string, x: number, y: number): Worker =>
     ({ id, name, role, x, y, carried: 0, carrying: null, capacity: 6, policy: null,
       task: null, organizationId: null, controlMode: 'independent' });
   const farm: Building = { id: 'farm_000001', name: 'First Light Farm', type: 'farm', x: 4, y: 7, mode: 'food',
     organizationId: null, controlMode: 'independent' };
-  return { schema: WORLD_SCHEMA, seed, tick: 0, tiles, buildings: [farm],
-    workers: [worker('npc_000001', 'Ada', 'Forester', 3, 5),
+  return { schema: WORLD_SCHEMA, seed, tick: 0, phase:'active', housingCapacity:3, tiles,
+    buildings: includePrototypeEntities ? [farm] : [],
+    workers: includePrototypeEntities ? [worker('npc_000001', 'Ada', 'Forester', 3, 5),
       worker('npc_000002', 'Bram', 'Miner', 4, 5),
-      worker('npc_000003', 'Cora', 'Generalist', 3, 6)],
+      worker('npc_000003', 'Cora', 'Generalist', 3, 6)] : [],
     stocks: { wood: 12, stone: 6, food: 48 }, totalHarvested: 0,
-    events: ['First Light founded. Open Ada’s controller and begin your Python lessons.'] };
+    events: includePrototypeEntities
+      ? ['First Light founded. Open Ada’s controller and begin your Python lessons.']
+      : ['Simulation initialized. A habitable clearing awaits its first inhabitants.'] };
+}
+export function createCivilizationWorld(seed = 2048): WorldState {
+  return createWorld(seed, false);
+}
 }
 function nearest(world: WorldState, unit: Worker, resource: 'wood' | 'stone'): Tile | undefined {
   const type = resource === 'wood' ? 'forest' : 'quarry';
@@ -73,6 +89,7 @@ function progressWorker(world: WorldState, unit: Worker): void {
   unit.task = null;
 }
 export function stepWorld(previous: WorldState): WorldState {
+  if (previous.phase === 'dormant') return previous;
   const state: WorldState = {
     ...previous, tick: previous.tick + 1,
     tiles: previous.tiles.map(t => ({ ...t })),
@@ -91,12 +108,22 @@ export function stepWorld(previous: WorldState): WorldState {
   return state;
 }
 export function applyCommands(previous: WorldState, commands: ScriptCommand[]): { world: WorldState; messages: string[] } {
-  const world: WorldState = {
+  let world: WorldState = {
     ...previous, workers: previous.workers.map(w => ({ ...w, task: w.task ? { ...w.task } : null })),
     buildings: previous.buildings.map(b => ({ ...b }))
   };
   const messages: string[] = [];
   for (const cmd of commands.slice(0, 64)) {
+    if (cmd.action === 'initialize') {
+      if (world.phase === 'active') {messages.push('Simulation already initialized.');continue;}
+      world = createCivilizationWorld(world.seed);
+      messages.push('Simulation initialized. Physical environment generated.');
+      continue;
+    }
+    if (world.phase === 'dormant' && cmd.action !== 'log') {
+      messages.push('Initialize the simulation with Empire.initialize() first.');
+      continue;
+    }
     if (cmd.action === 'log') { messages.push(String(cmd.message ?? '').slice(0, 180)); continue; }
     if (cmd.action === 'farm_mode') {
       const farm = world.buildings.find(b => b.id === cmd.buildingId);
@@ -135,6 +162,7 @@ export function catchUp(previous: WorldState, elapsedMs: number): { world: World
 export function worldSnapshot(world: WorldState) {
   return {
     tick: world.tick, day: 1 + Math.floor(world.tick / 24), hour: world.tick % 24,
+    phase: world.phase, housing_capacity: world.housingCapacity,
     stocks: { ...world.stocks },
     workers: world.workers.map(w => ({
       id: w.id, name: w.name, role: w.role, x: w.x, y: w.y,

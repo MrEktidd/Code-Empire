@@ -27,3 +27,14 @@ export function starterControllers(): Controller[] {
     }
   ];
 }
+
+/** Only a global controller exists before founding. The population is intentionally zero. */
+export function initialControllers(): Controller[] {
+  return [{
+    id:'ctrl_000005',ownerEntityId:null,ownerType:'global',filename:'main.py',
+    source:'# CIVILIZATION INITIATIVE // Simulation initialization\n# Run this Python file to generate your first world.\n\nEmpire.initialize()\n',
+    notes:'Empire.initialize() is a one-time command. Running it again will not reset the world.',
+    enabled:false,intervalTicks:12,nextRunTick:1,memory:{},
+    lastStatus:'idle',lastError:null,lastOutput:[],executions:0
+  }];
+}

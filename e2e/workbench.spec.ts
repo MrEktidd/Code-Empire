@@ -1,8 +1,10 @@
 import {test,expect} from '@playwright/test';
 test('new game opens the workbench and both documentation libraries',async({page})=>{
  await page.goto('/');
- await expect(page.getByText(/EARLY ALPHA · v0.2.7/).first()).toBeVisible();
+ await expect(page.getByText(/EARLY ALPHA · v0.3.0/).first()).toBeVisible();
  await page.getByRole('button',{name:/NEW EMPIRE/}).click();
+ await page.getByRole('textbox',{name:'Boot command'}).fill('Empire.boot()');
+ await page.getByRole('textbox',{name:'Boot command'}).press('Enter');
  await expect(page.locator('.desktop-window').first()).toBeVisible();
  await page.getByRole('button',{name:'Python Reference'}).click();
  await expect(page.getByRole('heading',{name:'How Python runs'})).toBeVisible();
