@@ -108,6 +108,14 @@ export default function App(){
  };
  const open=(kind:WindowKind,id?:string)=>setWorkspace(s=>upsertWindow(s,kind,id));
  const editController=(id:string,change:Partial<Controller>)=>setControllers(c=>c.map(x=>x.id===id?{...x,...change}:x));
+ const checkpointController=(id:string)=>{
+  setControllers(current=>current.map(c=>{
+   if(c.id!==id)return c;
+   const previous=c.checkpoints??[];
+   if(previous[previous.length-1]?.source===c.source)return c;
+   return {...c,checkpoints:[...previous,{savedAt:Date.now(),source:c.source}].slice(-20)};
+  }));
+ };
  const openEntity=(id:string)=>{
   setSelection(id);
   const c=controllers.find(x=>x.ownerEntityId===id);
@@ -145,7 +153,7 @@ export default function App(){
   findDoc([...PYTHON_TOPICS,...GAME_DOCUMENTS],win.activeDoc??'')?.title??'Reference Page':
   windowTitle(win,controllers.find(c=>c.id===win.controllerId)?.filename);
  const render=(win:WindowState)=>renderGameWindow(win,{world,controllers,entries,selection,lesson,
-  showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson});
+  showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController});
 
  return <>
   {screen==='menu'?<MainMenu loaded={loaded} saveExists={saveExists}
