@@ -25,13 +25,13 @@ test('genesis rejects incomplete list then creates three archived founders',asyn
  await editor.fill('founders = [\n    {"name": "Adam", "sex": "male"},\n    {"name": "Eve", "sex": "female"},\n    {"name": "Ada", "sex": "female"},\n]\n\nEmpire.seed_population(founders)\n');
  await page.getByRole('button',{name:/RUN SCRIPT/}).click();
  await expect(page.locator('.founder-card')).toHaveCount(3,{timeout:75000});
- await page.getByRole('button',{name:'Genesis Archive'}).click();
+ await page.locator('.sidebar').getByRole('button',{name:'Genesis Archive',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Genesis Archive'})).toBeVisible();
  await expect(page.locator('.genesis-archive .founder-card')).toHaveCount(3);
  await page.getByRole('button',{name:/MENU/}).last().click();
  await page.reload();
  await page.getByRole('button',{name:/CONTINUE CAMPAIGN/}).click();
- await page.getByRole('button',{name:'Genesis Archive'}).click();
+ await page.locator('.sidebar').getByRole('button',{name:'Genesis Archive',exact:true}).click();
  await expect(page.locator('.genesis-archive .founder-card')).toHaveCount(3);
 });
 test('new game opens the workbench and both documentation libraries',async({page})=>{
