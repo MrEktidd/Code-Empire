@@ -17,9 +17,7 @@ const BUILTINS=['print','len','range','int','float','str','list','dict','set','t
  'sorted','enumerate','zip','any','all','isinstance','type','abs','round'].map(label=>({label,type:'function'}));
 export default function PythonEditor({id,source,error,completions=[],onChange,onRun}:Props){
  const host=useRef<HTMLDivElement>(null),view=useRef<EditorView|null>(null);
- const hostRef=useRef(id);
  const [size,setSize]=useState(fontSize);
- hostRef.current=id;
  handlers.set(id,{onChange,onRun});
  useEffect(()=>{
   if(!host.current)return;
