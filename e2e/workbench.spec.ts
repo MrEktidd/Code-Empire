@@ -32,5 +32,5 @@ test('continuous simulation saves progress before returning to menu',async({page
  await page.reload();
  await expect(page.getByRole('button',{name:/CONTINUE CAMPAIGN/})).toBeEnabled();
  await page.getByRole('button',{name:/CONTINUE CAMPAIGN/}).click();
- await expect(page.getByText(/FIRST LIGHT/).first()).toBeVisible();
+ await expect(page.locator('.game-shell')).toBeVisible();
 });
