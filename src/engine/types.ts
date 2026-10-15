@@ -28,6 +28,7 @@ export type Controller = {
   memory: Record<string, unknown>;
   lastStatus: 'idle' | 'success' | 'error';
   lastError: string | null;
+  checkpoints?: { savedAt: number; source: string }[];
   lastOutput: string[];
   executions: number;
 };
