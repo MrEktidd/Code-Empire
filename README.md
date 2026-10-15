@@ -4,13 +4,13 @@
 
 Code-Empire is an open-source browser-based Python coding game. Program individual settlers, learn Python through real simulation challenges, and eventually build automated organizations, kingdoms, industries and interstellar civilizations.
 
-**Current release:** v0.2.7 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
+**Current release:** v0.3.0 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
 
 ## Play
 
 After GitHub Pages is configured to use GitHub Actions: https://mrektidd.github.io/Code-Empire/
 
-The main menu offers **New Empire**, **Continue Campaign**, and **Import Campaign**. New games begin in the settlement age with three NPCs and a farm. The default workbench opens a world map, script explorer, and **Learn Python** academy.
+The main menu offers **New Empire**, **Continue Campaign**, and **Import Campaign**. New games start in a DOS-inspired Civilization Initiative terminal. Enter `Empire.boot()` to launch the workbench, then run `Empire.initialize()` from `main.py` to generate the world. New worlds have zero settlers and a housing capacity of three; creating founders is a later milestone. The default workbench opens a world map, script explorer, and **Learn Python** academy.
 
 ## Learn Python: Start here
 
@@ -102,3 +102,6 @@ This maintenance update adds contextual, linked Python concepts across all 65 la
 This pass reviews all 65 reusable Python articles for clearer and technically accurate explanations, proper indentation guidance, copyable runnable snippets, and game-independent terminology. It fixes the string-escaping and regular-expression examples that previously contained literal newline separators. Every snippet is now compiled and executed by a real Python interpreter in CI, with exact-output checks for representative articles. Internal reference links are also validated by the existing unit tests. This update does not change gameplay, controller APIs, saving, or the guided academy.
 
 To verify the handbook independently, run `python3 scripts/check_python_docs.py`.
+
+## v0.3.0 — The Civilization Initiative
+A new campaign opens with a terminal explaining the confirmed simulation-theory premise. `Empire.boot()` launches the dormant workbench; `Empire.initialize()` in `main.py` submits a validated, one-time initialization command that generates a deterministic uninhabited clearing. Generation feedback is displayed in the workspace, followed by the Overview (population 0, housing capacity 3). Auto time advancement is disabled before initialization. Older v0.2 campaign saves are migrated to the new schema without replacing their inhabitants. Founders, housing construction, named characters and mass-population rules remain planned—not included in this bootstrapping release.

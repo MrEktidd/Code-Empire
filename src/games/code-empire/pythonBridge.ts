@@ -29,8 +29,12 @@ export const CODE_EMPIRE_PYTHON_BRIDGE = [
 '    def order(self, worker_id, task, resource=None, x=None, y=None):',
 '        commands.append({"action":"order","workerId":str(worker_id),"task":str(task),"resource":resource,"x":x,"y":y})',
 '    def log(self, message): commands.append({"action":"log","message":str(message)})',
+'class Empire:',
+'    @staticmethod',
+'    def initialize():',
+'        commands.append({"action":"initialize"})',
 'world=World(_ce_snapshot_value)',
 'owner=world.get(_ce_owner) if _ce_owner else None',
-'namespace.update({"world":world,"self":owner})',
+'namespace.update({"world":world,"self":owner,"Empire":Empire})',
 'callback_args=(world,memory) if owner is None else (owner,world,memory)'
 ].join('\n');

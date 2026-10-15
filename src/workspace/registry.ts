@@ -4,6 +4,14 @@ export type WindowState={id:string;kind:WindowKind;controllerId?:string;x:number
 export type WorkspaceState={windows:WindowState[];focus:string|null;nextZ:number};
 const titles:Record<WindowKind,string>={world:'World View',scripts:'Script Explorer',controller:'Python Controller',learn:'Learn Python',docs:'Game API',python:'Python Reference',console:'Runtime Console',overview:'Colony Overview',settings:'Settings',document:'Reference Page'};
 export function windowTitle(w:WindowState,filename?:string){return w.kind==='controller'?filename??titles.controller:titles[w.kind];}
+export function startupWorkspace():WorkspaceState {
+ return upsertWindow({nextZ:1,focus:null,windows:[]},'controller','ctrl_000005');
+}
+export function activeWorkspace():WorkspaceState {
+ return {nextZ:2,focus:'overview',windows:[
+  {id:'overview',kind:'overview',x:30,y:26,width:740,height:570,minimized:false,maximized:false,z:1,tab:'code'}
+ ]};
+}
 export function newWorkspace():WorkspaceState{
  return {nextZ:5,focus:'world',windows:[
  {id:'world',kind:'world',x:24,y:18,width:640,height:440,minimized:false,maximized:false,z:1,tab:'code'},

@@ -3,6 +3,10 @@ export type ApiEntry = {
   contexts:('npc'|'farm'|'global')[]; returns:string; note:string;
 };
 export const API:ApiEntry[]=[
+ {name:'Empire.initialize',signature:'Empire.initialize()',contexts:['global'],returns:'None',
+  description:'Initialize a new simulation from main.py after launching the Civilization Initiative software.',
+  note:'One-time, validated global command. Re-running cannot replace or reset an active world.',
+  example:'Empire.initialize()'},
  {name:'print',signature:'print(value)',contexts:['npc','farm','global'],returns:'None',
   description:'Display text in this script’s Output tab. Ideal for testing and debugging.',
   note:'Use print() to inspect values while learning. Output is captured per execution.',
