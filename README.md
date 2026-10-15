@@ -4,7 +4,7 @@
 
 Code-Empire is an open-source browser-based Python coding game. Program individual settlers, learn Python through real simulation challenges, and eventually build automated organizations, kingdoms, industries and interstellar civilizations.
 
-**Current release:** v0.2.5 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
+**Current release:** v0.2.6 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
 
 ## Play
 
@@ -28,7 +28,7 @@ The lessons are optional and can be completed while experimenting with the rest 
 
 The **Python Reference** is a separate button in the left rail, independent of both **Learn Python** milestones and **Game API**. It has 65 searchable articles across 10 sections on Python syntax, built-in types (int, float, str, bool), lists (the standard Python array-like container), dictionaries, tuples, sets, control flow, functions, modules, exceptions, debugging and readable code.
 
-Every article has plain-language explanations, a runnable Python example, common mistakes and a copy-example control. Search and browse any article immediately—nothing is gated behind lesson progress. The learning academy has a shortcut to relevant reference articles when a concept is introduced.
+Every article has plain-language explanations, a runnable Python example, common mistakes and a copy-example control. Relevant concepts inside articles are linked like an encyclopedia: following a link opens a new documentation tab, preserves your previous article, and focuses an existing tab instead of duplicating it. Links from Game API articles also take you to the Python Reference. Search and browse any article immediately—nothing is gated behind lesson progress. The learning academy has a shortcut to relevant reference articles when a concept is introduced.
 
 The **Game API** remains the reference for world-specific commands such as `self.order()` and `world.workers()`. Script-attached Docs tabs still show the APIs available to each entity type. This separation is intentional: Python language concepts are documented independently of Code-Empire systems.
 
@@ -92,3 +92,7 @@ The project is MIT licensed and welcomes community contributions. See [architect
 ## v0.2.5 — Reusable engine and workbench
 
 v0.2.5 separates the reusable Python runtime, workbench and documentation browser from the Code-Empire settlement simulation. The documentation library now has 65 game-agnostic topics, clickable links, tabs and independent pop-out windows. The Game API uses the same browser. The editor uses Tab = four spaces, larger/smaller font controls, keyboard Run and error diagnostics. Autosaving uses a bounded dirty-state coordinator, and script executions can no longer overwrite newer source edits. A source history tab keeps recent run checkpoints. The menu labels the prototype **Early Alpha**. See [platform architecture](docs/PLATFORM.md).
+
+## v0.2.6 — Reference navigation
+
+This maintenance update adds contextual, linked Python concepts across all 65 language articles, and links from Game API explanations into Python Reference topics. In-text and related links open a new documentation tab by default; existing tabs are reused rather than duplicated. Sidebar navigation still uses the current tab. The redundant '+ Tab' actions were removed; independently movable Pop Out windows remain available.

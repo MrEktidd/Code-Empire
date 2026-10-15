@@ -1,6 +1,6 @@
 # Reusable programming platform
 
-v0.2.5 separates the programming workbench from Code-Empire's simulated world.
+v0.2.5 established the programming workbench from Code-Empire's simulated world.
 
 ## Boundaries
 
@@ -33,7 +33,7 @@ Controller source revisions are merged against the latest player edits. A comple
 
 ## Documentation
 
-Python language topics are environment-agnostic and must not reference settlers, buildings or Code-Empire data. Game APIs are authored separately and may cross-link to language topics. Both use the same browser with tabs, category navigation, search and independent pop-out windows. Cross-links use stable `scope:id` identifiers and are checked in tests.
+Python language topics are environment-agnostic and must not reference settlers, buildings or Code-Empire data. Game APIs are authored separately and may cross-link to language topics. Both use the same browser with tabs, category navigation, search and independent pop-out windows. Beginning in v0.2.6, linked terms inside articles and related-topic references open destinations in new tabs without duplicating existing tabs; sidebar navigation reuses the current tab. Explicit links use `[[label|scope:stable-id]]` and are validated by tests. Cross-links use stable `scope:id` identifiers and are checked in tests.
 
 ## Release and testing
 

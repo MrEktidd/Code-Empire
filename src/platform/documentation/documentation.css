@@ -6,7 +6,6 @@
 .documentation-tab.active{background:#2a4c4b;border-color:#67ae87}
 .documentation-tab button{background:none;border:0;color:#c1d7d3;padding:8px 9px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .documentation-tab button:first-child{flex:1;min-width:0;text-align:left}
-.documentation-new-tab{background:none;color:#a0cbb7;border:0;font-size:19px}
 .documentation-filter{display:flex;flex-shrink:0;gap:8px;padding:10px 12px;border-bottom:1px solid #344f59;background:#142632}
 .documentation-filter input,.documentation-filter select{min-width:0;background:#0b1923;border:1px solid #43616b;color:#d0e5db;padding:8px;font-size:11px}
 .documentation-filter input{flex:1}.documentation-filter select{width:155px}
