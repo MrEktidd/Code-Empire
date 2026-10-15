@@ -10,15 +10,17 @@ import {lintGutter,setDiagnostics} from '@codemirror/lint';
 export type Suggestion={label:string;detail?:string;info?:string;type?:string};
 type Props={id:string;source:string;error?:string|null;completions?:Suggestion[];onChange:(source:string)=>void;onRun?:()=>void};
 const editorStateCache=new Map<string,EditorState>();
+const handlers=new Map<string,{onChange:(source:string)=>void;onRun?:()=>void}>();
 const FONT_STORAGE='code-empire-editor-font-size';
 function fontSize():number{try{return Math.max(11,Math.min(22,Number(localStorage.getItem(FONT_STORAGE))||13));}catch{return 13;}}
 const BUILTINS=['print','len','range','int','float','str','list','dict','set','tuple','sum','min','max',
  'sorted','enumerate','zip','any','all','isinstance','type','abs','round'].map(label=>({label,type:'function'}));
 export default function PythonEditor({id,source,error,completions=[],onChange,onRun}:Props){
  const host=useRef<HTMLDivElement>(null),view=useRef<EditorView|null>(null);
- const change=useRef(onChange),run=useRef(onRun);
+ const hostRef=useRef(id);
  const [size,setSize]=useState(fontSize);
- change.current=onChange;run.current=onRun;
+ hostRef.current=id;
+ handlers.set(id,{onChange,onRun});
  useEffect(()=>{
   if(!host.current)return;
   const saved=editorStateCache.get(id);
@@ -27,13 +29,13 @@ export default function PythonEditor({id,source,error,completions=[],onChange,on
    EditorState.tabSize.of(4),indentUnit.of('    '),
    lineNumbers(),highlightActiveLine(),drawSelection(),history(),indentOnInput(),bracketMatching(),
    closeBrackets(),highlightSelectionMatches(),python(),syntaxHighlighting(defaultHighlightStyle),lintGutter(),
-   keymap.of([{key:'Mod-Enter',run:()=>{run.current?.();return true;}},...defaultKeymap,...historyKeymap,...completionKeymap,...searchKeymap,indentWithTab]),
+   keymap.of([{key:'Mod-Enter',run:()=>{handlers.get(id)?.onRun?.();return true;}},...defaultKeymap,...historyKeymap,...completionKeymap,...searchKeymap,indentWithTab]),
    autocompletion({override:[ctx=>{
     const word=ctx.matchBefore(/[\w.]*/);
     if(!word||(!ctx.explicit&&word.from===word.to))return null;
     return {from:word.from,options};
    }]}),
-   EditorView.updateListener.of(update=>{if(update.docChanged)change.current(update.state.doc.toString());}),
+   EditorView.updateListener.of(update=>{if(update.docChanged)handlers.get(id)?.onChange(update.state.doc.toString());}),
    EditorView.theme({
     '&':{height:'100%',backgroundColor:'#0b1521',color:'#c9e0d5'},
     '.cm-scroller':{fontFamily:'"Cascadia Code",Consolas,monospace',overflow:'auto'},
