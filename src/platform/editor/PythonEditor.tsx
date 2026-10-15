@@ -20,6 +20,7 @@ export default function PythonEditor({id,source,error,completions=[],onChange,on
  const [size,setSize]=useState(fontSize);
  handlers.set(id,{onChange,onRun});
  useEffect(()=>{
+  handlers.set(id,{onChange,onRun});
   if(!host.current)return;
   const saved=editorStateCache.get(id);
   const options=[...completions,...BUILTINS];
