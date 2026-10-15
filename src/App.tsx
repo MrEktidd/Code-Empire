@@ -22,7 +22,6 @@ import type {WindowKind,WindowState,WorkspaceState} from './workspace/registry';
 import {WindowManager} from './workspace/WindowManager';
 import {LESSONS,lessonCompleted} from './learning/lessons';
 import './styles.css';
-const VERSION='0.2.5';
 const SPEED=[0,1100,420,140];
 type Screen='menu'|'game';
 export default function App(){
@@ -146,7 +145,7 @@ export default function App(){
   findDoc([...PYTHON_TOPICS,...GAME_DOCUMENTS],win.activeDoc??'')?.title??'Reference Page':
   windowTitle(win,controllers.find(c=>c.id===win.controllerId)?.filename);
  const render=(win:WindowState)=>renderGameWindow(win,{world,controllers,entries,selection,lesson,
-  showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc});
+  showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson});
 
  return <>
   {screen==='menu'?<MainMenu loaded={loaded} saveExists={saveExists}
