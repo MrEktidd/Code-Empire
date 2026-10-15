@@ -38,3 +38,41 @@ export function initialControllers(): Controller[] {
     lastStatus:'idle',lastError:null,lastOutput:[],executions:0
   }];
 }
+
+/** Genesis starts with two editable examples; the player must add a third dictionary. */
+export const GENESIS_CONTROLLER_ID='ctrl_genesis_001';
+export function genesisController():Controller {
+  return {
+    id:GENESIS_CONTROLLER_ID,ownerEntityId:null,ownerType:'global',filename:'genesis.py',
+    source:'# GENESIS PROTOCOL // Your first people\n# Change Adam and Eve to any names you like.\n# Add a THIRD dictionary in the list below.\n# Example: {"name": "Alex", "sex": "female"}\n\nfounders = [\n    {"name": "Adam", "sex": "male"},\n    {"name": "Eve", "sex": "female"},\n    # Add your third founder here. Remember the comma!\n]\n\nEmpire.seed_population(founders)\n',
+    notes:'Define three unique founders with name and sex. Initial housing accommodates exactly three.',
+    enabled:false,intervalTicks:24,nextRunTick:1,memory:{},
+    lastStatus:'idle',lastError:null,lastOutput:[],executions:0
+  };
+}
+export function ensureGenesisController(controllers:Controller[],active:boolean):Controller[] {
+  if(!active||controllers.some(c=>c.id===GENESIS_CONTROLLER_ID||c.filename==='genesis.py'))return controllers;
+  return [...controllers,genesisController()];
+}
+/** Every founder remains a named, independently programmable entity. */
+export function founderController(index:number,ownerId:string,name:string):Controller {
+  const id='ctrl_'+String(index).padStart(6,'0');
+  const slug=name.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')||'founder';
+  return npc(id,ownerId,slug+'_'+index+'.py',index===1
+    ? '# Your first founder: '+name.replace(/[\r\n]/g,' ')+'\n\ndef on_tick(self, world, memory):\n    print("Hello, Empire!")\n'
+    : '# Program the actions of '+name.replace(/[\r\n]/g,' ')+'\n\ndef on_tick(self, world, memory):\n    pass\n');
+}
+export function ensureFounderControllers(controllers:Controller[],world:import('./engine/types').WorldState):Controller[] {
+  const existing=new Set(controllers.map(c=>c.ownerEntityId));
+  const filenames=new Set(controllers.map(c=>c.filename));
+  const additions:Controller[]=[];
+  for(const founder of world.genesisArchive){
+    if(existing.has(founder.id))continue;
+    const index=Number(founder.id.replace('npc_',''));
+    const c=founderController(index,founder.id,founder.name);
+    if(controllers.some(other=>other.id===c.id))continue;
+    while(filenames.has(c.filename))c.filename='founder_'+index+'_'+filenames.size+'.py';
+    filenames.add(c.filename);existing.add(founder.id);additions.push(c);
+  }
+  return [...controllers,...additions];
+}

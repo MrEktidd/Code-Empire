@@ -33,10 +33,12 @@ export function migrateCampaign(obj:unknown):Campaign|undefined {
   if(validCampaign(obj))return obj;
   if(!obj||typeof obj!=='object')return undefined;
   const old=obj as Partial<Campaign>;
-  if(old.schema!==2||old.world?.schema!==2||!Array.isArray(old.world?.workers))return undefined;
+  if(![2,3].includes(old.schema??0)||old.world?.schema!==old.schema||!Array.isArray(old.world?.workers))return undefined;
   const upgraded={...old,schema:WORLD_SCHEMA,
-    world:{...old.world,schema:WORLD_SCHEMA,phase:'active',
-      housingCapacity:Math.max(3,old.world.workers.length)}} as Campaign;
+    world:{...old.world,schema:WORLD_SCHEMA,
+      phase:old.schema===2?'active':old.world.phase,
+      housingCapacity:old.schema===2?Math.max(3,old.world.workers.length):old.world.housingCapacity,
+      genesisArchive:[]}} as Campaign;
   return validCampaign(upgraded)?upgraded:undefined;
 }
 export async function saveCampaign(world:WorldState,controllers:Controller[],lessonIndex:number):Promise<void>{
@@ -57,7 +59,8 @@ export function validCampaign(obj:unknown):obj is Campaign{
   !Number.isInteger(w.tick)||w.tick<0||
   !Number.isInteger(w.seed)||!Array.isArray(w.tiles)||
   w.tiles.length!==(w.phase==='dormant'?0:WIDTH*HEIGHT)||
-  !Array.isArray(w.workers)||w.workers.length>100000||
+  !Array.isArray(w.workers)||w.workers.length>100000||w.workers.length>w.housingCapacity||
+  !Array.isArray(w.genesisArchive)||w.genesisArchive.length>10000||
   (w.phase==='dormant'&&(w.workers.length>0||w.buildings?.length>0||w.tick!==0))||
   !Array.isArray(w.buildings)||w.buildings.length>100000||
   !w.stocks||!['wood','stone','food'].every(k=>Number.isFinite(w.stocks[k as keyof typeof w.stocks])&&w.stocks[k as keyof typeof w.stocks]>=0)||
@@ -72,11 +75,17 @@ export function validCampaign(obj:unknown):obj is Campaign{
   if(typeof id!=='string'||id.length<1||id.length>128||ids.has(id))return false;
   ids.add(id);return true;
  };
- if(!w.workers.every(x=>x&&register(x.id)&&typeof x.name==='string'&&typeof x.role==='string'&&grid(x.x,x.y)&&
+ if(!w.workers.every(x=>x&&register(x.id)&&typeof x.name==='string'&&typeof x.role==='string'&&
+  (x.sex===undefined||x.sex==='male'||x.sex==='female')&&grid(x.x,x.y)&&
   integer(x.carried)&&integer(x.capacity)&&x.capacity>0&&x.carried<=x.capacity&&
   [null,'wood','stone'].includes(x.carrying)&&[null,'wood','stone'].includes(x.policy)&&
   [null,'independent','delegated','event_only'].includes(x.controlMode)&&
   (x.task===null||(x.task&&['gather','deposit','move'].includes(x.task.kind)&&grid(x.task.x,x.task.y)))))return false;
+ if(!w.genesisArchive.every(a=>a&&typeof a.id==='string'&&ids.has(a.id)&&
+  w.workers.some(w=>w.id===a.id&&w.name===a.name&&w.sex===a.sex)&&
+  typeof a.name==='string'&&a.name.length>0&&a.name.length<=32&&
+  (a.sex==='male'||a.sex==='female')&&integer(a.createdTick)&&a.createdTick<=w.tick))return false;
+ if(new Set(w.genesisArchive.map(a=>a.id)).size!==w.genesisArchive.length)return false;
  if(!w.buildings.every(x=>x&&register(x.id)&&typeof x.name==='string'&&x.type==='farm'&&grid(x.x,x.y)&&
   ['food','rest'].includes(x.mode)&&['independent','delegated','event_only'].includes(x.controlMode)))return false;
  if(!Array.isArray(c.controllers)||c.controllers.length>120000)return false;
@@ -103,6 +112,6 @@ export function validCampaign(obj:unknown):obj is Campaign{
 export function downloadCampaign(world:WorldState,controllers:Controller[],lessonIndex:number){
   const payload:Campaign={schema:WORLD_SCHEMA,savedAt:Date.now(),world,controllers,lessonIndex};
   const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
-  const a=document.createElement('a');a.href=url;a.download='code-empire-v0.3.json';a.click();
+  const a=document.createElement('a');a.href=url;a.download='code-empire-v0.3.1.json';a.click();
   setTimeout(()=>URL.revokeObjectURL(url),3000);
 }

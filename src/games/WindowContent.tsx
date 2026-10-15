@@ -11,6 +11,8 @@ import type {DocScope} from '../platform/documentation/types';
 import {contextApi} from '../docs/api';
 import {LESSONS} from '../learning/lessons';
 import WorldView from './code-empire/WorldView';
+import {GenesisOverview,GenesisArchive} from './code-empire/GenesisViews';
+import {GENESIS_CONTROLLER_ID} from '../defaults';
 const LESSON_REFERENCE=['printing','variables','functions','if-elif','if-elif','for-loops','dicts','while-loops'];
 export type WindowContext={
  world:WorldState;controllers:Controller[];entries:ExecutionEntry[];selection:string;lesson:number;
@@ -30,14 +32,38 @@ export type WindowContext={
    if(!c)return <p className="muted padded">This controller is unavailable.</p>;
    const owner=[...world.workers,...world.buildings].find(x=>x.id===c.ownerEntityId);
    const recent=entries.filter(e=>e.controllerId===c.id).slice(-12).reverse();
+   const founder=world.genesisArchive.find(x=>x.id===c.ownerEntityId);
+   const worker=world.workers.find(x=>x.id===c.ownerEntityId);
+   const isGenesis=c.id===GENESIS_CONTROLLER_ID;
    return <div className="controller-view">
     <div className="controller-meta"><span className="eyebrow">OWNER: {owner?.name??'WORLD'} · {c.ownerEntityId??'global'}</span><span className={'status-pill '+c.lastStatus}>{c.lastStatus.toUpperCase()}</span></div>
     <nav className="controller-tabs">{(['code','docs','notes','output','history'] as const).map(t=><button key={t} className={win.tab===t?'selected':''} onClick={()=>setWorkspace(s=>updateWindow(s,win.id,{tab:t}))}>{t.toUpperCase()}</button>)}</nav>
+    <div className="controller-main"><div className="controller-content">
     {win.tab==='code'&&<div className="code-area"><PythonEditor id={c.id} source={c.source} error={c.lastError} completions={contextApi(c.ownerType).map(a=>({label:a.name,type:'method',detail:a.signature,info:a.description}))} onChange={source=>editController(c.id,{source})} onRun={()=>{checkpointController(c.id);void execute(c.id);}}/></div>}
     {win.tab==='docs'&&<div className="scroll-pane">{contextApi(c.ownerType).map(api=><article className="api-card" key={api.name}><code>{api.signature}</code><p>{api.description}</p><small>{api.note}</small><pre>{api.example}</pre><button onClick={()=>{checkpointController(c.id);editController(c.id,{source:c.source+'\n'+api.example+'\n'});setWorkspace(s=>updateWindow(s,win.id,{tab:'code'}));}}>APPEND EXAMPLE TO CODE</button></article>)}</div>}
     {win.tab==='notes'&&<div className="notes-area"><p className="muted">Private notes for this controller. Autosaved independently of execution state.</p><textarea aria-label="Script notes" value={c.notes} onChange={e=>editController(c.id,{notes:e.target.value})} placeholder="What should this script do? What can be improved?"/></div>}
     {win.tab==='output'&&<div className="scroll-pane output-pane">{c.lastError&&<div className="error-box">{c.lastError}</div>}{recent.length===0?<p className="muted">No executions yet. Press Run Script to see output.</p>:recent.map((e,i)=><div className={e.success?'log-line':'log-line error'} key={i}><span>[Tick {e.tick}] {e.success?'✓':'✕'} {e.filename}</span>{e.output.map((line,j)=><pre key={j}>{line}</pre>)}{e.error&&<pre>{e.error}</pre>}</div>)}</div>}
     {win.tab==='history'&&<div className="scroll-pane"><p className="muted">Saved source checkpoints. Each successful Run Script creates a checkpoint if your code changed.</p>{(c.checkpoints??[]).slice().reverse().map((h,i)=><article className="api-card" key={i}><strong>{new Date(h.savedAt).toLocaleString()}</strong><pre>{h.source.slice(0,1200)}</pre><button onClick={()=>{checkpointController(c.id);editController(c.id,{source:h.source});setWorkspace(s=>updateWindow(s,win.id,{tab:'code'}));}}>RESTORE THIS REVISION</button></article>)}{!c.checkpoints?.length&&<p>No checkpoints yet. Run a script to create one.</p>}</div>}
+    </div><aside className="controller-inspector" aria-label="Entity information">
+     {isGenesis?<><p className="eyebrow">GENESIS PROTOCOL</p><h3>Founding Population</h3>
+       <p className="muted">Change Adam and Eve if you wish, then write a third dictionary inside the founders list.</p>
+       <pre>{'{"name": "Alex", "sex": "female"},'}</pre>
+       <p className="muted">Keep the brackets and commas. All three people are created together when the script passes validation.</p>
+       <div className="inspector-stat"><span>Population</span><strong>{world.workers.length} / {world.housingCapacity}</strong></div>
+       <div className="inspector-progress"><span style={{width:(world.workers.length/world.housingCapacity*100)+'%'}}/></div>
+       {world.genesisArchive.length>0?<p className="success-message">Genesis complete. Founders recorded in the archive.</p>:<p className="muted">Run this script to submit your founders. Errors appear in the Output tab.</p>}
+       <button className="inspector-action" onClick={()=>open('archive')}>OPEN GENESIS ARCHIVE ↗</button></>:
+       worker?<><p className="eyebrow">CHARACTER INFORMATION</p><h3>{worker.name}</h3><p className="muted">{worker.role} · {founder?'Genesis founder':'Settler'}</p>
+       {founder&&<div className="inspector-stat"><span>Sex</span><strong>{founder.sex}</strong></div>}
+       <div className="inspector-stat"><span>Current task</span><strong>{worker.policy??'Idle'}</strong></div>
+       <div className="inspector-stat"><span>Carrying</span><strong>{worker.carried} / {worker.capacity}</strong></div>
+       <div className="inspector-progress"><span style={{width:(worker.carried/worker.capacity*100)+'%'}}/></div>
+       <div className="inspector-stat"><span>Location</span><strong>{worker.x}, {worker.y}</strong></div>
+       {founder&&<button className="inspector-action" onClick={()=>open('archive')}>VIEW GENESIS ARCHIVE ↗</button>}</>:
+       <><p className="eyebrow">CONTROLLER INFORMATION</p><h3>{c.filename}</h3><p className="muted">Global simulation controller.</p>
+       <div className="inspector-stat"><span>Executions</span><strong>{c.executions}</strong></div>
+       <div className="inspector-stat"><span>Status</span><strong>{c.lastStatus}</strong></div></>}
+    </aside></div>
     <div className="controller-footer"><label><input type="checkbox" checked={c.enabled} onChange={e=>editController(c.id,{enabled:e.target.checked,nextRunTick:world.tick+1})}/> AUTO-RUN</label><label>EVERY <input aria-label="Run interval hours" type="number" min="1" max="999" value={c.intervalTicks} onChange={e=>editController(c.id,{intervalTicks:Math.max(1,Math.min(999,Number(e.target.value)||1))})}/> HOURS</label><button className="accent-btn" disabled={busy} onClick={()=>{checkpointController(c.id);void execute(c.id);}}>{busy?'EXECUTING…':'▶ RUN SCRIPT'}</button></div>
     <div className="rename-row"><label>FILE <input aria-label="Controller filename" value={c.filename} onChange={e=>{const v=e.target.value;if(v.length<=60)editController(c.id,{filename:v});}} onBlur={()=>{if(!/^[\w.-]+\.py$/.test(c.filename)||controllers.some(x=>x.id!==c.id&&x.filename===c.filename))editController(c.id,{filename:c.id+'.py'});}}/></label><span>ID {c.id}</span></div>
    </div>;
@@ -54,6 +80,7 @@ export type WindowContext={
    onCrossLink={(s,id)=>openDoc(s,id)}/>;
  }
     if(win.kind==='console')return <div className="window-content scroll-pane console-lines">{entries.length===0?<p className="muted">Execution and errors will appear here.</p>:entries.slice().reverse().map((e,i)=><div key={i} className={e.success?'log-line':'log-line error'}><b>Tick {e.tick} · {e.filename} {e.success?'✓':'✕'}</b>{e.output.map((s,j)=><pre key={j}>{s}</pre>)}{e.error&&<pre>{e.error}</pre>}</div>)}</div>;
-  if(win.kind==='overview')return <div className="window-content overview"><p className="eyebrow">CIVILIZATION INITIATIVE · SIMULATION STATUS</p><h2>{world.phase==='active'?'First Light':'Awaiting Initialization'}</h2><p className="muted">Settlement Age · Day {1+Math.floor(world.tick/24)}</p><div className="metrics">{Object.entries(world.stocks).map(([k,v])=><div key={k}><small>{k.toUpperCase()}</small><strong>{v}</strong></div>)}</div><h3>Population</h3><div className="metrics"><div><small>INHABITANTS</small><strong>{world.workers.length}</strong></div><div><small>HOUSING CAPACITY</small><strong>{world.workers.length} / {world.housingCapacity}</strong></div></div><p className="muted">{world.workers.length===0?'Your environment is ready, but no civilization exists yet. Naming and creating the first inhabitants is planned for the next gameplay milestone.':'Citizens & production · '+world.totalHarvested+' harvested resources'}</p><h3>Milestones</h3>{world.events.map((e,i)=><p key={i} className="muted">{e}</p>)}</div>;
+  if(win.kind==='archive')return <GenesisArchive world={world} openGenesis={()=>open('controller',GENESIS_CONTROLLER_ID)} openEntity={openEntity}/>;
+  if(win.kind==='overview')return <GenesisOverview world={world} openGenesis={()=>open('controller',GENESIS_CONTROLLER_ID)} openEntity={openEntity} openArchive={()=>open('archive')}/>;
   return <div className="window-content"><h2>Settings</h2><label className="setting-row"><input type="checkbox" checked={beginner} onChange={e=>setBeginner(e.target.checked)}/> Show beginner learning prompts</label><button onClick={()=>setWorkspace(newWorkspace())}>RESET WORKSPACE LAYOUT</button><p className="muted">Scripts and simulation state are saved in IndexedDB. Window layouts are saved in local browser preferences.</p></div>;
  };

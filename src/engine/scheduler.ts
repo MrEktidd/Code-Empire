@@ -1,4 +1,5 @@
-import { applyCommands, stepWorld, worldSnapshot } from './world';
+import { applyCommands, stepWorld, worldSnapshot,validateFounderBatch } from './world';
+import {ensureGenesisController,ensureFounderControllers,GENESIS_CONTROLLER_ID} from '../defaults';
 import { executeBatch } from '../platform/scheduling/executeBatch';
 import type { Controller, ExecutionEntry, ScriptCommand, ScriptResult, WorldState } from './types';
 export type Executor=(source:string,snapshot:ReturnType<typeof worldSnapshot>,memory:Record<string,unknown>,ownerEntityId:string|null)=>Promise<ScriptResult>;
@@ -6,13 +7,14 @@ export type TickResult={world:WorldState;controllers:Controller[];entries:Execut
 export function dueControllers(world:WorldState,controllers:Controller[],limit=16):Controller[]{
  if(world.phase==='dormant')return [];
  const entities=new Map([...world.workers,...world.buildings].map(e=>[e.id,e.controlMode]));
- return controllers.filter(c=>c.enabled && c.nextRunTick<=world.tick &&
+ return controllers.filter(c=>c.id!==GENESIS_CONTROLLER_ID && c.enabled && c.nextRunTick<=world.tick &&
   (c.ownerEntityId===null||entities.get(c.ownerEntityId)==='independent'))
   .sort((a,b)=>a.nextRunTick-b.nextRunTick||a.id.localeCompare(b.id)).slice(0,limit);
 }
 export function validateCommand(world:WorldState,command:ScriptCommand):string|null{
  if(!command||typeof command!=='object')return 'Not a command';
  if(command.action==='initialize')return world.phase==='dormant'?null:'Simulation is already initialized';
+ if(command.action==='seed_population')return validateFounderBatch(world,command.founders);
  if(world.phase==='dormant'&&command.action!=='log')return 'Initialize simulation first';
  if(command.action==='log')return typeof command.message==='string' && command.message.length<=180?null:'Log message must be text under 181 characters';
  if(command.action==='farm_mode'){
@@ -60,11 +62,11 @@ export async function runControllers(world:WorldState,controllers:Controller[],s
  for(const {id,command} of pending){
   const entry=entries.find(e=>e.controllerId===id)!;
   const origin=selected.find(c=>c.id===id)!;
-  const reason=command.action==='initialize'&&origin.ownerType!=='global'
-    ? 'Only a global controller can initialize the simulation'
+  const reason=(command.action==='initialize'||command.action==='seed_population')&&origin.ownerType!=='global'
+    ? 'Only a global controller can initialize or seed the simulation'
     : validateCommand(world,command);
   if(reason){entry.output.push('Rejected command: '+reason);continue;}
-  const target=command.action==='initialize'?'simulation':command.action==='farm_mode'?command.buildingId:command.action==='log'?undefined:command.workerId;
+  const target=command.action==='initialize'?'simulation':command.action==='seed_population'?'genesis':command.action==='farm_mode'?command.buildingId:command.action==='log'?undefined:command.workerId;
   if(target&&claimed.has(target)){entry.output.push('Command conflict: '+target+' was already ordered this tick.');continue;}
   if(target)claimed.add(target);
   accepted.push(command);
@@ -72,7 +74,9 @@ export async function runControllers(world:WorldState,controllers:Controller[],s
  const committed=applyCommands(world,accepted);
  if(committed.messages.length)entries.push({tick:world.tick,controllerId:'engine',filename:'Simulation',success:true,
   output:committed.messages,commands:0});
- return {world:committed.world,controllers:controllers.map(c=>changes.get(c.id)??c),entries};
+ const updated=controllers.map(c=>changes.get(c.id)??c);
+ const withGenesis=ensureGenesisController(updated,committed.world.phase==='active'&&committed.world.workers.length===0);
+ return {world:committed.world,controllers:ensureFounderControllers(withGenesis,committed.world),entries};
 }
 export async function advanceTick(world:WorldState,controllers:Controller[],executor:Executor):Promise<TickResult>{
  const updated=stepWorld(world);

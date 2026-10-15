@@ -22,3 +22,23 @@
 .initialization-box .initialization-current{color:#b5f7c6}.initialization-progress{height:10px;border:1px solid #426c65;background:#0e292b;margin:18px 0}
 .initialization-progress span{display:block;height:100%;background:#65cda0;transition:width .18s}
 .overview .metrics{margin:12px 0 24px}
+
+/* v0.3.1 — Genesis Protocol, archive, and reusable script information pane */
+.controller-main{flex:1;min-height:0;display:flex;overflow:hidden}
+.controller-content{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+.controller-inspector{width:235px;flex-shrink:0;overflow:auto;background:#152633;border-left:1px solid #344d58;padding:13px 12px}
+.controller-inspector h3{margin:7px 0 12px;font-size:16px;color:#def4e8;overflow-wrap:anywhere}
+.controller-inspector pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px;background:#0b1924;border:1px solid #31505b;padding:10px;color:#a6dbbc}
+.controller-inspector .muted{font-size:11px}.inspector-stat{padding:9px 0;display:flex;gap:8px;align-items:center;justify-content:space-between;border-bottom:1px solid #2a4350;font-size:11px}
+.inspector-stat span{color:#97b0b3}.inspector-stat strong{font-size:12px;color:#d5ebdf;text-align:right;overflow-wrap:anywhere}
+.inspector-progress{height:7px;background:#273e44;margin:12px 0;border-radius:6px;overflow:hidden}.inspector-progress span{display:block;height:100%;background:#70ca9e}
+.inspector-action{background:#224b43;border:1px solid #408267;color:#bff4d4;padding:9px 11px;font-size:10px;font-weight:800;letter-spacing:.4px;max-width:100%;text-align:left}
+.genesis-overview .metrics{margin-bottom:16px}.genesis-mission{padding:18px;margin:14px 0;border:1px solid #406b64;background:linear-gradient(130deg,#1d3c37,#132734);color:#d9eee4}
+.genesis-mission h3{margin:7px 0 10px;font-size:19px}.genesis-mission p{font-size:12px;line-height:1.65;color:#c1d8d5}.genesis-mission code{color:#9fe9b6}
+.genesis-mission .accent-btn{margin-top:7px}.founder-list{display:grid;gap:8px;margin:14px 0}
+.founder-card{display:flex;align-items:center;gap:12px;text-align:left;padding:13px 14px;width:100%;border:1px solid #43625b;background:#1a3437;color:#dcece2;cursor:pointer}
+.founder-card:hover{border-color:#8acba4;background:#27483d}.founder-card>span:nth-child(2){min-width:0;flex:1}
+.founder-card strong{display:block;font-size:13px}.founder-card small{display:block;font-size:10px;color:#9bbcb8;margin-top:4px}
+.founder-index{font-family:Consolas,monospace;color:#9ddfbb;font-size:17px}.genesis-archive .muted{max-width:680px}
+@media(max-width:900px){.controller-inspector{width:185px}}
+@media(max-width:650px){.controller-main{flex-direction:column}.controller-inspector{width:100%;max-height:155px;border-left:0;border-top:1px solid #344d58;padding:8px 12px}.controller-inspector h3{margin:3px 0;font-size:13px}.controller-inspector .muted{margin:5px 0}.controller-inspector pre{display:none}.controller-inspector .inspector-stat{padding:4px 0}.controller-inspector .inspector-progress{margin:4px 0}.controller-footer{flex-shrink:0}}
