@@ -47,7 +47,6 @@ export function createWorld(seed = 2048, includePrototypeEntities = true): World
 export function createCivilizationWorld(seed = 2048): WorldState {
   return createWorld(seed, false);
 }
-}
 function nearest(world: WorldState, unit: Worker, resource: 'wood' | 'stone'): Tile | undefined {
   const type = resource === 'wood' ? 'forest' : 'quarry';
   return world.tiles.filter(t => t.ground === type && t.remaining > 0)
