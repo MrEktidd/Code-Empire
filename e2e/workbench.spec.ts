@@ -28,7 +28,7 @@ test('continuous simulation saves progress before returning to menu',async({page
    });db.close();return tick;
  });
  expect(current).toBeGreaterThan(0);
- await page.getByRole('button',{name:'MENU'}).last().click();
+ await page.getByRole('button',{name:/MENU/}).last().click();
  await page.reload();
  await expect(page.getByRole('button',{name:/CONTINUE CAMPAIGN/})).toBeEnabled();
  await page.getByRole('button',{name:/CONTINUE CAMPAIGN/}).click();
