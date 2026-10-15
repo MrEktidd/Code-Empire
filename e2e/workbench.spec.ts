@@ -11,7 +11,7 @@ test('new game opens the workbench and both documentation libraries',async({page
  await page.getByRole('button',{name:/Pop out/}).click();
  await expect(page.locator('.desktop-window')).toHaveCount(5);
  await page.getByRole('button',{name:'Game API'}).click();
- await expect(page.getByText('CODE-EMPIRE GAME API').first()).toBeVisible();
+ await expect(page.locator('.documentation-toolbar strong').filter({hasText:'GAME API'}).first()).toBeVisible();
 });
 test('continuous simulation saves progress before returning to menu',async({page})=>{
  await page.goto('/');
