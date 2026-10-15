@@ -26,7 +26,7 @@ The lessons are optional and can be completed while experimenting with the rest 
 
 ## Python Reference — always available
 
-The **Python Reference** is a separate button in the left rail, independent of both **Learn Python** milestones and **Game API**. It has 45 searchable articles across 10 sections on Python syntax, built-in types (int, float, str, bool), lists (the standard Python array-like container), dictionaries, tuples, sets, control flow, functions, modules, exceptions, debugging and readable code.
+The **Python Reference** is a separate button in the left rail, independent of both **Learn Python** milestones and **Game API**. It has 65 searchable articles across 10 sections on Python syntax, built-in types (int, float, str, bool), lists (the standard Python array-like container), dictionaries, tuples, sets, control flow, functions, modules, exceptions, debugging and readable code.
 
 Every article has plain-language explanations, a runnable Python example, common mistakes and a copy-example control. Search and browse any article immediately—nothing is gated behind lesson progress. The learning academy has a shortcut to relevant reference articles when a concept is introduced.
 
