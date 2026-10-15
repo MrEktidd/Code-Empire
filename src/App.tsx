@@ -2,7 +2,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import type {ChangeEvent} from 'react';
 import MainMenu from './app/MainMenu';
 import {renderGameWindow} from './games/WindowContent';
-import {createWorld,createPendingWorld,catchUp} from './engine/world';
+import {createPendingWorld,catchUp} from './engine/world';
 import {CODE_EMPIRE_PYTHON_BRIDGE} from './games/code-empire/pythonBridge';
 import {SaveCoordinator} from './platform/persistence/SaveCoordinator';
 import {mergeRuntimeControllers} from './platform/controllers/mergeRuntime';
@@ -13,7 +13,7 @@ import {PYTHON_TOPICS} from './content/python/topics';
 import {GAME_DOCUMENTS} from './games/code-empire/docs';
 import {advanceTick,runControllers} from './engine/scheduler';
 import type {Campaign,Controller,ExecutionEntry,WorldState,ScriptCommand} from './engine/types';
-import {starterControllers,initialControllers} from './defaults';
+import {initialControllers} from './defaults';
 import {PythonRuntime} from './platform/python/PythonRuntime';
 import {loadCampaign,saveCampaign,downloadCampaign,validCampaign,migrateCampaign} from './storage/db';
 import {loadWorkspace,saveWorkspace} from './storage/workspace';
@@ -210,7 +210,7 @@ export default function App(){
     <p className="boot-footnote">Press ENTER to execute · <button type="button" onClick={()=>setScreen('menu')}>RETURN TO MENU</button></p>
    </section></main>:
    <div className="game-shell"><header className="game-header"><button className="brand-button" onClick={()=>{setSpeed(0);void saver.current?.flush().catch(()=>{});setScreen('menu');}}>⌘ <b>CODE<span>EMPIRE</span></b></button><span>{world.phase==='dormant'?'SIMULATION OFFLINE':'FIRST LIGHT'} <span className="divider">/</span> {world.phase==='dormant'?'AWAITING INITIALIZATION':'SETTLEMENT AGE'}</span><span>DAY {1+Math.floor(world.tick/24)} · {String(world.tick%24).padStart(2,'0')}:00</span><div className="clock-actions"><button disabled={world.phase==='dormant'||loadingStep>=0} className={speed===0?'active':''} onClick={()=>setSpeed(0)}>Ⅱ</button><button disabled={busy||world.phase==='dormant'||loadingStep>=0} onClick={()=>void execute()}>⏭</button>{[1,2,3].map(v=><button key={v} disabled={world.phase==='dormant'||loadingStep>=0} className={speed===v?'active':''} onClick={()=>setSpeed(v)}>{v}×</button>)}</div></header>
-   <div className="game-row"><aside className="sidebar">{(world.phase==='dormant'?[['scripts','⌘','Scripts'],['python','Py','Python Reference'],['docs','▤','Game API']]:[['overview','◫','Overview'],['world','◇','World'],['scripts','⌘','Scripts'],['learn','✧','Learn Python'],['python','Py','Python Reference'],['docs','▤','Game API'],['console','>_','Console'],['settings','⚙','Settings']] as const).map(([kind,icon,label])=><button key={kind} title={label} aria-label={label} onClick={()=>open(kind)}><span>{icon}</span><small>{label}</small></button>)}</aside>
+   <div className="game-row"><aside className="sidebar">{(world.phase==='dormant'?[['scripts','⌘','Scripts'],['python','Py','Python Reference'],['docs','▤','Game API']]:[['overview','◫','Overview'],['world','◇','World'],['scripts','⌘','Scripts'],['learn','✧','Learn Python'],['python','Py','Python Reference'],['docs','▤','Game API'],['console','>_','Console'],['settings','⚙','Settings']] as const).map(([kind,icon,label])=><button key={kind} title={label} aria-label={label} onClick={()=>open(kind as WindowKind)}><span>{icon}</span><small>{label}</small></button>)}</aside>
    <div className="desktop-area"><WindowManager state={workspace} setState={setWorkspace} title={title} render={render}/>
     {loadingStep>=0&&<div className="initialization-overlay" role="status" aria-live="polite"><div className="initialization-box"><p className="eyebrow">CIVILIZATION INITIATIVE // WORLD GENERATOR</p><h2>INITIALIZING SIMULATION</h2>
      <div className="initialization-progress"><span style={{width:(100*Math.min(loadingStep,BOOT_MESSAGES.length)/BOOT_MESSAGES.length)+'%'}}/></div>

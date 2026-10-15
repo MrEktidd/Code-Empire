@@ -1,23 +1,31 @@
 import {test,expect} from '@playwright/test';
-test('new game opens the workbench and both documentation libraries',async({page})=>{
+async function enterWorkbench(page: import('@playwright/test').Page){
  await page.goto('/');
- await expect(page.getByText(/EARLY ALPHA · v0.3.0/).first()).toBeVisible();
  await page.getByRole('button',{name:/NEW EMPIRE/}).click();
  await page.getByRole('textbox',{name:'Boot command'}).fill('Empire.boot()');
  await page.getByRole('textbox',{name:'Boot command'}).press('Enter');
+ await expect(page.getByRole('button',{name:'Scripts'})).toBeVisible();
+}
+async function initializeWorld(page: import('@playwright/test').Page){
+ await page.getByRole('button',{name:/RUN SCRIPT/}).click();
+ await expect(page.getByRole('heading',{name:'INITIALIZING SIMULATION'})).toBeVisible({timeout:75000});
+ await expect(page.getByRole('heading',{name:'First Light'})).toBeVisible({timeout:15000});
+}
+test('new game opens the workbench and both documentation libraries',async({page})=>{
+ await enterWorkbench(page);
  await expect(page.locator('.desktop-window').first()).toBeVisible();
  await page.getByRole('button',{name:'Python Reference'}).click();
  await expect(page.getByRole('heading',{name:'How Python runs'})).toBeVisible();
  await page.getByRole('button',{name:/Lists/}).click();
  await expect(page.getByRole('heading',{name:/Lists/})).toBeVisible();
  await page.getByRole('button',{name:/Pop out/}).click();
- await expect(page.locator('.desktop-window')).toHaveCount(5);
+ await expect(page.locator('.desktop-window')).toHaveCount(3);
  await page.getByRole('button',{name:'Game API'}).click();
  await expect(page.locator('.documentation-toolbar strong').filter({hasText:'GAME API'}).first()).toBeVisible();
 });
 test('continuous simulation saves progress before returning to menu',async({page})=>{
- await page.goto('/');
- await page.getByRole('button',{name:/NEW EMPIRE/}).click();
+ await enterWorkbench(page);
+ await initializeWorld(page);
  await page.getByRole('button',{name:'3×'}).click();
  await page.waitForTimeout(1400);
  const current=await page.evaluate(async()=>{
@@ -37,20 +45,17 @@ test('continuous simulation saves progress before returning to menu',async({page
  await expect(page.locator('.game-shell')).toBeVisible();
 });
 
-test('Python worker executes an NPC controller end-to-end',async({page})=>{
+test('Python worker initializes a zero-population world end-to-end',async({page})=>{
  test.setTimeout(120000);
- await page.goto('/');
- await page.getByRole('button',{name:/NEW EMPIRE/}).click();
- await page.getByRole('button',{name:'Scripts'}).click();
- await page.getByRole('button',{name:/ada.py/}).first().click();
- await page.getByRole('button',{name:/RUN SCRIPT/}).click();
- await page.getByRole('button',{name:'OUTPUT'}).click();
- await expect(page.getByText('Hello, Empire!',{exact:false}).last()).toBeVisible({timeout:75000});
+ await enterWorkbench(page);
+ await initializeWorld(page);
+ await expect(page.getByText('0 / 3',{exact:false}).first()).toBeVisible();
+ await page.getByRole('button',{name:'World'}).click();
+ await expect(page.getByText('THE FRONTIER',{exact:false})).toBeVisible();
 });
 
 test('in-article Python links open and reuse tabs without losing the source',async({page})=>{
- await page.goto('/');
- await page.getByRole('button',{name:/NEW EMPIRE/}).click();
+ await enterWorkbench(page);
  await page.getByRole('button',{name:'Python Reference'}).click();
  const browser=page.locator('.documentation-browser').filter({has:page.locator('.documentation-toolbar strong:has-text("PYTHON REFERENCE")')});
  await browser.locator('.documentation-directory').getByRole('button',{name:/Lists/}).click();
@@ -69,8 +74,7 @@ test('in-article Python links open and reuse tabs without losing the source',asy
 });
 
 test('Game API language links open the Python Reference without closing the API',async({page})=>{
- await page.goto('/');
- await page.getByRole('button',{name:/NEW EMPIRE/}).click();
+ await enterWorkbench(page);
  await page.getByRole('button',{name:'Game API'}).click();
  const game=page.locator('.documentation-browser').filter({has:page.locator('.documentation-toolbar strong:has-text("GAME API")')});
  await game.locator('.documentation-directory').getByRole('button',{name:'world.workers',exact:true}).click();
