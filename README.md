@@ -4,7 +4,7 @@
 
 Code-Empire is an open-source browser-based Python coding game. Program individual settlers, learn Python through real simulation challenges, and eventually build automated organizations, kingdoms, industries and interstellar civilizations.
 
-**Current release:** v0.2.6 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
+**Current release:** v0.2.7 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
 
 ## Play
 
@@ -96,3 +96,9 @@ v0.2.5 separates the reusable Python runtime, workbench and documentation browse
 ## v0.2.6 — Reference navigation
 
 This maintenance update adds contextual, linked Python concepts across all 65 language articles, and links from Game API explanations into Python Reference topics. In-text and related links open a new documentation tab by default; existing tabs are reused rather than duplicated. Sidebar navigation still uses the current tab. The redundant '+ Tab' actions were removed; independently movable Pop Out windows remain available.
+
+## v0.2.7 — Python documentation accuracy
+
+This pass reviews all 65 reusable Python articles for clearer and technically accurate explanations, proper indentation guidance, copyable runnable snippets, and game-independent terminology. It fixes the string-escaping and regular-expression examples that previously contained literal newline separators. Every snippet is now compiled and executed by a real Python interpreter in CI, with exact-output checks for representative articles. Internal reference links are also validated by the existing unit tests. This update does not change gameplay, controller APIs, saving, or the guided academy.
+
+To verify the handbook independently, run `python3 scripts/check_python_docs.py`.
