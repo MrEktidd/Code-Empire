@@ -1,4 +1,5 @@
 import {useMemo,useState} from 'react';
+import type {ReactNode} from 'react';
 import type {DocArticle,DocScope} from './types';
 import {docKey,findDoc,searchDocs} from './types';
 import './documentation.css';
@@ -24,6 +25,14 @@ export default function DocumentationBrowser({scope,articles,tabs,activeDoc,onCh
  const navigate=(scopeValue:DocScope,id:string,newTab=false)=>{
   const record=articles.find(x=>x.id===id&&x.scope===scopeValue);
   if(record)open(record,newTab);else onCrossLink(scopeValue,id);
+ };
+ const renderLinkedParagraph=(value:string):ReactNode[]=>{
+  const split=value.split(/(\\[\\[[^\\]]+\\|(?:python|game):[^\\]]+\\]\\])/g);
+  return split.map((piece,index)=>{
+   const m=piece.match(/^\\[\\[([^|]+)\\|(python|game):([^\\]]+)\\]\\]$/);
+   if(!m)return piece;
+   return <button key={index} className="documentation-inline-link" onClick={()=>navigate(m[2] as DocScope,m[3])}>{m[1]}</button>;
+  });
  };
  const close=(key:string)=>{
   const next=tabList.filter(t=>t!==key);
@@ -71,7 +80,7 @@ export default function DocumentationBrowser({scope,articles,tabs,activeDoc,onCh
       <h2>{active.title}</h2>
       {active.signature&&<pre className="documentation-signature">{active.signature}</pre>}
       <p className="documentation-summary">{active.summary}</p>
-      {active.body.split('\n\n').filter(Boolean).map((paragraph,i)=><p key={i}>{paragraph}</p>)}
+      {active.body.split('\n\n').filter(Boolean).map((paragraph,i)=><p key={i}>{renderLinkedParagraph(paragraph)}</p>)}
       {active.example&&<><h3>Example</h3><pre className="documentation-code"><code>{active.example}</code></pre>
        <button className="documentation-copy" onClick={()=>{void navigator.clipboard?.writeText(active.example);}}>⧉ Copy example</button></>}
       {active.tip&&<div className="documentation-tip"><strong>Remember</strong><p>{active.tip}</p></div>}
