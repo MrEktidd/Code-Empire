@@ -14,11 +14,11 @@ export class SaveCoordinator<T> {
     private debounceMs=800,private periodicMs=5000){}
   start():void {
     if(this.ticker)return;
-    this.ticker=setInterval(()=>{if(this.dirty)void this.flush();},this.periodicMs);
+    this.ticker=setInterval(()=>{if(this.dirty)void this.flush().catch(()=>{});},this.periodicMs);
   }
   markDirty():void {
     this.dirty=true;this.generation++;this.status='unsaved';this.notify('unsaved');
-    if(!this.timeout)this.timeout=setTimeout(()=>{this.timeout=undefined;void this.flush();},this.debounceMs);
+    if(!this.timeout)this.timeout=setTimeout(()=>{this.timeout=undefined;void this.flush().catch(()=>{});},this.debounceMs);
   }
   async flush():Promise<void>{
     if(this.timeout){clearTimeout(this.timeout);this.timeout=undefined;}
