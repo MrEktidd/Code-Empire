@@ -214,7 +214,7 @@ export default function App(){
    <div className="desktop-area"><WindowManager state={workspace} setState={setWorkspace} title={title} render={render}/>
     {loadingStep>=0&&<div className="initialization-overlay" role="status" aria-live="polite"><div className="initialization-box"><p className="eyebrow">CIVILIZATION INITIATIVE // WORLD GENERATOR</p><h2>INITIALIZING SIMULATION</h2>
      <div className="initialization-progress"><span style={{width:(100*Math.min(loadingStep,BOOT_MESSAGES.length)/BOOT_MESSAGES.length)+'%'}}/></div>
-     {BOOT_MESSAGES.slice(0,loadingStep+1).map((m,i)=><p className={i===loadingStep?'initialization-current':''} key={i}>{i===loadingStep?'› ':'✓ '}{m}</p>)}
+     {BOOT_MESSAGES.slice(0,loadingStep+1).map((m,i)=><p className={i===loadingStep?'initialization-current':''} key={i}>{i===loadingStep?'› ':'✓ '}{m}</p>)}</div>}
     </div></div><div className="taskbar">{workspace.windows.map(w=><button key={w.id} className={workspace.focus===w.id&&!w.minimized?'focused':''} onClick={()=>setWorkspace(s=>w.minimized?focusWindow(s,w.id):updateWindow(s,w.id,{minimized:true}))}>{title(w)}</button>)}</div></div></div>
    <footer className="game-footer"><span className="footer-notice">{status} · {saveStatus}{offline>0?' · +'+offline+'h offline progress':''}</span>{world.workers.length>0&&beginner&&lesson<LESSONS.length&&<button className="lesson-shortcut" onClick={()=>open('learn')}>✧ Lesson {lesson+1}: {LESSONS[lesson].title}</button>}<button onClick={()=>downloadCampaign(world,controllers,lesson)}>⇩ EXPORT</button><button onClick={()=>fileInput.current?.click()}>⇧ IMPORT</button><button onClick={()=>{setSpeed(0);void saver.current?.flush().catch(()=>{});setScreen('menu');}}>⌂ MENU</button></footer>
    </div>}
