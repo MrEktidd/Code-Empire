@@ -58,7 +58,7 @@ test('in-article Python links open and reuse tabs without losing the source',asy
  await browser.locator('.documentation-article').getByRole('button',{name:'int',exact:true}).click();
  await expect(browser.locator('.documentation-article h2')).toContainText('Integers');
  await expect(tabs).toHaveCount(2);
- await browser.locator('.documentation-tabs').getByRole('button',{name:/Lists/}).click();
+ await browser.locator('.documentation-tabs .documentation-tab').filter({hasText:'Lists'}).locator('button').first().click();
  await expect(browser.locator('.documentation-article h2')).toContainText('Lists');
  await browser.locator('.documentation-article').getByRole('button',{name:'int',exact:true}).click();
  await expect(tabs).toHaveCount(2);
