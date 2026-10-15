@@ -20,7 +20,7 @@ test('genesis rejects incomplete list then creates three archived founders',asyn
  await page.getByRole('button',{name:/RUN SCRIPT/}).click();
  await page.getByRole('button',{name:'OUTPUT'}).click();
  await expect(page.getByText(/Define exactly three founders/)).toBeVisible({timeout:75000});
- await page.getByRole('button',{name:'CODE'}).click();
+ await page.getByRole('button',{name:'CODE',exact:true}).click();
  const editor=page.locator('.controller-view .cm-content');
  await editor.fill('founders = [\n    {"name": "Adam", "sex": "male"},\n    {"name": "Eve", "sex": "female"},\n    {"name": "Ada", "sex": "female"},\n]\n\nEmpire.seed_population(founders)\n');
  await page.getByRole('button',{name:/RUN SCRIPT/}).click();
