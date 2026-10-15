@@ -1,5 +1,5 @@
-import type {ScriptResult} from '../../engine/types';
-type Pending={resolve:(value:ScriptResult)=>void;reject:(reason:Error)=>void;timer:ReturnType<typeof setTimeout>};
+import type {PythonResult} from '../controllers/types';
+type Pending={resolve:(value:PythonResult)=>void;reject:(reason:Error)=>void;timer:ReturnType<typeof setTimeout>};
 export class PythonRuntime {
  private worker:Worker|null=null;
  private ready:Promise<void>|null=null;
@@ -26,12 +26,12 @@ export class PythonRuntime {
   });
   return this.ready;
  }
- async run(source:string,snapshot:unknown,memory:Record<string,unknown>,ownerEntityId:string|null,adapterSource:string):Promise<ScriptResult>{
+ async run<TCommand=unknown>(source:string,snapshot:unknown,memory:Record<string,unknown>,ownerEntityId:string|null,adapterSource:string):Promise<PythonResult<TCommand>>{
   await this.initialize();
-  return new Promise<ScriptResult>((resolve,reject)=>{
+  return new Promise<PythonResult<TCommand>>((resolve,reject)=>{
    const id=++this.counter;
    const timer=setTimeout(()=>{this.reset();reject(new Error('Script exceeded its 2-second execution budget. Python runtime restarted.'));},2000);
-   this.pending.set(id,{resolve,reject,timer});
+   this.pending.set(id,{resolve:resolve as (value:PythonResult)=>void,reject,timer});
    this.worker!.postMessage({type:'run',id,source,snapshot,memory,ownerEntityId,adapterSource});
   });
  }

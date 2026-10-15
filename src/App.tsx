@@ -12,7 +12,7 @@ import {findDoc} from './platform/documentation/types';
 import {PYTHON_TOPICS} from './content/python/topics';
 import {GAME_DOCUMENTS} from './games/code-empire/docs';
 import {advanceTick,runControllers} from './engine/scheduler';
-import type {Campaign,Controller,ExecutionEntry,WorldState} from './engine/types';
+import type {Campaign,Controller,ExecutionEntry,WorldState,ScriptCommand} from './engine/types';
 import {starterControllers} from './defaults';
 import {PythonRuntime} from './platform/python/PythonRuntime';
 import {loadCampaign,saveCampaign,downloadCampaign,validCampaign} from './storage/db';
@@ -78,9 +78,9 @@ export default function App(){
    const {world:w,controllers:c}=latest.current;
    const result=manualId?
     await runControllers(w,c,c.filter(x=>x.id===manualId),(source,snapshot,memory,ownerId)=>
-      runtime.current!.run(source,snapshot,memory,ownerId,CODE_EMPIRE_PYTHON_BRIDGE),true):
+      runtime.current!.run<ScriptCommand>(source,snapshot,memory,ownerId,CODE_EMPIRE_PYTHON_BRIDGE),true):
     await advanceTick(w,c,(source,snapshot,memory,ownerId)=>
-      runtime.current!.run(source,snapshot,memory,ownerId,CODE_EMPIRE_PYTHON_BRIDGE));
+      runtime.current!.run<ScriptCommand>(source,snapshot,memory,ownerId,CODE_EMPIRE_PYTHON_BRIDGE));
    if(sessionAtStart!==sessionVersion.current)return;
    applyState(result.world,result.controllers,result.entries,c);
    if(result.entries.some(x=>!x.success))setStatus('Python error — inspect the controller Output tab.');

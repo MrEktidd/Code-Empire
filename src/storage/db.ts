@@ -68,7 +68,7 @@ export function validCampaign(obj:unknown):obj is Campaign{
  return c.controllers.every(script=>{
   if(!script||typeof script.id!=='string'||controllerIds.has(script.id)||
    typeof script.filename!=='string'||script.filename.length>160||filenames.has(script.filename)||
-   !script.filename.endsWith('.py')||typeof script.source!=='string'||script.source.length>1000000||
+   typeof script.source!=='string'||script.source.length>1000000||
    typeof script.notes!=='string'||script.notes.length>200000||
    !['npc','farm','global'].includes(script.ownerType)||
    (script.ownerEntityId!==null&&!ids.has(script.ownerEntityId))||
