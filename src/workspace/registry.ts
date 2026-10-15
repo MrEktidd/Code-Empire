@@ -5,7 +5,6 @@ export type WorkspaceState={windows:WindowState[];focus:string|null;nextZ:number
 const titles:Record<WindowKind,string>={world:'World View',scripts:'Script Explorer',controller:'Python Controller',learn:'Learn Python',docs:'Game API',python:'Python Reference',console:'Runtime Console',overview:'Colony Overview',settings:'Settings',document:'Reference Page'};
 export function windowTitle(w:WindowState,filename?:string){return w.kind==='controller'?filename??titles.controller:titles[w.kind];}
 export function startupWorkspace():WorkspaceState {
- const base=newWorkspace();
  return upsertWindow({nextZ:1,focus:null,windows:[]},'controller','ctrl_000005');
 }
 export function activeWorkspace():WorkspaceState {

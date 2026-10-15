@@ -17,7 +17,7 @@ import {initialControllers} from './defaults';
 import {PythonRuntime} from './platform/python/PythonRuntime';
 import {loadCampaign,saveCampaign,downloadCampaign,validCampaign,migrateCampaign} from './storage/db';
 import {loadWorkspace,saveWorkspace} from './storage/workspace';
-import {newWorkspace,startupWorkspace,activeWorkspace,upsertWindow,focusWindow,updateWindow,windowTitle} from './workspace/registry';
+import {startupWorkspace,activeWorkspace,upsertWindow,focusWindow,updateWindow,windowTitle} from './workspace/registry';
 import type {WindowKind,WindowState,WorkspaceState} from './workspace/registry';
 import {WindowManager} from './workspace/WindowManager';
 import {LESSONS,lessonCompleted} from './learning/lessons';
