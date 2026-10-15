@@ -45,3 +45,23 @@ test('Python worker executes an NPC controller end-to-end',async({page})=>{
  await page.getByRole('button',{name:'OUTPUT'}).click();
  await expect(page.getByText('Hello, Empire!',{exact:false}).last()).toBeVisible({timeout:75000});
 });
+
+test('in-article Python links open and reuse tabs without losing the source',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:/NEW EMPIRE/}).click();
+ await page.getByRole('button',{name:'Python Reference'}).click();
+ const browser=page.locator('.documentation-browser').filter({has:page.locator('.documentation-toolbar strong:has-text("PYTHON REFERENCE")')});
+ await browser.locator('.documentation-directory').getByRole('button',{name:/Lists/}).click();
+ await expect(browser.locator('.documentation-article h2')).toContainText('Lists');
+ const tabs=browser.locator('.documentation-tabs .documentation-tab');
+ await expect(tabs).toHaveCount(1);
+ await browser.locator('.documentation-article').getByRole('button',{name:'int',exact:true}).click();
+ await expect(browser.locator('.documentation-article h2')).toContainText('Integers');
+ await expect(tabs).toHaveCount(2);
+ await browser.locator('.documentation-tabs').getByRole('button',{name:/Lists/}).click();
+ await expect(browser.locator('.documentation-article h2')).toContainText('Lists');
+ await browser.locator('.documentation-article').getByRole('button',{name:'int',exact:true}).click();
+ await expect(tabs).toHaveCount(2);
+ await expect(browser.locator('.documentation-article-toolbar').getByRole('button',{name:/Pop out/})).toBeVisible();
+ await expect(browser.locator('.documentation-article-toolbar').getByRole('button',{name:/Tab/})).toHaveCount(0);
+});
