@@ -11,7 +11,7 @@ describe('document link integrity',()=>{
  });
  it('has portable Python explanations, not world-specific examples',()=>{
   for(const topic of PYTHON_TOPICS){
-   expect(topic.example).not.toMatch(/npc_0|Ada|Bram|Cora|First Light|world\.workers|woodcutt/i);
+   expect(topic.body+' '+topic.tip+' '+topic.example).not.toMatch(/npc_0|Ada|Bram|Cora|First Light|world\.workers|woodcutt|Code-Empire/i);
    expect(topic.summary.length).toBeGreaterThan(8);
   }
   expect(PYTHON_TOPICS.length).toBeGreaterThanOrEqual(60);
