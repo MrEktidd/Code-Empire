@@ -45,6 +45,7 @@ export default function App(){
  const saver=useRef<SaveCoordinator<{world:WorldState;controllers:Controller[];lesson:number}>|null>(null);
  const latest=useRef({world,controllers,lesson});
  const gate=useRef(false);
+ const sessionVersion=useRef(0);
  const fileInput=useRef<HTMLInputElement>(null);
  latest.current={world,controllers,lesson};
  useEffect(()=>{
@@ -72,6 +73,7 @@ export default function App(){
  const execute=useCallback(async(manualId?:string)=>{
   if(gate.current||!runtime.current||screen!=='game')return;
   gate.current=true;setBusy(true);
+  const sessionAtStart=sessionVersion.current;
   try{
    const {world:w,controllers:c}=latest.current;
    const result=manualId?
@@ -79,6 +81,7 @@ export default function App(){
       runtime.current!.run(source,snapshot,memory,ownerId,CODE_EMPIRE_PYTHON_BRIDGE),true):
     await advanceTick(w,c,(source,snapshot,memory,ownerId)=>
       runtime.current!.run(source,snapshot,memory,ownerId,CODE_EMPIRE_PYTHON_BRIDGE));
+   if(sessionAtStart!==sessionVersion.current)return;
    applyState(result.world,result.controllers,result.entries,c);
    if(result.entries.some(x=>!x.success))setStatus('Python error — inspect the controller Output tab.');
    else setStatus(manualId?'Script executed.':'Simulation advanced.');
@@ -89,14 +92,18 @@ export default function App(){
   const timer=setInterval(()=>{void execute();},SPEED[speed]);return()=>clearInterval(timer);
  },[screen,speed,execute]);
  const newGame=async()=>{
+  if(gate.current){setStatus('Finish the current Python execution before starting a campaign.');return;}
   await saver.current?.flush().catch(()=>{});
+  sessionVersion.current++;
   if(saveExists&&!window.confirm('Start a new campaign? The existing autosave will be replaced. Export your save first if needed.'))return;
   setSpeed(0);setWorld(createWorld());setControllers(starterControllers());setLesson(0);setEntries([]);
   setWorkspace(newWorkspace());setStatus('New settlement founded. Open Learn Python to begin.');
   setOffline(0);setSelection('npc_000001');setScreen('game');
  };
  const continueGame=async()=>{
+  if(gate.current){setStatus('A Python execution is still running.');return;}
   await saver.current?.flush().catch(()=>{});
+  sessionVersion.current++;
   try{
    const value=await loadCampaign();
    if(!validCampaign(value)){setStatus('No valid campaign to continue.');return;}
@@ -126,6 +133,7 @@ export default function App(){
   if(c)open('controller',c.id);
  };
  const importGame=async(event:ChangeEvent<HTMLInputElement>)=>{
+  if(gate.current){setStatus('Complete Python execution before importing.');return;}
   await saver.current?.flush().catch(()=>{});
   const file=event.target.files?.[0];if(!file)return;
   try{
@@ -134,6 +142,7 @@ export default function App(){
    if(!window.confirm('Import this campaign and replace your current autosave?'))return;
    const c=data as Campaign;
    await saveCampaign(c.world,c.controllers,c.lessonIndex);
+   sessionVersion.current++;
    setWorld(c.world);setControllers(c.controllers);setLesson(c.lessonIndex);setEntries([]);
    setSaveExists(true);setScreen('game');setSpeed(0);setStatus('Campaign imported.');
   }catch(error){setStatus('Import failed: '+String(error));}
