@@ -30,7 +30,7 @@ describe('Genesis Protocol v0.3.1',()=>{
   const w=genesis();
   for(const bad of [null,{},founders.slice(0,2),[...founders,founders[0]],
     [...founders.slice(0,2),{name:'  ',sex:'female'}],
-    [...founders.slice(0,2),{name:'aDa',sex:'female'}],
+    [...founders.slice(0,2),{name:'eVe',sex:'female'}],
     [...founders.slice(0,2),{name:'Jules',sex:'other'}],
     [...founders.slice(0,2),{name:'Alex',sex:'male',power:99}]])
     expect(validateCommand(w,{action:'seed_population',founders:bad})).not.toBeNull();
