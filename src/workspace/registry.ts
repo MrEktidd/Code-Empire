@@ -1,5 +1,5 @@
 export type WindowKind='world'|'scripts'|'controller'|'learn'|'docs'|'python'|'console'|'overview'|'settings'|'document';
-export type ViewTab='code'|'docs'|'notes'|'output';
+export type ViewTab='code'|'docs'|'notes'|'output'|'history';
 export type WindowState={id:string;kind:WindowKind;controllerId?:string;x:number;y:number;width:number;height:number;minimized:boolean;maximized:boolean;z:number;tab:ViewTab;docScope?:'python'|'game';docId?:string;docTabs?:string[];activeDoc?:string};
 export type WorkspaceState={windows:WindowState[];focus:string|null;nextZ:number};
 const titles:Record<WindowKind,string>={world:'World View',scripts:'Script Explorer',controller:'Python Controller',learn:'Learn Python',docs:'Game API',python:'Python Reference',console:'Runtime Console',overview:'Colony Overview',settings:'Settings',document:'Reference Page'};
