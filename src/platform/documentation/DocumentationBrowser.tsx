@@ -27,11 +27,12 @@ export default function DocumentationBrowser({scope,articles,tabs,activeDoc,onCh
   if(record)open(record,newTab);else onCrossLink(scopeValue,id);
  };
  const renderLinkedParagraph=(value:string):ReactNode[]=>{
-  const split=value.split(/(\\[\\[[^\\]]+\\|(?:python|game):[^\\]]+\\]\\])/g);
-  return split.map((piece,index)=>{
-   const m=piece.match(/^\\[\\[([^|]+)\\|(python|game):([^\\]]+)\\]\\]$/);
-   if(!m)return piece;
-   return <button key={index} className="documentation-inline-link" onClick={()=>navigate(m[2] as DocScope,m[3])}>{m[1]}</button>;
+  const chunks=value.split(/(\[\[[^\]]+\]\])/g);
+  return chunks.map((chunk,index)=>{
+    const match=chunk.match(/^\[\[([^|]+)\|(python|game):([^\]]+)\]\]$/);
+    if(!match)return chunk;
+    return <button key={index} className="documentation-inline-link"
+      onClick={()=>navigate(match[2] as DocScope,match[3])}>{match[1]}</button>;
   });
  };
  const close=(key:string)=>{
