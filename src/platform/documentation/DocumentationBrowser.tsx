@@ -1,7 +1,7 @@
 import {useMemo,useState} from 'react';
 import type {ReactNode} from 'react';
 import type {DocArticle,DocScope} from './types';
-import {docKey,findDoc,searchDocs} from './types';
+import {docKey,findDoc,searchDocs,navigateDocTabs} from './types';
 import './documentation.css';
 type Props={
  scope:DocScope;articles:DocArticle[];tabs:string[];activeDoc:string;
@@ -17,27 +17,27 @@ export default function DocumentationBrowser({scope,articles,tabs,activeDoc,onCh
  const normalizedTabs=tabs.filter(k=>!!findDoc(articles,k));
  if(!normalizedTabs.includes(docKey(active.scope,active.id)))normalizedTabs.push(docKey(active.scope,active.id));
  const tabList=normalizedTabs.slice(-12);
- const open=(article:DocArticle,newTab=false)=>{
-  const key=docKey(article.scope,article.id);
-  const next=newTab||!tabList.length?[...tabList.filter(x=>x!==key),key]:tabList.map(t=>t===activeDoc?key:t);
-  onChange(next.slice(-12),key);
+ const open=(article:DocArticle,mode:'current'|'new'='current')=>{
+  const next=navigateDocTabs(tabList,activeDoc,docKey(article.scope,article.id),mode);
+  onChange(next.tabs,next.activeDoc);
  };
- const navigate=(scopeValue:DocScope,id:string,newTab=false)=>{
+ const navigate=(scopeValue:DocScope,id:string)=>{
   const record=articles.find(x=>x.id===id&&x.scope===scopeValue);
-  if(record)open(record,newTab);else onCrossLink(scopeValue,id);
+  if(record)open(record,'new');
+  else onCrossLink(scopeValue,id);
  };
  const renderLinkedParagraph=(value:string):ReactNode[]=>{
   const chunks=value.split(/(\[\[[^\]]+\]\])/g);
   return chunks.map((chunk,index)=>{
     const match=chunk.match(/^\[\[([^|]+)\|(python|game):([^\]]+)\]\]$/);
     if(!match)return chunk;
-    return <button key={index} className="documentation-inline-link"
+    return <button key={index} className="documentation-inline-link" title="Open related article in a new tab"
       onClick={()=>navigate(match[2] as DocScope,match[3])}>{match[1]}</button>;
   });
  };
  const close=(key:string)=>{
   const next=tabList.filter(t=>t!==key);
-  onChange(next,next.includes(activeDoc)?activeDoc:next[next.length-1]??docKey(fallback.scope,fallback.id));
+  onChange(next.length?next:[docKey(fallback.scope,fallback.id)],next.includes(activeDoc)?activeDoc:next[next.length-1]??docKey(fallback.scope,fallback.id));
  };
  return <div className="documentation-browser">
    <div className="documentation-toolbar">
@@ -52,7 +52,6 @@ export default function DocumentationBrowser({scope,articles,tabs,activeDoc,onCh
        <button aria-label={'Close '+a.title+' tab'} title="Close tab" onClick={()=>close(key)}>×</button>
       </div>;
     })}
-    <button className="documentation-new-tab" title="New documentation tab" onClick={()=>open(fallback,true)}>＋</button>
    </div>
    <div className="documentation-filter">
     <input aria-label="Search documentation" type="search" value={query} placeholder="Search topics, methods and examples..." onChange={e=>setQuery(e.target.value)}/>
@@ -66,7 +65,7 @@ export default function DocumentationBrowser({scope,articles,tabs,activeDoc,onCh
        const items=matching.filter(x=>x.category===cat);
        if(!items.length)return null;
        return <section key={cat}><h3>{cat}</h3>{items.map(x=><button key={x.id} className={activeDoc===docKey(x.scope,x.id)?'active':''}
-        onClick={()=>open(x)} onAuxClick={e=>{if(e.button===1)open(x,true);}} title={'Open '+x.title}>{x.title}</button>)}</section>;
+        onClick={()=>open(x)} onAuxClick={e=>{if(e.button===1){e.preventDefault();open(x,'new');}}} title={'Open '+x.title}>{x.title}</button>)}</section>;
       })}
       {!matching.length&&<p>No matching documents.</p>}
     </nav>
@@ -74,7 +73,6 @@ export default function DocumentationBrowser({scope,articles,tabs,activeDoc,onCh
       <div className="documentation-article-toolbar">
        <span>{active.category}</span>
        <div>
-        <button title="Open this article in another tab" onClick={()=>open(active,true)}>＋ Tab</button>
         <button title="Pop out into a movable window" onClick={()=>onPopout(active.scope,active.id)}>↗ Pop out</button>
        </div>
       </div>

@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 test('new game opens the workbench and both documentation libraries',async({page})=>{
  await page.goto('/');
- await expect(page.getByText(/EARLY ALPHA · v0.2.5/).first()).toBeVisible();
+ await expect(page.getByText(/EARLY ALPHA · v0.2.6/).first()).toBeVisible();
  await page.getByRole('button',{name:/NEW EMPIRE/}).click();
  await expect(page.locator('.desktop-window').first()).toBeVisible();
  await page.getByRole('button',{name:'Python Reference'}).click();
@@ -44,4 +44,37 @@ test('Python worker executes an NPC controller end-to-end',async({page})=>{
  await page.getByRole('button',{name:/RUN SCRIPT/}).click();
  await page.getByRole('button',{name:'OUTPUT'}).click();
  await expect(page.getByText('Hello, Empire!',{exact:false}).last()).toBeVisible({timeout:75000});
+});
+
+test('in-article Python links open and reuse tabs without losing the source',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:/NEW EMPIRE/}).click();
+ await page.getByRole('button',{name:'Python Reference'}).click();
+ const browser=page.locator('.documentation-browser').filter({has:page.locator('.documentation-toolbar strong:has-text("PYTHON REFERENCE")')});
+ await browser.locator('.documentation-directory').getByRole('button',{name:/Lists/}).click();
+ await expect(browser.locator('.documentation-article h2')).toContainText('Lists');
+ const tabs=browser.locator('.documentation-tabs .documentation-tab');
+ await expect(tabs).toHaveCount(1);
+ await browser.locator('.documentation-article').getByRole('button',{name:'int',exact:true}).click();
+ await expect(browser.locator('.documentation-article h2')).toContainText('Integers');
+ await expect(tabs).toHaveCount(2);
+ await browser.locator('.documentation-tabs .documentation-tab').filter({hasText:'Lists'}).locator('button').first().click();
+ await expect(browser.locator('.documentation-article h2')).toContainText('Lists');
+ await browser.locator('.documentation-article').getByRole('button',{name:'int',exact:true}).click();
+ await expect(tabs).toHaveCount(2);
+ await expect(browser.locator('.documentation-article-toolbar').getByRole('button',{name:/Pop out/})).toBeVisible();
+ await expect(browser.locator('.documentation-article-toolbar').getByRole('button',{name:/Tab/})).toHaveCount(0);
+});
+
+test('Game API language links open the Python Reference without closing the API',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:/NEW EMPIRE/}).click();
+ await page.getByRole('button',{name:'Game API'}).click();
+ const game=page.locator('.documentation-browser').filter({has:page.locator('.documentation-toolbar strong:has-text("GAME API")')});
+ await game.locator('.documentation-directory').getByRole('button',{name:'world.workers',exact:true}).click();
+ await expect(game.locator('.documentation-article h2')).toContainText('world.workers');
+ await game.locator('.documentation-article').getByRole('button',{name:'list',exact:true}).click();
+ const python=page.locator('.documentation-browser').filter({has:page.locator('.documentation-toolbar strong:has-text("PYTHON REFERENCE")')});
+ await expect(python.locator('.documentation-article h2')).toContainText('Lists');
+ await expect(game.locator('.documentation-tab')).toHaveCount(1);
 });
