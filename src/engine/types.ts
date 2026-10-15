@@ -42,7 +42,7 @@ export type ScriptResult = {
 };
 export type ExecutionEntry = {
   tick: number; controllerId: string; filename: string; success: boolean;
-  output: string[]; error?: string; commands: number;
+  output: string[]; error?: string; commands: number; durationMs?: number;
 };
 export type Campaign = {
   schema: number; savedAt: number; world: WorldState;
