@@ -128,13 +128,12 @@ test('shared theme colors apply across real scrollable panels and editor',async(
  const color='rgb(83, 143, 118) rgb(18, 38, 53)';
  const rail=page.locator('.sidebar.ce-scroll');
  await expect(rail).toHaveCSS('scrollbar-color',color);
- await page.getByRole('button',{name:'Python Reference'}).click();
- await expect(page.locator('.documentation-directory.ce-scroll')).toHaveCSS('scrollbar-color',color);
- await expect(page.locator('.documentation-article.ce-scroll')).toHaveCSS('scrollbar-color',color);
- await page.getByRole('button',{name:'Scripts'}).click();
  await expect(page.locator('.game-shell .cm-scroller').first()).toHaveCSS('scrollbar-color',color);
  await initializeWorld(page);
  await expect(page.locator('.overview.ce-scroll')).toHaveCSS('scrollbar-color',color);
+ await page.getByRole('button',{name:'Python Reference'}).click();
+ await expect(page.locator('.documentation-directory.ce-scroll')).toHaveCSS('scrollbar-color',color);
+ await expect(page.locator('.documentation-article.ce-scroll')).toHaveCSS('scrollbar-color',color);
  await expect(page.locator('.overview.ce-scroll')).toHaveCSS('scrollbar-width','thin');
 });
 
