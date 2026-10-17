@@ -31,14 +31,12 @@ describe('v0.3 initialization lifecycle',()=>{
   expect(invalid.world.phase).toBe('dormant');
   expect(invalid.entries[0].output).toContain('Rejected command: Only a global controller can initialize or seed the simulation');
  });
- it('validates dormant campaigns and migrates valid v0.2 saves without losing names',()=>{
-  const waiting={schema:4,savedAt:Date.now(),world:createPendingWorld(),controllers:initialControllers(),lessonIndex:0};
+ it('validates dormant campaigns and rejects legacy saves',()=>{
+  const waiting={schema:5,savedAt:Date.now(),world:createPendingWorld(),controllers:initialControllers(),lessonIndex:0};
   expect(validCampaign(waiting)).toBe(true);
   const old=createWorld();
   const converted=migrateCampaign({schema:2,savedAt:Date.now(),world:{...old,schema:2,phase:undefined,housingCapacity:undefined},
     controllers:starterControllers(),lessonIndex:2});
-  expect(converted?.world.workers.map(w=>w.name)).toEqual(['Ada','Bram','Cora']);
-  expect(converted?.world.phase).toBe('active');
-  expect(converted?.lessonIndex).toBe(2);
+  expect(converted).toBeUndefined();
  });
 });

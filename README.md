@@ -4,7 +4,7 @@
 
 Code-Empire is an open-source browser-based Python coding game. Program individual settlers, learn Python through real simulation challenges, and eventually build automated organizations, kingdoms, industries and interstellar civilizations.
 
-**Current release:** v0.3.1 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
+**Current release:** v0.3.2 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
 
 ## Play
 
@@ -16,7 +16,7 @@ The main menu offers **New Empire**, **Continue Campaign**, and **Import Campaig
 
 1. Open **Learn Python** (✧) in the left navigation rail.
 2. Follow the sequential hands-on lessons. They introduce `print()`, functions, attributes, methods, ticks, conditionals, loops, dictionaries, and scheduling.
-3. Open Ada's controller `ada.py`, edit real Python, and click **Run Script**.
+3. Complete Genesis and open your first founder's controller, edit real Python, and click **Run Script**.
 4. See printed messages in its **Output** tab. The system checks game results, not simply text patterns.
 5. Use the contextual **Docs** tab for exact methods available to the currently selected entity. Show a hint or load a worked example if needed.
 6. Toggle **Auto-run** and choose an execution interval to automate an object.
@@ -113,3 +113,11 @@ After completing the two-stage boot process, the Overview introduces **Genesis P
 Each generated character has a permanent NPC ID and its own editable Python controller. The Overview lists clickable character cards, script windows have a right-hand information pane, and the **Genesis Archive** records the original names, sex and founding day. The Archive persists through saves, exports and imports. The independent Python academy now references the player's chosen founder names instead of requiring Ada and Bram.
 
 **Intentionally deferred:** housing construction, birth/immigration systems, promotion from aggregated citizens to notable characters, skill growth and populations beyond the initial three.
+
+## v0.3.2 — Content packs and entity foundations
+
+The simulation now loads validated, namespaced, Factorio-style definitions for materials, items, recipes, entity types, and player-facing modules. Built-in definitions live under `src/games/code-empire/content/base/` and are registered before simulation. A typed `definePack(manifest, data => data.extend([...]))` helper supports authored TypeScript definitions, while JSON packs use the same validator. Recipes use generic inventory operations. A Carrying Basket proof-of-concept can be installed/removed from the character inspector or with `self.install_module("core:carrying_basket")` and increases carrying capacity from 6 to 12.
+
+The engine introduces specialized entity records, technical-component declarations, universal IDs, typed relationships, module slots, a centralized command registry, and deterministic typed simulation signals. Content definitions are included automatically in Game API reference articles. The Python workbench remains separate. No external mod execution or untrusted code import is supported. Save schema **5** uses a fresh IndexedDB database and intentionally does **not** migrate older campaigns, as there were no player saves to preserve. For the architecture and contribution contract, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/CONTENT.md](docs/CONTENT.md).
+
+Scope: this is infrastructure, not a complete production economy. Craft operations process recipe inputs immediately; manufacturing duration, module acquisition costs and research-gated availability come later.

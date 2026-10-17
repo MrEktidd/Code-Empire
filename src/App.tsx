@@ -3,6 +3,7 @@ import type {ChangeEvent} from 'react';
 import MainMenu from './app/MainMenu';
 import {renderGameWindow} from './games/WindowContent';
 import {createPendingWorld,catchUp} from './engine/world';
+import {applyCommands} from './engine/commands/registry';
 import {CODE_EMPIRE_PYTHON_BRIDGE} from './games/code-empire/pythonBridge';
 import {SaveCoordinator} from './platform/persistence/SaveCoordinator';
 import {mergeRuntimeControllers} from './platform/controllers/mergeRuntime';
@@ -146,6 +147,13 @@ export default function App(){
    setScreen('game');
   }catch(e){setStatus('Could not load campaign: '+String(e));}
  };
+ const issueCommand=(command:ScriptCommand)=>{
+  if(gate.current||busy||world.phase!=='active')return;
+  const outcome=applyCommands(latest.current.world,[command]);
+  setWorld(outcome.world);
+  setStatus(outcome.messages.join(' · ')||'Command processed.');
+  if(outcome.messages.length)setEntries(old=>[...old,{tick:world.tick,controllerId:'engine',filename:'Interface',success:!outcome.messages[0].startsWith('Rejected'),output:outcome.messages,commands:1}].slice(-130));
+ };
  const open=(kind:WindowKind,id?:string)=>setWorkspace(s=>upsertWindow(s,kind,id));
  const editController=(id:string,change:Partial<Controller>)=>setControllers(c=>c.map(x=>x.id===id?{...x,...change}:x));
  const checkpointController=(id:string)=>{
@@ -198,7 +206,7 @@ export default function App(){
   findDoc([...PYTHON_TOPICS,...GAME_DOCUMENTS],win.activeDoc??'')?.title??'Reference Page':
   windowTitle(win,controllers.find(c=>c.id===win.controllerId)?.filename);
  const render=(win:WindowState)=>renderGameWindow(win,{world,controllers,entries,selection,lesson,
-  showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController});
+  showHint,setShowHint,beginner,busy,editController,execute,issueCommand,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController});
 
  const submitBoot=()=>{
   if(bootInput.trim()==='Empire.boot()'){setBootError('');setScreen('game');setWorkspace(startupWorkspace());}
@@ -218,14 +226,14 @@ export default function App(){
     {bootError&&<p className="boot-error" role="alert">{bootError}</p>}
     <p className="boot-footnote">Press ENTER to execute · <button type="button" onClick={()=>setScreen('menu')}>RETURN TO MENU</button></p>
    </section></main>:
-   <div className="game-shell"><header className="game-header"><button className="brand-button" onClick={()=>{setSpeed(0);void saver.current?.flush().catch(()=>{});setScreen('menu');}}>⌘ <b>CODE<span>EMPIRE</span></b></button><span>{world.phase==='dormant'?'SIMULATION OFFLINE':'FIRST LIGHT'} <span className="divider">/</span> {world.phase==='dormant'?'AWAITING INITIALIZATION':'SETTLEMENT AGE'}</span><span>DAY {1+Math.floor(world.tick/24)} · {String(world.tick%24).padStart(2,'0')}:00</span><div className="clock-actions"><button disabled={world.phase==='dormant'||loadingStep>=0} className={speed===0?'active':''} onClick={()=>setSpeed(0)}>Ⅱ</button><button disabled={busy||world.phase==='dormant'||loadingStep>=0} onClick={()=>void execute()}>⏭</button>{[1,2,3].map(v=><button key={v} disabled={world.phase==='dormant'||loadingStep>=0} className={speed===v?'active':''} onClick={()=>setSpeed(v)}>{v}×</button>)}</div></header>
+   <div className="game-shell"><header className="game-header"><button className="brand-button" onClick={async()=>{setSpeed(0);await saver.current?.flush().catch(()=>{});setScreen('menu');}}>⌘ <b>CODE<span>EMPIRE</span></b></button><span>{world.phase==='dormant'?'SIMULATION OFFLINE':'FIRST LIGHT'} <span className="divider">/</span> {world.phase==='dormant'?'AWAITING INITIALIZATION':'SETTLEMENT AGE'}</span><span>DAY {1+Math.floor(world.tick/24)} · {String(world.tick%24).padStart(2,'0')}:00</span><div className="clock-actions"><button disabled={world.phase==='dormant'||loadingStep>=0} className={speed===0?'active':''} onClick={()=>setSpeed(0)}>Ⅱ</button><button disabled={busy||world.phase==='dormant'||loadingStep>=0} onClick={()=>void execute()}>⏭</button>{[1,2,3].map(v=><button key={v} disabled={world.phase==='dormant'||loadingStep>=0} className={speed===v?'active':''} onClick={()=>setSpeed(v)}>{v}×</button>)}</div></header>
    <div className="game-row"><aside className="sidebar">{(world.phase==='dormant'?[['scripts','⌘','Scripts'],['python','Py','Python Reference'],['docs','▤','Game API']]:[['overview','◫','Overview'],['world','◇','World'],['archive','▤','Genesis Archive'],['scripts','⌘','Scripts'],['learn','✧','Learn Python'],['python','Py','Python Reference'],['docs','▤','Game API'],['console','>_','Console'],['settings','⚙','Settings']] as const).map(([kind,icon,label])=><button key={kind} title={label} aria-label={label} onClick={()=>open(kind as WindowKind)}><span>{icon}</span><small>{label}</small></button>)}</aside>
    <div className="desktop-area"><WindowManager state={workspace} setState={setWorkspace} title={title} render={render}/>
     {loadingStep>=0&&<div className="initialization-overlay" role="status" aria-live="polite"><div className="initialization-box"><p className="eyebrow">CIVILIZATION INITIATIVE // WORLD GENERATOR</p><h2>INITIALIZING SIMULATION</h2>
      <div className="initialization-progress"><span style={{width:(100*Math.min(loadingStep,BOOT_MESSAGES.length)/BOOT_MESSAGES.length)+'%'}}/></div>
      {BOOT_MESSAGES.slice(0,loadingStep+1).map((m,i)=><p className={i===loadingStep?'initialization-current':''} key={i}>{i===loadingStep?'› ':'✓ '}{m}</p>)}</div></div>}
     <div className="taskbar">{workspace.windows.map(w=><button key={w.id} className={workspace.focus===w.id&&!w.minimized?'focused':''} onClick={()=>setWorkspace(s=>w.minimized?focusWindow(s,w.id):updateWindow(s,w.id,{minimized:true}))}>{title(w)}</button>)}</div></div></div>
-   <footer className="game-footer"><span className="footer-notice">{status} · {saveStatus}{offline>0?' · +'+offline+'h offline progress':''}</span>{world.workers.length>0&&beginner&&lesson<LESSONS.length&&<button className="lesson-shortcut" onClick={()=>open('learn')}>✧ Lesson {lesson+1}: {LESSONS[lesson].title}</button>}<button onClick={()=>downloadCampaign(world,controllers,lesson)}>⇩ EXPORT</button><button onClick={()=>fileInput.current?.click()}>⇧ IMPORT</button><button onClick={()=>{setSpeed(0);void saver.current?.flush().catch(()=>{});setScreen('menu');}}>⌂ MENU</button></footer>
+   <footer className="game-footer"><span className="footer-notice">{status} · {saveStatus}{offline>0?' · +'+offline+'h offline progress':''}</span>{world.workers.length>0&&beginner&&lesson<LESSONS.length&&<button className="lesson-shortcut" onClick={()=>open('learn')}>✧ Lesson {lesson+1}: {LESSONS[lesson].title}</button>}<button onClick={()=>downloadCampaign(world,controllers,lesson)}>⇩ EXPORT</button><button onClick={()=>fileInput.current?.click()}>⇧ IMPORT</button><button onClick={async()=>{setSpeed(0);await saver.current?.flush().catch(()=>{});setScreen('menu');}}>⌂ MENU</button></footer>
    </div>}
   <input ref={fileInput} type="file" hidden accept=".json,application/json" onChange={e=>void importGame(e)}/>
  </>;

@@ -1,0 +1,26 @@
+[
+  {
+    "type": "material",
+    "id": "core:wood_material",
+    "display_name": "Wood",
+    "properties": {
+      "renewable": true
+    }
+  },
+  {
+    "type": "material",
+    "id": "core:stone_material",
+    "display_name": "Stone",
+    "properties": {
+      "renewable": false
+    }
+  },
+  {
+    "type": "material",
+    "id": "core:iron_material",
+    "display_name": "Iron",
+    "properties": {
+      "renewable": false
+    }
+  }
+]

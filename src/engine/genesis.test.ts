@@ -24,7 +24,7 @@ describe('Genesis Protocol v0.3.1',()=>{
   expect(worldSnapshot(r.world).workers[0].name).toBe('Adam');
   const next=applyCommands(r.world,[{action:'seed_population',founders}]);
   expect(next.world).toEqual(r.world);
-  expect(next.messages.some(x=>x.includes('Genesis rejected'))).toBe(true);
+  expect(next.messages.some(x=>x.includes('Rejected command:'))).toBe(true);
  });
  it('rejects malformed batches atomically, capacity limit and dormant requests',()=>{
   const w=genesis();
@@ -52,15 +52,14 @@ describe('Genesis Protocol v0.3.1',()=>{
   expect(invalid.entries[0].output.join(' ')).toMatch(/Only a global controller/);
   expect(dueControllers(world,[{...cs[0],enabled:true,nextRunTick:0}])).toEqual([]);
  });
- it('validates stored records and upgrades v0.3.0 zero-population campaigns',()=>{
+ it('validates schema 5 and deliberately rejects older campaigns',()=>{
   const world=applyCommands(genesis(),[{action:'seed_population',founders}]).world;
   const records=ensureFounderControllers([genesisController(),...initialControllers()],world);
-  const campaign={schema:4,savedAt:Date.now(),world,controllers:records,lessonIndex:0};
+  const campaign={schema:5,savedAt:Date.now(),world,controllers:records,lessonIndex:0};
   expect(validCampaign(campaign)).toBe(true);
   expect(validCampaign({...campaign,world:{...world,genesisArchive:[...world.genesisArchive,world.genesisArchive[0]]}})).toBe(false);
   const old={schema:3,savedAt:Date.now(),world:{...createCivilizationWorld(),schema:3,genesisArchive:undefined},controllers:initialControllers(),lessonIndex:0};
   const updated=migrateCampaign(old);
-  expect(updated?.world.genesisArchive).toEqual([]);
-  expect(updated?.world.workers).toHaveLength(0);
+  expect(updated).toBeUndefined();
  });
 });
