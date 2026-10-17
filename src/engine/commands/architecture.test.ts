@@ -44,7 +44,7 @@ describe('v0.3.2 modules, recipes, commands and signals',()=>{
  });
  it('shares command validation between UI and Python and supports bounded ordered signals',()=>{
   const w=world();
-  const cmd={action:'module.install',entityId:'npc_000001',moduleId:'core:carrying_basket'};
+  const cmd={action:'module.install' as const,entityId:'npc_000001',moduleId:'core:carrying_basket'};
   expect(COMMANDS.validate(w,cmd)).toBeNull();
   expect(COMMANDS.authorized(cmd,'npc','npc_000001')).toBe(true);
   expect(COMMANDS.authorized(cmd,'npc','npc_000002')).toBe(false);

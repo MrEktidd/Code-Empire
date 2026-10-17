@@ -46,7 +46,7 @@ const catalogDocs:DocArticle[]=(['material','item','recipe','entity','module'] a
   returns:'',related:[]
  })));
 export const GAME_DOCUMENTS:DocArticle[]=[...API.map(e=>({
- id:e.name.replaceAll('.','-'),scope:'game',category:categories[e.name]??'Other',
+ id:e.name.replaceAll('.','-'),scope:'game' as const,category:categories[e.name]??'Other',
  title:e.name,signature:e.signature,summary:e.description,body:e.note+'\n\n'+(contextual[e.name]??''),
  example:e.example,tip:'Game-world changes are submitted as validated commands; direct mutations of snapshots have no effect.',
  returns:e.returns,

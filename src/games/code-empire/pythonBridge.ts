@@ -30,7 +30,7 @@ export const CODE_EMPIRE_PYTHON_BRIDGE = [
 '    def buildings(self): return list(self._buildings)',
 '    def entities(self): return list(self._workers+self._buildings+self._entities)',
 '    def get(self, entity_id): return next((e for e in self._workers+self._buildings+self._entities if e.id==entity_id),None)',
-'    def stockpile(self, resource): return self._stocks.get(resource.split(":")[-1],0) if resource.startswith("core:") else self._stocks.get(resource,0)',
+'    def stockpile(self, resource): return self._stocks.get(resource, self._stocks.get(resource[5:] if resource.startswith("core:") else resource, 0))',
 '    def events(self, event_type=None): return [ObjectView(e) for e in self._signals if event_type is None or e["type"]==event_type]',
 '    def install_module(self, entity_id, module_id):',
 '        commands.append({"action":"module.install","entityId":str(entity_id),"moduleId":str(module_id)})',

@@ -52,6 +52,7 @@ export function validCampaign(value:unknown):value is Campaign{
  const ground=new Set(['meadow','forest','quarry','farm','stockpile','water']);
  const grid=(x:number,y:number)=>nat(x)&&nat(y)&&x<WIDTH&&y<HEIGHT;
  if(!w.tiles.every((tile,i)=>tile&&grid(tile.x,tile.y)&&tile.y*WIDTH+tile.x===i&&ground.has(tile.ground)&&nat(tile.remaining)))return false;
+ if([...w.workers,...w.buildings,...w.entities].some(e=>!e||typeof e!=='object'||typeof e.id!=='string'||typeof e.definitionId!=='string'))return false;
  const all=entityRefs(w),ids=new Set<string>();
  for(const e of all){
   if(typeof e.id!=='string'||e.id.length>128||!e.id||ids.has(e.id)||CONTENT.get(e.definitionId)?.type!=='entity')return false;
