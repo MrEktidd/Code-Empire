@@ -36,7 +36,7 @@ describe('Workbench organization',()=>{
   const base=upsertWindow(newWorkspace(),'controller','ctrl_example');
   const next=applyWorkspacePreset(base,'research',{width:1200,height:800});
   expect(next.windows.find(w=>w.id==='controller:ctrl_example')?.minimized).toBe(true);
-  expect(next.windows.filter(w=>!w.minimized).map(w=>w.kind)).toEqual(['python','docs']);
+  expect(next.windows.filter(w=>!w.minimized).map(w=>w.kind)).toEqual(['docs','python']);
  });
  it('restores good windows and discards stale controller refs',()=>{
   const saved=upsertWindow(newWorkspace(),'controller','ctrl_deleted');
