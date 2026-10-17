@@ -18,11 +18,11 @@ test('genesis rejects incomplete list then creates three archived founders',asyn
  await page.getByRole('button',{name:/OPEN GENESIS.PY/}).click();
  await expect(page.getByText('Founding Population')).toBeVisible();
  await page.getByRole('button',{name:/RUN SCRIPT/}).click();
- await page.getByRole('button',{name:'OUTPUT'}).click();
+ await page.getByRole('button',{name:'OUTPUT',exact:true}).click();
  await expect(page.getByText(/Define exactly three founders/)).toBeVisible({timeout:75000});
  await expect(page.getByText('Command rejected',{exact:true}).first()).toBeVisible();
  await page.getByRole('button',{name:/Open controller output/}).click();
- await expect(page.getByRole('button',{name:'OUTPUT'})).toHaveClass(/selected/);
+ await expect(page.getByRole('button',{name:'OUTPUT',exact:true})).toHaveClass(/selected/);
  await page.getByRole('button',{name:'CODE',exact:true}).click();
  const editor=page.locator('.controller-view .cm-content');
  await editor.fill('founders = [\n    {"name": "Adam", "sex": "male"},\n    {"name": "Eve", "sex": "female"},\n    {"name": "Ada", "sex": "female"},\n]\n\nEmpire.seed_population(founders)\n');

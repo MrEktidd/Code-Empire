@@ -51,3 +51,8 @@
 .setting-group .muted{margin:2px 0}
 .setting-group label,.setting-group strong{font-size:12px;color:var(--ce-color-text)}
 .resize-grip:focus-visible{outline:2px solid var(--ce-color-accent)}
+
+/* Notifications are informative overlays, never invisible blockers for game controls.
+   Only deliberate notification buttons capture pointer input. */
+.workbench-notice{pointer-events:none}
+.workbench-notice button{pointer-events:auto}
