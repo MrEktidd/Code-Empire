@@ -148,3 +148,46 @@ test('one central theme token controls all themed scroll containers',async({page
  expect(after).toHaveLength(before.length);
  for(const c of after)expect(c).toContain('rgb(225, 140, 85)');
 });
+
+test('theme editor applies live colors, can undo/revert and saves across reloads',async({page})=>{
+ await enterWorkbench(page);
+ await initializeWorld(page);
+ await page.getByRole('button',{name:'Settings'}).click();
+ await page.getByRole('tab',{name:'Theme'}).click();
+ await expect(page.getByRole('heading',{name:'Theme Editor'})).toBeVisible();
+ const original=await page.locator('.game-shell').evaluate(el=>getComputedStyle(el).getPropertyValue('--ce-color-accent').trim());
+ const input=page.getByRole('textbox',{name:'Accent hex value',exact:true});
+ await input.fill('#f0b440');
+ await expect(page.locator('.game-shell')).toHaveCSS('--ce-color-accent','#f0b440');
+ await page.getByRole('button',{name:/Undo/}).click();
+ await expect(page.locator('.game-shell')).toHaveCSS('--ce-color-accent',original);
+ await page.getByRole('button',{name:/Redo/}).click();
+ await expect(page.locator('.game-shell')).toHaveCSS('--ce-color-accent','#f0b440');
+ await page.getByRole('button',{name:'Revert to Saved'}).click();
+ await expect(page.locator('.game-shell')).toHaveCSS('--ce-color-accent',original);
+ await input.fill('#cf66aa');
+ await page.getByRole('button',{name:'Save Theme'}).click();
+ await expect(page.getByText('✓ Saved')).toBeVisible();
+ await page.reload();
+ await expect(page.locator('html')).toHaveCSS('--ce-color-accent','#cf66aa');
+ page.on('dialog',dialog=>{void dialog.accept();});
+ await enterWorkbench(page);
+ await initializeWorld(page);
+ await page.getByRole('button',{name:'Settings'}).click();
+ await page.getByRole('tab',{name:'Theme'}).click();
+ await expect(page.getByRole('textbox',{name:'Accent hex value',exact:true})).toHaveValue('#cf66aa');
+ await page.getByRole('button',{name:'Reset Defaults'}).click();
+ await page.getByRole('button',{name:'Save Theme'}).click();
+ await expect(page.locator('html')).toHaveCSS('--ce-color-accent',original);
+});
+
+test('unsaved theme changes are discarded on closing settings',async({page})=>{
+ await enterWorkbench(page);
+ await initializeWorld(page);
+ await page.getByRole('button',{name:'Settings'}).click();
+ await page.getByRole('tab',{name:'Theme'}).click();
+ await page.getByRole('textbox',{name:'Accent hex value',exact:true}).fill('#dd5511');
+ await expect(page.locator('.game-shell')).toHaveCSS('--ce-color-accent','#dd5511');
+ await page.getByRole('button',{name:'Close Settings'}).click();
+ await expect(page.locator('.game-shell')).toHaveCSS('--ce-color-accent','#76cfa2');
+});

@@ -18,6 +18,7 @@
   --ce-color-on-accent: #091d17;
 
   /* Scale and shape */
+  --ce-border-size: 1px;
   --ce-control-radius: 2px;
   --ce-panel-radius: 5px;
   --ce-control-padding-y: 9px;
@@ -124,3 +125,50 @@
 .game-shell .cm-scroller::-webkit-scrollbar-corner {
   background: var(--ce-scrollbar-track);
 }
+
+/* Theme-editor exposure: bridge the older workbench CSS to the shared tokens. */
+:root { color:var(--ce-color-text);background:var(--ce-color-background); }
+body { background:var(--ce-color-background);color:var(--ce-color-text); }
+.game-shell { background:var(--ce-color-background); }
+.game-header,.game-footer { background:var(--ce-color-surface);color:var(--ce-color-text-muted); }
+.game-header { border-bottom-width:var(--ce-border-size); }
+.game-footer { border-top-color:var(--ce-color-border-soft);border-top-width:var(--ce-border-size); }
+.desktop-area { background:linear-gradient(125deg,var(--ce-color-background),var(--ce-color-surface-muted) 65%,var(--ce-color-background)); }
+.desktop-window { border-width:var(--ce-border-size); }
+.window-titlebar { border-bottom-color:var(--ce-color-border);border-bottom-width:var(--ce-border-size); }
+.window-heading { color:var(--ce-color-text); }
+.window-actions button { color:var(--ce-color-text-muted); }
+.window-actions button:hover { background:var(--ce-color-surface-muted); }
+.taskbar { background:var(--ce-color-surface-muted);border-top-color:var(--ce-color-border-soft); }
+.taskbar button { color:var(--ce-color-text-muted);background:var(--ce-color-surface-raised);border-color:var(--ce-color-border);border-radius:var(--ce-control-radius); }
+.taskbar button.focused { background:var(--ce-color-accent);color:var(--ce-color-on-accent); }
+.sidebar { border-right-width:var(--ce-border-size); }
+.sidebar button { color:var(--ce-color-text-muted); }
+.sidebar button:hover { background:var(--ce-color-surface-muted); }
+.eyebrow,.lesson-counter { color:var(--ce-color-accent); }
+.muted { color:var(--ce-color-text-muted); }
+.game-shell .ce-button,.settings-screen .ce-button {
+  background:var(--ce-color-surface-muted);color:var(--ce-color-text);border:var(--ce-border-size) solid var(--ce-color-border);
+  border-radius:var(--ce-control-radius);
+}
+.game-shell .ce-button--primary,.settings-screen .ce-button--primary {
+  background:var(--ce-color-accent);color:var(--ce-color-on-accent);border-color:var(--ce-color-accent);
+}
+.ce-panel { border-width:var(--ce-border-size); }
+.ce-input { border-width:var(--ce-border-size); }
+.controller-tabs,.controller-footer,.controller-inspector,.rename-row { background:var(--ce-color-surface-muted);border-color:var(--ce-color-border-soft); }
+.controller-tabs button { color:var(--ce-color-text-muted); }
+.controller-tabs button.selected { border-bottom-color:var(--ce-color-accent);color:var(--ce-color-text);background:var(--ce-color-surface-raised); }
+.game-shell .cm-editor { background-color:var(--ce-color-background);color:var(--ce-color-text); }
+.game-shell .cm-gutters { background-color:var(--ce-color-surface-muted);color:var(--ce-color-text-muted); }
+.documentation-browser,.documentation-article { background:var(--ce-color-surface);color:var(--ce-color-text); }
+.documentation-toolbar,.documentation-tab.active { background:var(--ce-color-surface-raised); }
+.documentation-toolbar,.documentation-directory h3,.documentation-article-toolbar { color:var(--ce-color-accent); }
+.documentation-tabs,.documentation-filter,.documentation-directory { background:var(--ce-color-surface-muted);border-color:var(--ce-color-border-soft); }
+.documentation-tab,.documentation-directory button.active { background:var(--ce-color-surface-raised);border-color:var(--ce-color-border); }
+.documentation-tab button,.documentation-article p,.documentation-directory button { color:var(--ce-color-text); }
+.documentation-filter input,.documentation-filter select { background:var(--ce-color-background);color:var(--ce-color-text);border-color:var(--ce-color-border); }
+.documentation-article h2 { color:var(--ce-color-text); }
+.documentation-article h3,.documentation-summary { color:var(--ce-color-accent)!important; }
+.documentation-article pre { background:var(--ce-color-background);border-color:var(--ce-color-border);color:var(--ce-color-text); }
+.menu-root { background:radial-gradient(ellipse at 72% 55%,var(--ce-color-surface-raised) 0%,transparent 34%),var(--ce-color-background); }
