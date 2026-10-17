@@ -118,16 +118,18 @@ test('Game API language links open the Python Reference without closing the API'
 test('navigation scrollbars use the Code Empire theme',async({page})=>{
  await enterWorkbench(page);
  const rail=page.locator('.sidebar');
- const railThumb=await rail.evaluate(el=>{
-  const s=getComputedStyle(el,'::-webkit-scrollbar-thumb');
-  return {background:s.backgroundColor,radius:s.borderTopLeftRadius};
- });
- expect(railThumb).toEqual({background:'rgb(81, 141, 115)',radius:'0px'});
+ await expect(rail).toHaveCSS('scrollbar-color','rgb(97, 158, 130) rgb(19, 38, 52)');
+ await expect(rail).toHaveCSS('scrollbar-width','thin');
  await page.getByRole('button',{name:'Python Reference'}).click();
  const directory=page.locator('.documentation-directory');
- const topicThumb=await directory.evaluate(el=>{
-  const s=getComputedStyle(el,'::-webkit-scrollbar-thumb');
-  return {background:s.backgroundColor,radius:s.borderTopLeftRadius};
- });
- expect(topicThumb).toEqual({background:'rgb(81, 141, 115)',radius:'0px'});
+ await expect(directory).toHaveCSS('scrollbar-color','rgb(97, 158, 130) rgb(19, 38, 52)');
+ await expect(directory).toHaveCSS('scrollbar-width','thin');
+ await expect(page.locator('.documentation-article')).toHaveCSS('scrollbar-color','rgb(97, 158, 130) rgb(19, 38, 52)');
+});
+test('Colony Overview scrollbar uses the dark workbench theme',async({page})=>{
+ await enterWorkbench(page);
+ await initializeWorld(page);
+ const overview=page.locator('.window-content.overview');
+ await expect(overview).toHaveCSS('scrollbar-color','rgb(97, 158, 130) rgb(19, 38, 52)');
+ await expect(overview).toHaveCSS('scrollbar-width','thin');
 });
