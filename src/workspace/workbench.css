@@ -1,0 +1,44 @@
+/* Code Empire desktop affordances: uses existing theme tokens. */
+.workspace-controls{position:relative;flex:0 0 auto;display:flex;align-items:center;z-index:25}
+.workspace-menu-trigger{height:100%;border:1px solid var(--ce-color-border);border-radius:var(--ce-control-radius);
+ background:var(--ce-color-surface-muted);color:var(--ce-color-text);font-size:11px;padding:4px 10px}
+.workspace-menu-trigger:hover,.workspace-menu-trigger:focus-visible{border-color:var(--ce-color-accent)}
+.workspace-menu{position:absolute;left:0;bottom:calc(100% + 5px);min-width:220px;max-width:min(320px,90vw);
+ padding:7px;background:var(--ce-color-surface);border:1px solid var(--ce-color-border);
+ box-shadow:0 12px 35px #000c;border-radius:var(--ce-panel-radius);display:flex;flex-direction:column;gap:2px}
+.workspace-menu-label{font-size:9px;letter-spacing:1px;color:var(--ce-color-accent);padding:9px 7px 4px;font-weight:800}
+.workspace-menu button{background:transparent;color:var(--ce-color-text);text-align:left;border:0;
+ padding:9px 10px;font-size:11px;border-radius:var(--ce-control-radius)}
+.workspace-menu button:hover,.workspace-menu button:focus-visible{background:var(--ce-color-surface-raised)}
+.workspace-menu p{font-size:10px;line-height:1.5;color:var(--ce-color-text-muted);margin:7px}
+.workbench-notice{position:absolute;right:15px;bottom:53px;width:min(370px,calc(100vw - 100px));
+ z-index:70;padding:12px 14px;background:var(--ce-color-surface);border:1px solid var(--ce-color-accent);
+ border-left:4px solid var(--ce-color-accent);box-shadow:0 12px 30px #000b;color:var(--ce-color-text)}
+.workbench-notice-warning{border-left-color:#e4bb74}
+.workbench-notice-error{border-left-color:#ed8989}
+.workbench-notice-heading{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.workbench-notice-heading strong{font-size:12px}
+.workbench-notice-heading button{background:none;border:0;color:var(--ce-color-text);font-size:17px}
+.workbench-notice p{color:var(--ce-color-text-muted);font-size:11px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.workbench-notice-action{background:var(--ce-color-surface-raised);border:1px solid var(--ce-color-border);
+ color:var(--ce-color-accent);padding:7px 10px;font-size:11px}
+.command-palette-backdrop{position:fixed;inset:0;z-index:4000;background:#020b14b7;display:flex;
+ justify-content:center;align-items:flex-start;padding:clamp(38px,13vh,160px) 12px 20px}
+.command-palette{width:min(610px,98vw);max-height:min(600px,77vh);display:flex;flex-direction:column;
+ background:var(--ce-color-surface);border:1px solid var(--ce-color-border);box-shadow:0 25px 85px #000c;
+ border-radius:var(--ce-panel-radius);color:var(--ce-color-text);overflow:hidden}
+.palette-input{display:flex;align-items:center;gap:10px;padding:15px;border-bottom:1px solid var(--ce-color-border)}
+.palette-input input{flex:1;min-width:0;background:none;color:var(--ce-color-text);outline:none;border:0;font-size:15px}
+.palette-input kbd,.palette-footer{font-size:10px;color:var(--ce-color-text-muted)}
+.palette-input span{color:var(--ce-color-accent)}
+.palette-results{overflow:auto;padding:8px;min-height:60px}
+.palette-results>button{border:0;background:transparent;color:var(--ce-color-text);width:100%;
+ display:flex;justify-content:space-between;align-items:center;text-align:left;gap:7px;padding:10px 12px}
+.palette-results>button.selected,.palette-results>button:hover{background:var(--ce-color-surface-raised)}
+.palette-results strong{font-size:12px;display:block}.palette-results small{display:block;font-size:10px;
+ color:var(--ce-color-text-muted);margin-top:4px}.palette-results em{font-size:9px;color:var(--ce-color-accent);font-style:normal}
+.palette-footer{padding:10px 15px;border-top:1px solid var(--ce-color-border-soft)}
+@media(max-width:760px){.workspace-menu{left:auto;right:0}
+ .workbench-notice{left:84px;right:8px;width:auto}
+ .workspace-menu-trigger{padding:4px 7px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.desktop-window,.game-shell *{scroll-behavior:auto!important;animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
