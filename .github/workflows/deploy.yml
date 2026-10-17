@@ -35,6 +35,8 @@ jobs:
         run: npm run build
         env:
           GITHUB_PAGES: 'true'
+      - name: Verify production Pages bundle boots
+        run: npx playwright test --config playwright.production.config.ts
       - name: Configure Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5

@@ -1,7 +1,7 @@
 import type {WorldState} from '../../engine/types';
 type Props={world:WorldState;openGenesis:()=>void;openEntity:(id:string)=>void};
 export function GenesisArchive({world,openGenesis,openEntity}:Props){
- return <div className="window-content genesis-archive">
+ return <div className="window-content genesis-archive ce-scroll">
   <p className="eyebrow">CIVILIZATION INITIATIVE · HISTORICAL RECORDS</p><h2>Genesis Archive</h2>
   <p className="muted">The identities of your first inhabitants are preserved here. Your personally named characters have permanent IDs, independent scripts and their own place in civilization's history.</p>
   {world.genesisArchive.length===0?<div className="genesis-mission"><h3>No inhabitants recorded</h3><p>Complete the Genesis Protocol to establish your first named inhabitants.</p><button className="accent-btn" onClick={openGenesis}>OPEN GENESIS.PY ↗</button></div>:
@@ -11,7 +11,7 @@ export function GenesisArchive({world,openGenesis,openEntity}:Props){
  </div>;
 }
 export function GenesisOverview({world,openGenesis,openEntity,openArchive}:Props&{openArchive:()=>void}){
- return <div className="window-content overview genesis-overview">
+ return <div className="window-content overview genesis-overview ce-scroll">
   <p className="eyebrow">CIVILIZATION INITIATIVE · SIMULATION STATUS</p>
   <h2>{world.phase==='active'?'First Light':'Awaiting Initialization'}</h2>
   <p className="muted">Settlement Age · Day {1+Math.floor(world.tick/24)}</p>

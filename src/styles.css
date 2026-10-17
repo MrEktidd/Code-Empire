@@ -44,45 +44,4 @@
 @media(max-width:650px){.controller-main{flex-direction:column}.controller-inspector{width:100%;max-height:155px;border-left:0;border-top:1px solid #344d58;padding:8px 12px}.controller-inspector h3{margin:3px 0;font-size:13px}.controller-inspector .muted{margin:5px 0}.controller-inspector pre{display:none}.controller-inspector .inspector-stat{padding:4px 0}.controller-inspector .inspector-progress{margin:4px 0}.controller-footer{flex-shrink:0}}
 
 
-/* v0.3.31 — Code Empire navigation scrollbars.
-   Match the angular steel/forest-green workbench styling instead of native
-   rounded grey scrollbars. Keep native scrolling, keyboard and touch behavior. */
-/* Firefox uses the standard scrollbar properties. Chromium and Safari
-   use the square-cornered WebKit track/thumb below, which standard color
-   properties can otherwise override in Chromium. */
-@supports (-moz-appearance: none) {
-  .sidebar,
-  .documentation-directory {
-    scrollbar-width: thin;
-    scrollbar-color: #518d73 #101f2b;
-  }
-}
-.sidebar::-webkit-scrollbar,
-.documentation-directory::-webkit-scrollbar {
-  width: 8px;
-}
-.sidebar::-webkit-scrollbar-track,
-.documentation-directory::-webkit-scrollbar-track {
-  background: #101f2b;
-  border-left: 1px solid #2b4650;
-  border-radius: 0;
-}
-.sidebar::-webkit-scrollbar-thumb,
-.documentation-directory::-webkit-scrollbar-thumb {
-  background: #518d73;
-  border: 1px solid #2d594f;
-  border-radius: 0;
-}
-.sidebar::-webkit-scrollbar-thumb:hover,
-.documentation-directory::-webkit-scrollbar-thumb:hover {
-  background: #78cfa3;
-  border-color: #518d73;
-}
-.sidebar::-webkit-scrollbar-thumb:active,
-.documentation-directory::-webkit-scrollbar-thumb:active {
-  background: #a0e9bc;
-}
-.sidebar::-webkit-scrollbar-corner,
-.documentation-directory::-webkit-scrollbar-corner {
-  background: #101f2b;
-}
+/* All scrollbar and UI foundation rules now live in theme/theme.css. */

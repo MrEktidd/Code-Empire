@@ -1,0 +1,126 @@
+/*
+  Code Empire UI Theme — v0.3.34
+  CHANGE VALUES HERE to restyle all participating interface elements.
+  This is the shared visual contract; game logic must not import these CSS tokens.
+*/
+:root {
+  /* Brand and backgrounds */
+  --ce-color-background: #08111b;
+  --ce-color-surface: #111e2b;
+  --ce-color-surface-raised: #23404a;
+  --ce-color-surface-muted: #142734;
+  --ce-color-border: #41616b;
+  --ce-color-border-soft: #314451;
+  --ce-color-text: #d6e5e5;
+  --ce-color-text-muted: #9eb5bb;
+  --ce-color-accent: #76cfa2;
+  --ce-color-accent-hover: #91e8b7;
+  --ce-color-on-accent: #091d17;
+
+  /* Scale and shape */
+  --ce-control-radius: 2px;
+  --ce-panel-radius: 5px;
+  --ce-control-padding-y: 9px;
+  --ce-control-padding-x: 12px;
+
+  /* Scrollbars: shared by the sidebar, windows, docs, and editors */
+  --ce-scrollbar-size: 9px;
+  --ce-scrollbar-track: #122635;
+  --ce-scrollbar-thumb: #538f76;
+  --ce-scrollbar-thumb-hover: #7ed3a9;
+  --ce-scrollbar-thumb-active: #a3efc1;
+  --ce-scrollbar-border: #33594f;
+  --ce-scrollbar-radius: 0px;
+}
+
+/* Reusable controls: choose these CSS classes for new workbench UI. */
+.ce-panel {
+  background: var(--ce-color-surface);
+  border: 1px solid var(--ce-color-border);
+  border-radius: var(--ce-panel-radius);
+  color: var(--ce-color-text);
+}
+.ce-button {
+  background: var(--ce-color-surface-muted);
+  border: 1px solid var(--ce-color-border);
+  border-radius: var(--ce-control-radius);
+  color: var(--ce-color-text);
+  padding: var(--ce-control-padding-y) var(--ce-control-padding-x);
+  cursor: pointer;
+}
+.ce-button:hover:not(:disabled) { border-color: var(--ce-color-accent); }
+.ce-button:focus-visible,
+.ce-input:focus-visible { outline: 2px solid var(--ce-color-accent-hover); outline-offset: 2px; }
+.ce-button:disabled { opacity: .5; cursor: not-allowed; }
+.ce-button--primary,
+.accent-btn {
+  background: #347758;
+  border-color: var(--ce-color-accent);
+  color: #effff6;
+  border-radius: var(--ce-control-radius);
+}
+.ce-input {
+  border: 1px solid var(--ce-color-border);
+  border-radius: var(--ce-control-radius);
+  background: var(--ce-color-background);
+  color: var(--ce-color-text);
+  padding: var(--ce-control-padding-y) var(--ce-control-padding-x);
+}
+.ce-badge {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ce-color-accent);
+  background: var(--ce-color-surface-muted);
+  border: 1px solid var(--ce-color-border-soft);
+  border-radius: var(--ce-control-radius);
+  padding: 2px 6px;
+}
+
+/* Existing shell primitives also consume these same central tokens. */
+.game-shell { color: var(--ce-color-text); }
+.desktop-window { background: var(--ce-color-surface); border-color: var(--ce-color-border); border-radius: var(--ce-panel-radius); }
+.window-titlebar { background: var(--ce-color-surface-raised); }
+.sidebar { background: var(--ce-color-surface); border-right-color: var(--ce-color-border-soft); }
+.sidebar button:hover { color: var(--ce-color-accent-hover); }
+.game-header { border-bottom-color: var(--ce-color-border-soft); }
+
+/*
+  Shared scrollbar primitive.
+  Opt in with class="ce-scroll" or <ScrollArea />. The CodeMirror scrolling
+  viewport is provided by the editor library, so it is targeted explicitly.
+  Never style * globally: visual theme CSS must not touch arbitrary DOM.
+*/
+.ce-scroll,
+.game-shell .cm-scroller {
+  color-scheme: dark;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ce-scrollbar-thumb) var(--ce-scrollbar-track);
+}
+.ce-scroll::-webkit-scrollbar,
+.game-shell .cm-scroller::-webkit-scrollbar {
+  width: var(--ce-scrollbar-size);
+  height: var(--ce-scrollbar-size);
+}
+.ce-scroll::-webkit-scrollbar-track,
+.game-shell .cm-scroller::-webkit-scrollbar-track {
+  background: var(--ce-scrollbar-track);
+  border-radius: var(--ce-scrollbar-radius);
+}
+.ce-scroll::-webkit-scrollbar-thumb,
+.game-shell .cm-scroller::-webkit-scrollbar-thumb {
+  background: var(--ce-scrollbar-thumb);
+  border: 1px solid var(--ce-scrollbar-border);
+  border-radius: var(--ce-scrollbar-radius);
+}
+.ce-scroll::-webkit-scrollbar-thumb:hover,
+.game-shell .cm-scroller::-webkit-scrollbar-thumb:hover {
+  background: var(--ce-scrollbar-thumb-hover);
+}
+.ce-scroll::-webkit-scrollbar-thumb:active,
+.game-shell .cm-scroller::-webkit-scrollbar-thumb:active {
+  background: var(--ce-scrollbar-thumb-active);
+}
+.ce-scroll::-webkit-scrollbar-corner,
+.game-shell .cm-scroller::-webkit-scrollbar-corner {
+  background: var(--ce-scrollbar-track);
+}
