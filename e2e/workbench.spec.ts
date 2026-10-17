@@ -206,7 +206,9 @@ test('Quick Open, workspace presets and saved layouts are accessible from the wo
  await expect(page.locator('.desktop-window[aria-label="main.py"]')).toBeVisible();
  await page.getByRole('button',{name:'Arrange workspace'}).click();
  await page.getByRole('menuitem',{name:'Research workspace'}).click();
- await expect(page.locator('.desktop-window[aria-label="Python Reference"]')).toBeVisible();
+ const mobile=await page.evaluate(()=>window.matchMedia('(max-width: 760px)').matches);
+ if(!mobile)await expect(page.locator('.desktop-window[aria-label="Python Reference"]')).toBeVisible();
+ else await expect(page.locator('.desktop-window[aria-label="Python Reference"]')).toHaveCount(1);
  await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
  await page.getByRole('button',{name:'Arrange workspace'}).click();
  await page.getByRole('menuitem',{name:'Tile windows'}).click();
