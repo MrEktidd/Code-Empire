@@ -91,7 +91,7 @@ export default function App(){
  useEffect(()=>{
   if(loadingStep<0)return;
   if(loadingStep>=BOOT_MESSAGES.length){
-   const end=setTimeout(()=>{setLoadingStep(-1);setWorkspace(s=>upsertWindow(s,'overview'));setStatus('Simulation online. Population: 0 / 3.');},550);
+   const end=setTimeout(()=>{setLoadingStep(-1);setWorkspace(activeWorkspace());setStatus('Simulation online. Population: 0 / 3.');},550);
    return()=>clearTimeout(end);
   }
   const timer=setTimeout(()=>setLoadingStep(step=>step+1),loadingStep===0?350:220);

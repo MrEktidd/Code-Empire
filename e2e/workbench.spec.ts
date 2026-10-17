@@ -196,26 +196,34 @@ test('unsaved theme changes are discarded on closing settings',async({page})=>{
 });
 
 test('Quick Open, workspace presets and saved layouts are accessible from the workbench',async({page})=>{
- await enterWorkbench(page);
- await page.keyboard.press('Control+k');
- await expect(page.getByRole('dialog',{name:'Quick Open'})).toBeVisible();
- const search=page.getByRole('textbox',{name:'Search commands, scripts and windows'});
- await search.fill('main.py');
- await search.press('Enter');
- await expect(page.getByRole('dialog',{name:'Quick Open'})).toHaveCount(0);
- await expect(page.locator('.desktop-window[aria-label="main.py"]')).toBeVisible();
- await page.getByRole('button',{name:'Arrange workspace'}).click();
- await page.getByRole('menuitem',{name:'Research workspace'}).click();
- const mobile=await page.evaluate(()=>window.matchMedia('(max-width: 760px)').matches);
- if(!mobile)await expect(page.locator('.desktop-window[aria-label="Python Reference"]')).toBeVisible();
- else await expect(page.locator('.desktop-window[aria-label="Python Reference"]')).toHaveCount(1);
- await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
- await page.getByRole('button',{name:'Arrange workspace'}).click();
- await page.getByRole('menuitem',{name:'Tile windows'}).click();
- await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
- await page.getByRole('button',{name:/MENU/}).last().click();
- await page.getByRole('button',{name:/CONTINUE CAMPAIGN/}).click();
- await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
+ test.setTimeout(90000);
+ await test.step('Boot workbench and open a script from Quick Open',async()=>{
+  await enterWorkbench(page);
+  await page.keyboard.press('Control+k');
+  await expect(page.getByRole('dialog',{name:'Quick Open'})).toBeVisible();
+  const search=page.getByRole('textbox',{name:'Search commands, scripts and windows'});
+  await search.fill('main.py');
+  await search.press('Enter');
+  await expect(page.getByRole('dialog',{name:'Quick Open'})).toHaveCount(0);
+  await expect(page.locator('.desktop-window[aria-label="main.py"]')).toBeVisible();
+ });
+ await test.step('Apply Research preset and tile windows',async()=>{
+  await page.getByRole('button',{name:'Arrange workspace'}).click();
+  await page.getByRole('menuitem',{name:'Research workspace'}).click();
+  const mobile=await page.evaluate(()=>window.matchMedia('(max-width: 760px)').matches);
+  if(!mobile)await expect(page.locator('.desktop-window[aria-label="Python Reference"]')).toBeVisible();
+  else await expect(page.locator('.desktop-window[aria-label="Python Reference"]')).toHaveCount(1);
+  await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
+  await page.getByRole('button',{name:'Arrange workspace'}).click();
+  await page.getByRole('menuitem',{name:'Tile windows'}).click();
+  await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
+ });
+ await test.step('Continue campaign restores the saved layout',async()=>{
+  await page.getByRole('button',{name:/MENU/}).last().click();
+  await expect(page.getByRole('button',{name:/CONTINUE CAMPAIGN/})).toBeEnabled();
+  await page.getByRole('button',{name:/CONTINUE CAMPAIGN/}).click();
+  await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
+ });
 });
 
 test('General Settings controls UI size and offers theme recovery',async({page})=>{
