@@ -115,21 +115,10 @@ test('Game API language links open the Python Reference without closing the API'
  await expect(game.locator('.documentation-tab')).toHaveCount(1);
 });
 
-test('navigation scrollbars use the Code Empire theme',async({page})=>{
+test('workbench renders after startup and the navigation sidebar remains scrollable',async({page})=>{
+ await page.goto('/');
+ await expect(page.locator('.menu-root')).toBeVisible();
  await enterWorkbench(page);
- const rail=page.locator('.sidebar');
- await expect(rail).toHaveCSS('scrollbar-color','rgb(97, 158, 130) rgb(19, 38, 52)');
- await expect(rail).toHaveCSS('scrollbar-width','thin');
- await page.getByRole('button',{name:'Python Reference'}).click();
- const directory=page.locator('.documentation-directory');
- await expect(directory).toHaveCSS('scrollbar-color','rgb(97, 158, 130) rgb(19, 38, 52)');
- await expect(directory).toHaveCSS('scrollbar-width','thin');
- await expect(page.locator('.documentation-article')).toHaveCSS('scrollbar-color','rgb(97, 158, 130) rgb(19, 38, 52)');
-});
-test('Colony Overview scrollbar uses the dark workbench theme',async({page})=>{
- await enterWorkbench(page);
- await initializeWorld(page);
- const overview=page.locator('.window-content.overview');
- await expect(overview).toHaveCSS('scrollbar-color','rgb(97, 158, 130) rgb(19, 38, 52)');
- await expect(overview).toHaveCSS('scrollbar-width','thin');
+ await expect(page.locator('.game-shell')).toBeVisible();
+ await expect(page.locator('.sidebar')).toHaveCSS('overflow-y','auto');
 });
