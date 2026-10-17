@@ -1,6 +1,8 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {ChangeEvent} from 'react';
 import MainMenu from './app/MainMenu';
+import {applyTheme,persistTheme,themeDefaults} from './theme/themeState';
+import {saveUiScale} from './theme/uiPreferences';
 import {renderGameWindow} from './games/WindowContent';
 import {createPendingWorld,catchUp} from './engine/world';
 import {applyCommands} from './engine/commands/registry';
@@ -192,8 +194,8 @@ export default function App(){
     e.preventDefault();setWorkspace(s=>upsertWindow(s,'python'));
    }
   };
-  document.addEventListener('keydown',shortcut);
-  return()=>document.removeEventListener('keydown',shortcut);
+  document.addEventListener('keydown',shortcut,true);
+  return()=>document.removeEventListener('keydown',shortcut,true);
  },[screen]);
  const editController=(id:string,change:Partial<Controller>)=>setControllers(c=>c.map(x=>x.id===id?{...x,...change}:x));
  const checkpointController=(id:string)=>{
@@ -248,13 +250,20 @@ export default function App(){
  const render=(win:WindowState)=>renderGameWindow(win,{world,controllers,entries,selection,lesson,
   showHint,setShowHint,beginner,busy,editController,execute,issueCommand,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController});
 
+ const resetAppearance=()=>{
+  const defaults=themeDefaults();
+  applyTheme(defaults);saveUiScale(1);
+  try{persistTheme(defaults);setStatus('Appearance and interface size reset to defaults.');}
+  catch{setStatus('Appearance reset for this session; browser storage is unavailable.');}
+ };
  const submitBoot=()=>{
   if(bootInput.trim()==='Empire.boot()'){setBootError('');setScreen('game');setWorkspace(startupWorkspace());}
   else setBootError('Unrecognized command. Enter Empire.boot() to launch the simulation software.');
  };
  return <>
   {screen==='menu'?<MainMenu loaded={loaded} saveExists={saveExists}
-  onNew={()=>void newGame()} onContinue={()=>void continueGame()} onImport={()=>fileInput.current?.click()} status={status}/>:
+  onNew={()=>void newGame()} onContinue={()=>void continueGame()} onImport={()=>fileInput.current?.click()}
+  onResetAppearance={resetAppearance} status={status}/>:
    screen==='terminal'?<main className="boot-terminal"><section className="boot-screen" aria-label="Simulation terminal">
     <p className="boot-heading">CIVILIZATION INITIATIVE // UNIVERSAL TERMINAL</p>
     <h1>WELCOME TO YOUR SIMULATION</h1>

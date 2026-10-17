@@ -1,5 +1,5 @@
-export default function MainMenu({loaded,saveExists,onNew,onContinue,onImport,status}:{
- loaded:boolean;saveExists:boolean;onNew:()=>void;onContinue:()=>void;onImport:()=>void;status:string;
+export default function MainMenu({loaded,saveExists,onNew,onContinue,onImport,onResetAppearance,status}:{
+ loaded:boolean;saveExists:boolean;onNew:()=>void;onContinue:()=>void;onImport:()=>void;onResetAppearance:()=>void;status:string;
 }){
  return <div className="menu-root"><div className="menu-stars"/><div className="menu-content">
   <div className="logo-mark">⌘</div>
@@ -11,6 +11,7 @@ export default function MainMenu({loaded,saveExists,onNew,onContinue,onImport,st
     <button className="accent-btn" disabled={!loaded} onClick={onNew}>✦ NEW EMPIRE</button>
     <button disabled={!loaded||!saveExists} onClick={onContinue}>▶ CONTINUE CAMPAIGN</button>
     <button onClick={onImport}>⇧ IMPORT CAMPAIGN</button>
+    <button onClick={onResetAppearance} title="Restore classic colors and 100% interface size">⟲ RESET APPEARANCE</button>
     <a href="https://github.com/MrEktidd/Code-Empire" target="_blank" rel="noreferrer">↗ OPEN-SOURCE PROJECT</a>
     <a href="https://github.com/MrEktidd/Code-Empire/issues" target="_blank" rel="noreferrer">REPORT A BUG / SUGGEST A FEATURE ↗</a>
   </div>

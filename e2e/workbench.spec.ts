@@ -227,3 +227,13 @@ test('General Settings controls UI size and offers theme recovery',async({page})
  await page.reload();
  await expect(page.locator('html')).toHaveCSS('--ce-ui-scale','1.15');
 });
+
+test('main menu can recover default appearance even with an unreadable saved theme',async({page})=>{
+ await page.goto('/');
+ await page.evaluate(()=>localStorage.setItem('code-empire-ui-theme-v1',
+  JSON.stringify({version:1,overrides:{'--ce-color-background':'#ffffff','--ce-color-text':'#ffffff','--ce-color-accent':'#ffffff'}})));
+ await page.reload();
+ await expect(page.locator('html')).toHaveCSS('--ce-color-text','#ffffff');
+ await page.getByRole('button',{name:/RESET APPEARANCE/}).click();
+ await expect(page.locator('html')).toHaveCSS('--ce-color-text','#d6e5e5');
+});
