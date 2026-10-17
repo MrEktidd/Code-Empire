@@ -3,6 +3,7 @@ import type {ChangeEvent} from 'react';
 import MainMenu from './app/MainMenu';
 import {renderGameWindow} from './games/WindowContent';
 import {createPendingWorld,catchUp} from './engine/world';
+import {applyCommands} from './engine/commands/registry';
 import {CODE_EMPIRE_PYTHON_BRIDGE} from './games/code-empire/pythonBridge';
 import {SaveCoordinator} from './platform/persistence/SaveCoordinator';
 import {mergeRuntimeControllers} from './platform/controllers/mergeRuntime';
@@ -146,6 +147,13 @@ export default function App(){
    setScreen('game');
   }catch(e){setStatus('Could not load campaign: '+String(e));}
  };
+ const issueCommand=(command:ScriptCommand)=>{
+  if(gate.current||busy||world.phase!=='active')return;
+  const outcome=applyCommands(latest.current.world,[command]);
+  setWorld(outcome.world);
+  setStatus(outcome.messages.join(' · ')||'Command processed.');
+  if(outcome.messages.length)setEntries(old=>[...old,{tick:world.tick,controllerId:'engine',filename:'Interface',success:!outcome.messages[0].startsWith('Rejected'),output:outcome.messages,commands:1}].slice(-130));
+ };
  const open=(kind:WindowKind,id?:string)=>setWorkspace(s=>upsertWindow(s,kind,id));
  const editController=(id:string,change:Partial<Controller>)=>setControllers(c=>c.map(x=>x.id===id?{...x,...change}:x));
  const checkpointController=(id:string)=>{
@@ -198,7 +206,7 @@ export default function App(){
   findDoc([...PYTHON_TOPICS,...GAME_DOCUMENTS],win.activeDoc??'')?.title??'Reference Page':
   windowTitle(win,controllers.find(c=>c.id===win.controllerId)?.filename);
  const render=(win:WindowState)=>renderGameWindow(win,{world,controllers,entries,selection,lesson,
-  showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController});
+  showHint,setShowHint,beginner,busy,editController,execute,issueCommand,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController});
 
  const submitBoot=()=>{
   if(bootInput.trim()==='Empire.boot()'){setBootError('');setScreen('game');setWorkspace(startupWorkspace());}

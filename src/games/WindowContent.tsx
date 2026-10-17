@@ -1,5 +1,5 @@
 import type {Dispatch,ReactNode,SetStateAction} from 'react';
-import type {Controller,ExecutionEntry,WorldState} from '../engine/types';
+import type {Controller,ExecutionEntry,WorldState,ScriptCommand} from '../engine/types';
 import type {WindowKind,WindowState,WorkspaceState} from '../workspace/registry';
 import {newWorkspace,updateWindow} from '../workspace/registry';
 import PythonEditor from '../platform/editor/PythonEditor';
@@ -20,11 +20,11 @@ export type WindowContext={
  setShowHint:Dispatch<SetStateAction<boolean>>;setBeginner:Dispatch<SetStateAction<boolean>>;
  setWorkspace:Dispatch<SetStateAction<WorkspaceState>>;
  editController:(id:string,change:Partial<Controller>)=>void;
- execute:(id?:string)=>Promise<void>;open:(kind:WindowKind,id?:string)=>void;
+ execute:(id?:string)=>Promise<void>;issueCommand:(command:ScriptCommand)=>void;open:(kind:WindowKind,id?:string)=>void;
  openEntity:(id:string)=>void;beginLesson:()=>void;checkpointController:(id:string)=>void;openDoc:(scope:DocScope,id:string,popout?:boolean)=>void;
 };
  export function renderGameWindow(win:WindowState,ctx:WindowContext):ReactNode{
- const {world,controllers,entries,selection,lesson,showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController}=ctx;
+ const {world,controllers,entries,selection,lesson,showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController,issueCommand}=ctx;
   if(win.kind==='world')return <WorldView world={world}selection={selection}onSelect={openEntity}/>;
   if(win.kind==='scripts')return <div className="window-content"><p className="eyebrow">PROJECT EXPLORER</p><p className="muted">Every programmable object gets its own controller automatically. Filenames are editable; IDs are permanent.</p>{controllers.map(c=><button key={c.id} className="file-row" onClick={()=>open('controller',c.id)}><span>⌘</span><span><b>{c.filename}</b><small>{c.ownerEntityId??'Global automation'} · {c.lastStatus}</small></span><span>↗</span></button>)}</div>;
   if(win.kind==='controller'){
@@ -57,6 +57,11 @@ export type WindowContext={
        {founder&&<div className="inspector-stat"><span>Sex</span><strong>{founder.sex}</strong></div>}
        <div className="inspector-stat"><span>Current task</span><strong>{worker.policy??'Idle'}</strong></div>
        <div className="inspector-stat"><span>Carrying</span><strong>{worker.carried} / {worker.capacity}</strong></div>
+       <div className="inspector-stat"><span>Utility Slot</span><strong>{worker.installedModules.utility?.[0]?'Carrying Basket':'Empty'}</strong></div>
+       <button className="inspector-action" disabled={busy} onClick={()=>issueCommand({
+         action:worker.installedModules.utility?.includes('core:carrying_basket')?'module.remove':'module.install',
+         entityId:worker.id,moduleId:'core:carrying_basket'
+       })}>{worker.installedModules.utility?.includes('core:carrying_basket')?'REMOVE CARRYING BASKET':'INSTALL CARRYING BASKET'}</button>
        <div className="inspector-progress"><span style={{width:(worker.carried/worker.capacity*100)+'%'}}/></div>
        <div className="inspector-stat"><span>Location</span><strong>{worker.x}, {worker.y}</strong></div>
        {founder&&<button className="inspector-action" onClick={()=>open('archive')}>VIEW GENESIS ARCHIVE ↗</button>}</>:
