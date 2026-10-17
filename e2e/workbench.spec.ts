@@ -114,3 +114,14 @@ test('Game API language links open the Python Reference without closing the API'
  await expect(python.locator('.documentation-article h2')).toContainText('Lists');
  await expect(game.locator('.documentation-tab')).toHaveCount(1);
 });
+
+test('navigation scrollbars use the Code Empire theme',async({page})=>{
+ await enterWorkbench(page);
+ const rail=page.locator('.sidebar');
+ await expect(rail).toHaveCSS('scrollbar-width','thin');
+ await expect(rail).toHaveCSS('scrollbar-color','rgb(81, 141, 115) rgb(16, 31, 43)');
+ await page.getByRole('button',{name:'Python Reference'}).click();
+ const directory=page.locator('.documentation-directory');
+ await expect(directory).toHaveCSS('scrollbar-width','thin');
+ await expect(directory).toHaveCSS('scrollbar-color','rgb(81, 141, 115) rgb(16, 31, 43)');
+});

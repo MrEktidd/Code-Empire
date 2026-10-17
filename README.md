@@ -4,7 +4,7 @@
 
 Code-Empire is an open-source browser-based Python coding game. Program individual settlers, learn Python through real simulation challenges, and eventually build automated organizations, kingdoms, industries and interstellar civilizations.
 
-**Current release:** v0.3.2 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
+**Current release:** v0.3.31 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
 
 ## Play
 
@@ -121,3 +121,7 @@ The simulation now loads validated, namespaced, Factorio-style definitions for m
 The engine introduces specialized entity records, technical-component declarations, universal IDs, typed relationships, module slots, a centralized command registry, and deterministic typed simulation signals. Content definitions are included automatically in Game API reference articles. The Python workbench remains separate. No external mod execution or untrusted code import is supported. Save schema **5** uses a fresh IndexedDB database and intentionally does **not** migrate older campaigns, as there were no player saves to preserve. For the architecture and contribution contract, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/CONTENT.md](docs/CONTENT.md).
 
 Scope: this is infrastructure, not a complete production economy. Craft operations process recipe inputs immediately; manufacturing duration, module acquisition costs and research-gated availability come later.
+
+## v0.3.31 — Sidebar scrollbar polish
+
+The main navigation rail and documentation topic sidebar now use slim, square-cornered green-on-dark scrollbars instead of native rounded grey scrollbars. Scrolling remains native, including keyboard and touch, and no game mechanics or content are changed.
