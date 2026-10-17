@@ -11,3 +11,7 @@ export function loadWorkspace():WorkspaceState{
 export function saveWorkspace(state:WorkspaceState){
  try{localStorage.setItem(KEY+':'+profile(),JSON.stringify(state));}catch{/* Storage might be unavailable. */}
 }
+
+export function hasSavedWorkspace():boolean{
+ try{return localStorage.getItem(KEY+':'+profile())!==null;}catch{return false;}
+}

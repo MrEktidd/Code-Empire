@@ -53,6 +53,14 @@ export default function ThemeEditor(){
  const [shareOpen,setShareOpen]=useState(false);
  const dirty=!same(draft,saved);
  useEffect(()=>{applyTheme(draft);},[draft]);
+ useEffect(()=>{
+  const onReset=()=>{
+   const defaults=themeDefaults();
+   setSaved(defaults);setDraft({...defaults});setPast([]);setFuture([]);setStatus('Appearance restored to defaults.');
+  };
+  window.addEventListener('code-empire:theme-reset',onReset);
+  return()=>window.removeEventListener('code-empire:theme-reset',onReset);
+ },[]);
  // Closing Settings without saving (even by switching windows) restores saved choices.
  useEffect(()=>()=>{applyTheme(readSavedTheme());},[]);
  const update=(next:ThemeValues)=>{

@@ -18,8 +18,11 @@ test('genesis rejects incomplete list then creates three archived founders',asyn
  await page.getByRole('button',{name:/OPEN GENESIS.PY/}).click();
  await expect(page.getByText('Founding Population')).toBeVisible();
  await page.getByRole('button',{name:/RUN SCRIPT/}).click();
- await page.getByRole('button',{name:'OUTPUT'}).click();
+ await page.getByRole('button',{name:'OUTPUT',exact:true}).click();
  await expect(page.getByText(/Define exactly three founders/)).toBeVisible({timeout:75000});
+ await expect(page.getByText('Command rejected',{exact:true}).first()).toBeVisible();
+ await page.getByRole('button',{name:/Open controller output/}).click();
+ await expect(page.getByRole('button',{name:'OUTPUT',exact:true})).toHaveClass(/selected/);
  await page.getByRole('button',{name:'CODE',exact:true}).click();
  const editor=page.locator('.controller-view .cm-content');
  await editor.fill('founders = [\n    {"name": "Adam", "sex": "male"},\n    {"name": "Eve", "sex": "female"},\n    {"name": "Ada", "sex": "female"},\n]\n\nEmpire.seed_population(founders)\n');
@@ -190,4 +193,57 @@ test('unsaved theme changes are discarded on closing settings',async({page})=>{
  await expect(page.locator('.game-shell')).toHaveCSS('--ce-color-accent','#dd5511');
  await page.getByRole('button',{name:'Close Settings'}).click();
  await expect(page.locator('.game-shell')).toHaveCSS('--ce-color-accent','#76cfa2');
+});
+
+test('Quick Open, workspace presets and saved layouts are accessible from the workbench',async({page})=>{
+ test.setTimeout(90000);
+ await test.step('Boot workbench and open a script from Quick Open',async()=>{
+  await enterWorkbench(page);
+  await page.keyboard.press('Control+k');
+  await expect(page.getByRole('dialog',{name:'Quick Open'})).toBeVisible();
+  const search=page.getByRole('textbox',{name:'Search commands, scripts and windows'});
+  await search.fill('main.py');
+  await search.press('Enter');
+  await expect(page.getByRole('dialog',{name:'Quick Open'})).toHaveCount(0);
+  await expect(page.locator('.desktop-window[aria-label="main.py"]')).toBeVisible();
+ });
+ await test.step('Apply Research preset and tile windows',async()=>{
+  await page.getByRole('button',{name:'Arrange workspace'}).click();
+  await page.getByRole('menuitem',{name:'Research workspace'}).click();
+  const mobile=await page.evaluate(()=>window.matchMedia('(max-width: 760px)').matches);
+  if(!mobile)await expect(page.locator('.desktop-window[aria-label="Python Reference"]')).toBeVisible();
+  else await expect(page.locator('.desktop-window[aria-label="Python Reference"]')).toHaveCount(1);
+  await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
+  await page.getByRole('button',{name:'Arrange workspace'}).click();
+  await page.getByRole('menuitem',{name:'Tile windows'}).click();
+  await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
+ });
+ await test.step('Continue campaign restores the saved layout',async()=>{
+  await page.getByRole('button',{name:/MENU/}).last().click();
+  await expect(page.getByRole('button',{name:/CONTINUE CAMPAIGN/})).toBeEnabled();
+  await page.getByRole('button',{name:/CONTINUE CAMPAIGN/}).click();
+  await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
+ });
+});
+
+test('General Settings controls UI size and offers theme recovery',async({page})=>{
+ await enterWorkbench(page);
+ await initializeWorld(page);
+ await page.getByRole('button',{name:'Settings'}).click();
+ await page.getByRole('combobox',{name:'Interface size'}).selectOption('1.15');
+ await expect(page.locator('html')).toHaveCSS('--ce-ui-scale','1.15');
+ await page.getByRole('button',{name:'Emergency: Restore Default Theme'}).click();
+ await expect(page.getByRole('status').filter({hasText:'Appearance restored'})).toBeVisible();
+ await page.reload();
+ await expect(page.locator('html')).toHaveCSS('--ce-ui-scale','1.15');
+});
+
+test('main menu can recover default appearance even with an unreadable saved theme',async({page})=>{
+ await page.goto('/');
+ await page.evaluate(()=>localStorage.setItem('code-empire-ui-theme-v1',
+  JSON.stringify({version:1,overrides:{'--ce-color-background':'#ffffff','--ce-color-text':'#ffffff','--ce-color-accent':'#ffffff'}})));
+ await page.reload();
+ await expect(page.locator('html')).toHaveCSS('--ce-color-text','#ffffff');
+ await page.getByRole('button',{name:/RESET APPEARANCE/}).click();
+ await expect(page.locator('html')).toHaveCSS('--ce-color-text','#d6e5e5');
 });
