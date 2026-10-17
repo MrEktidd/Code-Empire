@@ -20,6 +20,9 @@ test('genesis rejects incomplete list then creates three archived founders',asyn
  await page.getByRole('button',{name:/RUN SCRIPT/}).click();
  await page.getByRole('button',{name:'OUTPUT'}).click();
  await expect(page.getByText(/Define exactly three founders/)).toBeVisible({timeout:75000});
+ await expect(page.getByText('Command rejected',{exact:true}).first()).toBeVisible();
+ await page.getByRole('button',{name:/Open controller output/}).click();
+ await expect(page.getByRole('button',{name:'OUTPUT'})).toHaveClass(/selected/);
  await page.getByRole('button',{name:'CODE',exact:true}).click();
  const editor=page.locator('.controller-view .cm-content');
  await editor.fill('founders = [\n    {"name": "Adam", "sex": "male"},\n    {"name": "Eve", "sex": "female"},\n    {"name": "Ada", "sex": "female"},\n]\n\nEmpire.seed_population(founders)\n');
@@ -190,4 +193,37 @@ test('unsaved theme changes are discarded on closing settings',async({page})=>{
  await expect(page.locator('.game-shell')).toHaveCSS('--ce-color-accent','#dd5511');
  await page.getByRole('button',{name:'Close Settings'}).click();
  await expect(page.locator('.game-shell')).toHaveCSS('--ce-color-accent','#76cfa2');
+});
+
+test('Quick Open, workspace presets and saved layouts are accessible from the workbench',async({page})=>{
+ await enterWorkbench(page);
+ await page.keyboard.press('Control+k');
+ await expect(page.getByRole('dialog',{name:'Quick Open'})).toBeVisible();
+ const search=page.getByRole('textbox',{name:'Search commands, scripts and windows'});
+ await search.fill('main.py');
+ await search.press('Enter');
+ await expect(page.getByRole('dialog',{name:'Quick Open'})).toHaveCount(0);
+ await expect(page.locator('.desktop-window[aria-label="main.py"]')).toBeVisible();
+ await page.getByRole('button',{name:'Arrange workspace'}).click();
+ await page.getByRole('menuitem',{name:'Research workspace'}).click();
+ await expect(page.locator('.desktop-window[aria-label="Python Reference"]')).toBeVisible();
+ await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
+ await page.getByRole('button',{name:'Arrange workspace'}).click();
+ await page.getByRole('menuitem',{name:'Tile windows'}).click();
+ await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
+ await page.getByRole('button',{name:/MENU/}).last().click();
+ await page.getByRole('button',{name:/CONTINUE CAMPAIGN/}).click();
+ await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
+});
+
+test('General Settings controls UI size and offers theme recovery',async({page})=>{
+ await enterWorkbench(page);
+ await initializeWorld(page);
+ await page.getByRole('button',{name:'Settings'}).click();
+ await page.getByRole('combobox',{name:'Interface size'}).selectOption('1.15');
+ await expect(page.locator('html')).toHaveCSS('--ce-ui-scale','1.15');
+ await page.getByRole('button',{name:'Emergency: Restore Default Theme'}).click();
+ await expect(page.getByRole('status').filter({hasText:'Appearance restored'})).toBeVisible();
+ await page.reload();
+ await expect(page.locator('html')).toHaveCSS('--ce-ui-scale','1.15');
 });
