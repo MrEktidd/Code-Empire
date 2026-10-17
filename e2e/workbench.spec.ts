@@ -118,10 +118,16 @@ test('Game API language links open the Python Reference without closing the API'
 test('navigation scrollbars use the Code Empire theme',async({page})=>{
  await enterWorkbench(page);
  const rail=page.locator('.sidebar');
- await expect(rail).toHaveCSS('scrollbar-width','thin');
- await expect(rail).toHaveCSS('scrollbar-color','rgb(81, 141, 115) rgb(16, 31, 43)');
+ const railThumb=await rail.evaluate(el=>{
+  const s=getComputedStyle(el,'::-webkit-scrollbar-thumb');
+  return {background:s.backgroundColor,radius:s.borderTopLeftRadius};
+ });
+ expect(railThumb).toEqual({background:'rgb(81, 141, 115)',radius:'0px'});
  await page.getByRole('button',{name:'Python Reference'}).click();
  const directory=page.locator('.documentation-directory');
- await expect(directory).toHaveCSS('scrollbar-width','thin');
- await expect(directory).toHaveCSS('scrollbar-color','rgb(81, 141, 115) rgb(16, 31, 43)');
+ const topicThumb=await directory.evaluate(el=>{
+  const s=getComputedStyle(el,'::-webkit-scrollbar-thumb');
+  return {background:s.backgroundColor,radius:s.borderTopLeftRadius};
+ });
+ expect(topicThumb).toEqual({background:'rgb(81, 141, 115)',radius:'0px'});
 });

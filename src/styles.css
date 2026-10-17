@@ -47,10 +47,15 @@
 /* v0.3.31 — Code Empire navigation scrollbars.
    Match the angular steel/forest-green workbench styling instead of native
    rounded grey scrollbars. Keep native scrolling, keyboard and touch behavior. */
-.sidebar,
-.documentation-directory {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #518d73 #101f2b;
+/* Firefox uses the standard scrollbar properties. Chromium and Safari
+   use the square-cornered WebKit track/thumb below, which standard color
+   properties can otherwise override in Chromium. */
+@supports (-moz-appearance: none) {
+  .sidebar,
+  .documentation-directory {
+    scrollbar-width: thin;
+    scrollbar-color: #518d73 #101f2b;
+  }
 }
 .sidebar::-webkit-scrollbar,
 .documentation-directory::-webkit-scrollbar {
