@@ -56,3 +56,6 @@
    Only deliberate notification buttons capture pointer input. */
 .workbench-notice{pointer-events:none}
 .workbench-notice button{pointer-events:auto}
+
+/* Layout menu is portaled outside the horizontally scrollable taskbar. */
+.workspace-menu{max-height:min(420px,70vh);overflow-y:auto}
