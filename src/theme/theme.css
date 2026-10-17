@@ -172,3 +172,23 @@ body { background:var(--ce-color-background);color:var(--ce-color-text); }
 .documentation-article h3,.documentation-summary { color:var(--ce-color-accent)!important; }
 .documentation-article pre { background:var(--ce-color-background);border-color:var(--ce-color-border);color:var(--ce-color-text); }
 .menu-root { background:radial-gradient(ellipse at 72% 55%,var(--ce-color-surface-raised) 0%,transparent 34%),var(--ce-color-background); }
+
+/* Shared UI density: bounded token scaling, never zoom the simulation itself. */
+:root { --ce-ui-scale:1; }
+.game-shell .sidebar{width:calc(73px * var(--ce-ui-scale));gap:calc(4px * var(--ce-ui-scale));}
+.game-shell .sidebar button{font-size:calc(19px * var(--ce-ui-scale));padding:calc(10px * var(--ce-ui-scale)) 3px;}
+.game-shell .sidebar small{font-size:calc(9px * var(--ce-ui-scale));}
+.game-shell .game-header{font-size:calc(12px * var(--ce-ui-scale));}
+.game-shell .clock-actions button{padding:calc(7px * var(--ce-ui-scale)) calc(10px * var(--ce-ui-scale));}
+.game-shell .window-titlebar{height:calc(36px * var(--ce-ui-scale));}
+.game-shell .window-heading{font-size:calc(11px * var(--ce-ui-scale));}
+.game-shell .window-actions button{font-size:calc(16px * var(--ce-ui-scale));min-width:calc(27px * var(--ce-ui-scale));}
+.game-shell .controller-tabs button{font-size:calc(11px * var(--ce-ui-scale));padding:calc(10px * var(--ce-ui-scale)) 5px;}
+.game-shell .window-content{font-size:calc(12px * var(--ce-ui-scale));}
+.game-shell .ce-button{font-size:calc(11px * var(--ce-ui-scale));padding:calc(var(--ce-control-padding-y) * var(--ce-ui-scale)) calc(var(--ce-control-padding-x) * var(--ce-ui-scale));}
+.game-shell .taskbar{height:calc(36px * var(--ce-ui-scale));}
+.game-shell .taskbar button{font-size:calc(11px * var(--ce-ui-scale));}
+.game-shell .game-footer{height:calc(38px * var(--ce-ui-scale));font-size:calc(10px * var(--ce-ui-scale));}
+.game-shell .game-footer button{font-size:calc(10px * var(--ce-ui-scale));}
+.game-shell .muted{font-size:calc(12px * var(--ce-ui-scale));}
+@media(max-width:760px){.game-shell .sidebar{width:calc(64px * var(--ce-ui-scale));}}
