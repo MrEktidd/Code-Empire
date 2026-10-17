@@ -122,3 +122,29 @@ test('workbench renders after startup and the navigation sidebar remains scrolla
  await expect(page.locator('.game-shell')).toBeVisible();
  await expect(page.locator('.sidebar')).toHaveCSS('overflow-y','auto');
 });
+
+test('shared theme colors apply across real scrollable panels and editor',async({page})=>{
+ await enterWorkbench(page);
+ const color='rgb(83, 143, 118) rgb(18, 38, 53)';
+ const rail=page.locator('.sidebar.ce-scroll');
+ await expect(rail).toHaveCSS('scrollbar-color',color);
+ await expect(page.locator('.game-shell .cm-scroller').first()).toHaveCSS('scrollbar-color',color);
+ await initializeWorld(page);
+ await expect(page.locator('.overview.ce-scroll')).toHaveCSS('scrollbar-color',color);
+ await page.getByRole('button',{name:'Python Reference'}).click();
+ await expect(page.locator('.documentation-directory.ce-scroll')).toHaveCSS('scrollbar-color',color);
+ await expect(page.locator('.documentation-article.ce-scroll')).toHaveCSS('scrollbar-color',color);
+ await expect(page.locator('.overview.ce-scroll')).toHaveCSS('scrollbar-width','thin');
+});
+
+test('one central theme token controls all themed scroll containers',async({page})=>{
+ await enterWorkbench(page);
+ await page.getByRole('button',{name:'Python Reference'}).click();
+ const panes=page.locator('.sidebar.ce-scroll, .documentation-directory.ce-scroll, .documentation-article.ce-scroll');
+ const before=await panes.evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).scrollbarColor));
+ expect(new Set(before).size).toBe(1);
+ await page.locator('.game-shell').evaluate(node=>(node as HTMLElement).style.setProperty('--ce-scrollbar-thumb','#e18c55'));
+ const after=await panes.evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).scrollbarColor));
+ expect(after).toHaveLength(before.length);
+ for(const c of after)expect(c).toContain('rgb(225, 140, 85)');
+});

@@ -4,7 +4,7 @@
 
 Code-Empire is an open-source browser-based Python coding game. Program individual settlers, learn Python through real simulation challenges, and eventually build automated organizations, kingdoms, industries and interstellar civilizations.
 
-**Current release:** v0.3.33 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
+**Current release:** v0.3.34 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
 
 ## Play
 
@@ -133,3 +133,9 @@ Fixes the previous scrollbar-only patch, which applied Firefox-specific standard
 ## v0.3.33 — Emergency visual rollback
 
 Restores the previously working v0.3.31 stylesheet after reports of blank pages following the blanket scrollbar styling in v0.3.32. Main gameplay and save data are unchanged. Narrower styling and live production verification will be evaluated separately.
+
+## v0.3.34 — Shared UI theme foundation
+
+The centralized [`src/theme/theme.css`](src/theme/theme.css) defines the workbench's reusable color, border, spacing, radius, and scrollbar tokens. Changing a token there changes all participating UI elements. New content uses the `ce-scroll` class or `ScrollArea` React wrapper, rather than copy-pasting browser-specific scrollbar declarations. Sidebar, documentation, terminal status pane, colony overview, game panels, code editor scroll area, and taskbar now opt into the shared scrollbar theme. Reusable `ce-button`, `ce-panel`, `ce-input`, and `ce-badge` primitives are also available for future UI. This is an underlying theme configuration file, not an in-game visual editor yet.
+
+Scroll styles are limited to explicitly scrollable UI elements to avoid the broad global selector introduced and subsequently rolled back in v0.3.32. CI includes a production-built GitHub Pages route smoke test after the build as protection against blank-page asset path regressions. No gameplay or save changes.

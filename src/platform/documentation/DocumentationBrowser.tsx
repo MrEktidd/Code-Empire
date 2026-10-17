@@ -44,7 +44,7 @@ export default function DocumentationBrowser({scope,articles,tabs,activeDoc,onCh
     <strong>{scope==='python'?'PYTHON REFERENCE':'GAME API'}</strong>
     <span>{articles.length} ARTICLES · UNRESTRICTED</span>
    </div>
-   <div className="documentation-tabs" role="tablist" aria-label="Open documentation tabs">
+   <div className="documentation-tabs ce-scroll" role="tablist" aria-label="Open documentation tabs">
     {tabList.map(key=>{
       const a=findDoc(articles,key)!;
       return <div key={key} className={'documentation-tab '+(activeDoc===key?'active':'')} role="tab" aria-selected={activeDoc===key}>
@@ -60,7 +60,7 @@ export default function DocumentationBrowser({scope,articles,tabs,activeDoc,onCh
     </select>
    </div>
    <div className="documentation-columns">
-    <nav className="documentation-directory" aria-label="Documentation topics">
+    <nav className="documentation-directory ce-scroll" aria-label="Documentation topics">
       {categories.map(cat=>{
        const items=matching.filter(x=>x.category===cat);
        if(!items.length)return null;
@@ -69,7 +69,7 @@ export default function DocumentationBrowser({scope,articles,tabs,activeDoc,onCh
       })}
       {!matching.length&&<p>No matching documents.</p>}
     </nav>
-    <article className="documentation-article" key={activeDoc}>
+    <article className="documentation-article ce-scroll" key={activeDoc}>
       <div className="documentation-article-toolbar">
        <span>{active.category}</span>
        <div>
