@@ -170,6 +170,7 @@ test('theme editor applies live colors, can undo/revert and saves across reloads
  await expect(page.getByText('✓ Saved')).toBeVisible();
  await page.reload();
  await expect(page.locator('html')).toHaveCSS('--ce-color-accent','#cf66aa');
+ page.on('dialog',dialog=>{void dialog.accept();});
  await enterWorkbench(page);
  await initializeWorld(page);
  await page.getByRole('button',{name:'Settings'}).click();
