@@ -1,5 +1,7 @@
 import { HEIGHT, WIDTH, WORLD_SCHEMA } from './types';
-import type { Building, FounderRecord, ScriptCommand, Tile, Worker, WorldState } from './types';
+import type { Building, FounderRecord, Tile, Worker, WorldState } from './types';
+import {emitSignal} from './events/bus';
+export {applyCommands} from './commands/registry';
 
 function random01(seed: number, x: number, y: number): number {
   let n = (seed ^ Math.imul(x + 139, 374761393) ^ Math.imul(y + 53, 668265263)) >>> 0;
@@ -9,7 +11,7 @@ function random01(seed: number, x: number, y: number): number {
 /** Before Empire.initialize() runs, no terrain or people have been generated. */
 export function createPendingWorld(seed = 2048): WorldState {
   return {schema:WORLD_SCHEMA,seed,tick:0,phase:'dormant',housingCapacity:3,tiles:[],
-    workers:[],buildings:[],genesisArchive:[],stocks:{wood:0,stone:0,food:0},totalHarvested:0,events:[]};
+    workers:[],buildings:[],entities:[],relationships:[],signals:[],genesisArchive:[],stocks:{wood:0,stone:0,food:0},totalHarvested:0,events:[]};
 }
 
 /** includePrototypeEntities keeps existing v0.2 fixtures and saves testable.
@@ -30,12 +32,12 @@ export function createWorld(seed = 2048, includePrototypeEntities = true): World
   for (let y = 3; y <= 7; y++) for (let x = 2; x <= 5; x++) set(x, y, 'meadow');
   set(3, 5, 'stockpile'); if (includePrototypeEntities) set(4, 7, 'farm'); set(7, 4, 'forest', 72); set(9, 7, 'quarry', 65);
   const worker = (id: string, name: string, role: string, x: number, y: number): Worker =>
-    ({ id, name, role, x, y, carried: 0, carrying: null, capacity: 6, policy: null,
+    ({ id, definitionId:'core:founder',installedModules:{}, name, role, x, y, carried: 0, carrying: null, capacity: 6, policy: null,
       task: null, organizationId: null, controlMode: 'independent' });
-  const farm: Building = { id: 'farm_000001', name: 'First Light Farm', type: 'farm', x: 4, y: 7, mode: 'food',
+  const farm: Building = { id: 'farm_000001', definitionId:'core:farm',installedModules:{}, name: 'First Light Farm', type: 'farm', x: 4, y: 7, mode: 'food',
     organizationId: null, controlMode: 'independent' };
   return { schema: WORLD_SCHEMA, seed, tick: 0, phase:'active', housingCapacity:3, tiles,
-    buildings: includePrototypeEntities ? [farm] : [],genesisArchive:[],
+    buildings: includePrototypeEntities ? [farm] : [],entities:[],relationships:[],signals:[],genesisArchive:[],
     workers: includePrototypeEntities ? [worker('npc_000001', 'Ada', 'Forester', 3, 5),
       worker('npc_000002', 'Bram', 'Miner', 4, 5),
       worker('npc_000003', 'Cora', 'Generalist', 3, 6)] : [],
@@ -77,14 +79,14 @@ export function establishFounders(previous:WorldState,raw:unknown):WorldState {
   }));
   const spawn:[[number,number],[number,number],[number,number]]=[[3,6],[4,5],[4,6]];
   const workers:Worker[]=records.map((f,i)=>({
-    id:f.id,name:f.name,sex:f.sex,role:'Founder',x:spawn[i][0],y:spawn[i][1],
+    id:f.id,definitionId:'core:founder',installedModules:{},name:f.name,sex:f.sex,role:'Founder',x:spawn[i][0],y:spawn[i][1],
     carried:0,carrying:null,capacity:6,policy:null,task:null,
     organizationId:null,controlMode:'independent'
   }));
   return {...previous,workers,genesisArchive:records,
     events:[...previous.events,`Genesis: ${records.map(x=>x.name).join(', ')} became the first inhabitants of First Light.`]};
 }
-function nearest(world: WorldState, unit: Worker, resource: 'wood' | 'stone'): Tile | undefined {
+export function nearestResource(world: WorldState, unit: Worker, resource: 'wood' | 'stone'): Tile | undefined {
   const type = resource === 'wood' ? 'forest' : 'quarry';
   return world.tiles.filter(t => t.ground === type && t.remaining > 0)
     .sort((a, b) => (Math.abs(a.x - unit.x) + Math.abs(a.y - unit.y)) -
@@ -95,7 +97,7 @@ function choosePolicyTask(world: WorldState, unit: Worker): void {
   if (unit.carried >= unit.capacity || (unit.carried > 0 && unit.carrying !== unit.policy)) {
     unit.task = { kind: 'deposit', x: 3, y: 5 }; return;
   }
-  const target = nearest(world, unit, unit.policy);
+  const target = nearestResource(world, unit, unit.policy);
   if (target) unit.task = { kind: 'gather', x: target.x, y: target.y, resource: unit.policy };
   else if (unit.carried > 0) unit.task = { kind: 'deposit', x: 3, y: 5 };
 }
@@ -141,61 +143,9 @@ export function stepWorld(previous: WorldState): WorldState {
   }
   if (state.stocks.wood >= 60 && state.stocks.stone >= 24 && !state.events.some(e => e.startsWith('Milestone:')))
     state.events.push('Milestone: First Stockpiles — 60 wood and 24 stone secured.');
+  if(Object.keys(state.stocks).some(key=>state.stocks[key]!==previous.stocks[key]))
+    return emitSignal(state,'inventory.changed',{tick:state.tick});
   return state;
-}
-export function applyCommands(previous: WorldState, commands: ScriptCommand[]): { world: WorldState; messages: string[] } {
-  let world: WorldState = {
-    ...previous, workers: previous.workers.map(w => ({ ...w, task: w.task ? { ...w.task } : null })),
-    buildings: previous.buildings.map(b => ({ ...b }))
-  };
-  const messages: string[] = [];
-  for (const cmd of commands.slice(0, 64)) {
-    if (cmd.action === 'initialize') {
-      if (world.phase === 'active') {messages.push('Simulation already initialized.');continue;}
-      world = createCivilizationWorld(world.seed);
-      messages.push('Simulation initialized. Physical environment generated.');
-      continue;
-    }
-    if (world.phase === 'dormant' && cmd.action !== 'log') {
-      messages.push('Initialize the simulation with Empire.initialize() first.');
-      continue;
-    }
-    if (cmd.action === 'seed_population') {
-      const reason=validateFounderBatch(world,cmd.founders);
-      if(reason)messages.push('Genesis rejected: '+reason);
-      else{
-        world=establishFounders(world,cmd.founders);
-        messages.push('Genesis complete: '+world.workers.map(x=>x.name).join(', ')+'. Population '+world.workers.length+'/'+world.housingCapacity+'.');
-      }
-      continue;
-    }
-    if (cmd.action === 'log') { messages.push(String(cmd.message ?? '').slice(0, 180)); continue; }
-    if (cmd.action === 'farm_mode') {
-      const farm = world.buildings.find(b => b.id === cmd.buildingId);
-      if (!farm || !['food','rest','resting'].includes(cmd.mode??'')) messages.push('Invalid farm mode command');
-      else { farm.mode = cmd.mode === 'resting' ? 'rest' : cmd.mode as 'food'|'rest'; messages.push(farm.name + ': ' + farm.mode); }
-      continue;
-    }
-    const unit = world.workers.find(w => w.id === cmd.workerId);
-    if (!unit) { messages.push('Unknown worker: ' + String(cmd.workerId)); continue; }
-    if (cmd.action === 'assign') {
-      if (cmd.resource === 'wood' || cmd.resource === 'stone' || cmd.resource === 'idle') {
-        const nextPolicy = cmd.resource === 'idle' ? null : cmd.resource;
-        if (unit.policy !== nextPolicy) { unit.policy = nextPolicy; unit.task = null; messages.push(unit.name + ': ' + (nextPolicy ?? 'idle')); }
-      } else messages.push('Invalid resource: ' + String(cmd.resource));
-    } else if (cmd.action === 'order') {
-      if (cmd.task === 'deposit') unit.task = { kind: 'deposit', x: 3, y: 5 };
-      else if (cmd.task === 'gather' && (cmd.resource === 'wood' || cmd.resource === 'stone')) {
-        const target = nearest(world, unit, cmd.resource);
-        if (target) unit.task = { kind: 'gather', x: target.x, y: target.y, resource: cmd.resource };
-        else messages.push('No ' + cmd.resource + ' deposits remain.');
-      } else if (cmd.task === 'move' && Number.isInteger(cmd.x) && Number.isInteger(cmd.y) &&
-        cmd.x! >= 0 && cmd.y! >= 0 && cmd.x! < WIDTH && cmd.y! < HEIGHT) {
-        unit.task = { kind: 'move', x: cmd.x!, y: cmd.y! };
-      } else messages.push('Invalid order for ' + unit.name);
-    }
-  }
-  return { world, messages };
 }
 /** Offline progress executes established engine-owned policies, not player Python. */
 export function catchUp(previous: WorldState, elapsedMs: number): { world: WorldState; hours: number } {
@@ -209,13 +159,16 @@ export function worldSnapshot(world: WorldState) {
     tick: world.tick, day: 1 + Math.floor(world.tick / 24), hour: world.tick % 24,
     phase: world.phase, housing_capacity: world.housingCapacity,
     stocks: { ...world.stocks },
+    signals:world.signals.map(e=>({...e,payload:{...e.payload}})),
     workers: world.workers.map(w => ({
-      id: w.id, name: w.name, role: w.role, sex:w.sex??null, x: w.x, y: w.y,
+      id: w.id,definition_id:w.definitionId,modules:w.installedModules, name: w.name, role: w.role, sex:w.sex??null, x: w.x, y: w.y,
       carried: w.carried, carrying: w.carried, cargo_type: w.carrying,
       capacity: w.capacity, policy: w.policy, control_mode: w.controlMode
     })),
+    signals:world.signals.slice(-40).map(s=>({...s,payload:{...s.payload}})),
+    entities:world.entities.map(e=>({id:e.id,name:e.name,kind:e.kind,definition_id:e.definitionId,modules:e.installedModules})),
     buildings: world.buildings.map(b => ({
-      id: b.id, name: b.name, type: b.type, x: b.x, y: b.y, mode: b.mode
+      id: b.id,definition_id:b.definitionId,modules:b.installedModules, name: b.name, type: b.type, x: b.x, y: b.y, mode: b.mode
     }))
   };
 }

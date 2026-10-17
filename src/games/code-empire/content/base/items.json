@@ -1,0 +1,37 @@
+[
+  {
+    "type": "item",
+    "id": "core:wood",
+    "display_name": "Wood",
+    "stack_size": 100,
+    "inventory_key": "wood",
+    "material": "core:wood_material"
+  },
+  {
+    "type": "item",
+    "id": "core:stone",
+    "display_name": "Stone",
+    "stack_size": 100,
+    "inventory_key": "stone",
+    "material": "core:stone_material"
+  },
+  {
+    "type": "item",
+    "id": "core:food",
+    "display_name": "Food",
+    "stack_size": 100,
+    "inventory_key": "food"
+  },
+  {
+    "type": "item",
+    "id": "core:stone_axe",
+    "display_name": "Stone Axe",
+    "stack_size": 10
+  },
+  {
+    "type": "item",
+    "id": "core:plank",
+    "display_name": "Plank",
+    "stack_size": 100
+  }
+]

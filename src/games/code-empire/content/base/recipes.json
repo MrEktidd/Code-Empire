@@ -1,0 +1,42 @@
+[
+  {
+    "type": "recipe",
+    "id": "core:make_stone_axe",
+    "display_name": "Craft Stone Axe",
+    "inputs": [
+      {
+        "item": "core:wood",
+        "amount": 2
+      },
+      {
+        "item": "core:stone",
+        "amount": 3
+      }
+    ],
+    "outputs": [
+      {
+        "item": "core:stone_axe",
+        "amount": 1
+      }
+    ],
+    "duration": 2
+  },
+  {
+    "type": "recipe",
+    "id": "core:saw_planks",
+    "display_name": "Saw Planks",
+    "inputs": [
+      {
+        "item": "core:wood",
+        "amount": 2
+      }
+    ],
+    "outputs": [
+      {
+        "item": "core:plank",
+        "amount": 3
+      }
+    ],
+    "duration": 4
+  }
+]

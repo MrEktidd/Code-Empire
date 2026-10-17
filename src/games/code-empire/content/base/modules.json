@@ -1,0 +1,66 @@
+[
+  {
+    "type": "module",
+    "id": "core:carrying_basket",
+    "display_name": "Carrying Basket",
+    "description": "A simple pack allowing a settler to carry six more units.",
+    "slot": "utility",
+    "allowed_kinds": [
+      "person"
+    ],
+    "effects": [
+      {
+        "kind": "carry_capacity",
+        "amount": 6
+      }
+    ]
+  },
+  {
+    "type": "module",
+    "id": "core:log_storage",
+    "display_name": "Log Storage",
+    "description": "Provides capacity for 50 logs.",
+    "slot": "storage",
+    "allowed_kinds": [
+      "workplace"
+    ],
+    "effects": [
+      {
+        "kind": "inventory_capacity",
+        "amount": 50
+      }
+    ]
+  },
+  {
+    "type": "module",
+    "id": "core:improved_log_storage",
+    "display_name": "Improved Log Storage",
+    "description": "Provides capacity for 500 logs.",
+    "slot": "storage",
+    "allowed_kinds": [
+      "workplace"
+    ],
+    "effects": [
+      {
+        "kind": "inventory_capacity",
+        "amount": 500
+      }
+    ]
+  },
+  {
+    "type": "module",
+    "id": "core:truck_dispatch",
+    "display_name": "Truck Dispatch",
+    "description": "Unlocks the future automated shipment interface.",
+    "slot": "logistics",
+    "allowed_kinds": [
+      "workplace"
+    ],
+    "effects": [
+      {
+        "kind": "capability",
+        "capability": "shipping.dispatch"
+      }
+    ]
+  }
+]

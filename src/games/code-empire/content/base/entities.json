@@ -1,0 +1,68 @@
+[
+  {
+    "type": "entity",
+    "id": "core:founder",
+    "display_name": "Named Character",
+    "kind": "person",
+    "technical_components": [
+      "location",
+      "inventory",
+      "programmable"
+    ],
+    "module_slots": {
+      "utility": 1
+    }
+  },
+  {
+    "type": "entity",
+    "id": "core:farm",
+    "display_name": "Farm",
+    "kind": "workplace",
+    "technical_components": [
+      "location",
+      "production",
+      "programmable"
+    ],
+    "module_slots": {
+      "storage": 1
+    }
+  },
+  {
+    "type": "entity",
+    "id": "core:logging_camp",
+    "display_name": "Logging Camp",
+    "kind": "workplace",
+    "technical_components": [
+      "location",
+      "inventory",
+      "production",
+      "programmable"
+    ],
+    "module_slots": {
+      "storage": 1,
+      "logistics": 1
+    }
+  },
+  {
+    "type": "entity",
+    "id": "core:workforce",
+    "display_name": "Workforce",
+    "kind": "workforce",
+    "technical_components": [
+      "location",
+      "programmable"
+    ],
+    "module_slots": {}
+  },
+  {
+    "type": "entity",
+    "id": "core:planet",
+    "display_name": "Planet",
+    "kind": "celestial",
+    "technical_components": [
+      "location",
+      "ownership"
+    ],
+    "module_slots": {}
+  }
+]
