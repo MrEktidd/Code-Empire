@@ -60,6 +60,7 @@ export default function PythonEditor({id,source,error,completions=[],onChange,on
   if(!line||line>v.state.doc.lines){v.dispatch(setDiagnostics(v.state,[]));return;}
   const loc=v.state.doc.line(line);
   v.dispatch(setDiagnostics(v.state,[{from:loc.from,to:loc.to,severity:'error',message:error??'Python error'}]));
+  v.dispatch({effects:EditorView.scrollIntoView(loc.from,{y:'center'})});
  },[error,source]);
  useEffect(()=>{if(view.current)view.current.dom.style.fontSize=size+'px';},[size]);
  const adjust=(delta:number)=>{const value=Math.max(11,Math.min(22,size+delta));setSize(value);try{localStorage.setItem(FONT_STORAGE,String(value));}catch{}};

@@ -92,7 +92,7 @@ export function applyWorkspacePreset(state:WorkspaceState,preset:WorkspacePreset
  const ids=new Set(required);
  const width=Math.max(320,bounds.width),height=Math.max(240,bounds.height);
  const selected=next.windows.filter(w=>ids.has(w.kind)&&w.kind!=='controller');
- const mainSize=preset==='programming'?.62:preset==='management'?.65:.5;
+ const mainSize=preset==='programming' ? .62 : preset==='management' ? .65 : .5;
  next={...next,windows:next.windows.map(w=>{
   const i=selected.findIndex(x=>x.id===w.id);
   if(i<0)return {...w,minimized:true};

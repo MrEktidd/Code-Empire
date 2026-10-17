@@ -3,10 +3,10 @@ import type {Controller,WorldState} from '../engine/types';
 import type {WindowKind,WorkspaceState} from './registry';
 import './workbench.css';
 type Action={id:string;label:string;category:string;hint:string;perform:()=>void};
-export default function CommandPalette({controllers,world,workspace,onClose,openWindow,openController,openEntity,openDocs,run}:{
+export default function CommandPalette({controllers,world,workspace,onClose,openWindow,openController,openEntity,focusExisting,openDocs,run}:{
  controllers:Controller[];world:WorldState;workspace:WorkspaceState;onClose:()=>void;
  openWindow:(kind:WindowKind)=>void;openController:(id:string)=>void;
- openEntity:(id:string)=>void;openDocs:()=>void;run:()=>void;
+ openEntity:(id:string)=>void;focusExisting:(id:string)=>void;openDocs:()=>void;run:()=>void;
 }){
  const [query,setQuery]=useState('');
  const [current,setCurrent]=useState(0);
@@ -29,11 +29,11 @@ export default function CommandPalette({controllers,world,workspace,onClose,open
     hint:w.id,perform:()=>openEntity(w.id)})),
    ...workspace.windows.filter(w=>w.kind==='document').map(w=>({
     id:'existing:'+w.id,label:w.docId??w.id,category:'Open Documents',hint:'Switch to document',
-    perform:()=>openWindow('python')
+    perform:()=>focusExisting(w.id)
    }))
   ];
   return items;
- },[controllers,world.workers,workspace.windows,openWindow,openController,openEntity,openDocs,run]);
+ },[controllers,world.workers,workspace.windows,openWindow,openController,openEntity,focusExisting,openDocs,run]);
  const shown=actions.filter(a=>!query.trim()||[a.label,a.category,a.hint].join(' ').toLowerCase().includes(query.toLowerCase())).slice(0,12);
  const select=(a:Action)=>{a.perform();onClose();};
  return <div className="command-palette-backdrop" onPointerDown={e=>{if(e.target===e.currentTarget)onClose();}}>

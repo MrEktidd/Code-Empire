@@ -14,6 +14,7 @@ export function WindowManager({state,setState,render,title}:Props){
    return()=>window.removeEventListener('resize',recalc);
  },[]);
  const move=(e:React.PointerEvent<HTMLDivElement>,w:WindowState,resize:boolean)=>{
+  if(e.target instanceof HTMLElement&&e.target.closest('button'))return;
   if(small||w.maximized||e.button!==0)return;
   e.preventDefault();e.stopPropagation();
   const target=e.currentTarget;
@@ -41,7 +42,8 @@ export function WindowManager({state,setState,render,title}:Props){
      width:Math.max(260,Math.min(w.width,bounds.width)),
      height:Math.max(180,Math.min(w.height,bounds.height)),zIndex:w.z} as CSSProperties}
     onPointerDown={()=>setState(s=>s.focus===w.id?s:focusWindow(s,w.id))}>
-    <div className="window-titlebar" onPointerDown={e=>move(e,w,false)}>
+    <div className="window-titlebar" onDoubleClick={()=>{if(!small)setState(s=>updateWindow(s,w.id,{maximized:!w.maximized}));}}
+      onPointerDown={e=>move(e,w,false)} title="Double-click to maximize or restore">
       <span className="window-heading"><span className="window-dot"/> {title(w)}</span>
       <span className="window-actions">
         <button title="Minimize" aria-label={'Minimize '+title(w)} onPointerDown={e=>e.stopPropagation()} onClick={()=>setState(s=>updateWindow(s,w.id,{minimized:true}))}>─</button>
@@ -50,7 +52,15 @@ export function WindowManager({state,setState,render,title}:Props){
       </span>
     </div>
     <div className="window-body">{render(w)}</div>
-    {!small&&!w.maximized&&<div className="resize-grip" title="Drag to resize" onPointerDown={e=>move(e,w,true)}>◢</div>}
+    {!small&&!w.maximized&&<div className="resize-grip" role="button" tabIndex={0}
+      aria-label={'Resize '+title(w)} title="Drag to resize. Arrow keys resize by 20 pixels."
+      onKeyDown={e=>{
+       if(!['ArrowRight','ArrowLeft','ArrowUp','ArrowDown'].includes(e.key))return;
+       e.preventDefault();
+       const dw=e.key==='ArrowRight'?20:e.key==='ArrowLeft'?-20:0;
+       const dh=e.key==='ArrowDown'?20:e.key==='ArrowUp'?-20:0;
+       setState(s=>updateWindow(s,w.id,{width:Math.max(260,w.width+dw),height:Math.max(180,w.height+dh)}));
+      }} onPointerDown={e=>move(e,w,true)}>◢</div>}
   </section>)}
  </div>;
 }
