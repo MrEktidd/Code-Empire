@@ -4,7 +4,7 @@
 
 Code-Empire is an open-source browser-based Python coding game. Program individual settlers, learn Python through real simulation challenges, and eventually build automated organizations, kingdoms, industries and interstellar civilizations.
 
-**Current release:** v0.3.31 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
+**Current release:** v0.3.32 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
 
 ## Play
 
@@ -125,3 +125,7 @@ Scope: this is infrastructure, not a complete production economy. Craft operatio
 ## v0.3.31 — Sidebar scrollbar polish
 
 The main navigation rail and documentation topic sidebar now use slim, square-cornered green-on-dark scrollbars instead of native rounded grey scrollbars. Scrolling remains native, including keyboard and touch, and no game mechanics or content are changed.
+
+## v0.3.32 — Scrollbar theme correction
+
+Fixes the previous scrollbar-only patch, which applied Firefox-specific standard colors and omitted ordinary window scroll containers. The whole game workbench now uses dark slate tracks and muted green scrollbar thumbs on Chromium, Edge, Firefox and Safari where supported, including the left navigation, documentation browser, and Colony Overview. No gameplay changes.

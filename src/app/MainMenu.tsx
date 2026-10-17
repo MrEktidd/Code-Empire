@@ -5,7 +5,7 @@ export default function MainMenu({loaded,saveExists,onNew,onContinue,onImport,st
   <div className="logo-mark">⌘</div>
   <div className="menu-eyebrow">A CIVILIZATION WRITTEN IN CODE</div>
   <h1>CODE<span>EMPIRE</span></h1>
-  <div className="alpha-banner"><strong>EARLY ALPHA · v0.3.31</strong><p>This is a development preview of the Python workbench and simulation engine. Most civilization gameplay systems are not implemented yet. Export backups of work you want to keep.</p></div>
+  <div className="alpha-banner"><strong>EARLY ALPHA · v0.3.32</strong><p>This is a development preview of the Python workbench and simulation engine. Most civilization gameplay systems are not implemented yet. Export backups of work you want to keep.</p></div>
   <p>From your first settler to the stars. Write Python and automate a living world.</p>
   <div className="menu-options">
     <button className="accent-btn" disabled={!loaded} onClick={onNew}>✦ NEW EMPIRE</button>
@@ -14,7 +14,7 @@ export default function MainMenu({loaded,saveExists,onNew,onContinue,onImport,st
     <a href="https://github.com/MrEktidd/Code-Empire" target="_blank" rel="noreferrer">↗ OPEN-SOURCE PROJECT</a>
     <a href="https://github.com/MrEktidd/Code-Empire/issues" target="_blank" rel="noreferrer">REPORT A BUG / SUGGEST A FEATURE ↗</a>
   </div>
-  <div className="menu-bottom">EARLY ALPHA · v0.3.31 · REAL PYTHON · MIT LICENSE</div>
+  <div className="menu-bottom">EARLY ALPHA · v0.3.32 · REAL PYTHON · MIT LICENSE</div>
   {status!=='System ready.'&&<div className="menu-status">{status}</div>}
  </div></div>;
 }
