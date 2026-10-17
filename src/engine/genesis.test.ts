@@ -24,7 +24,7 @@ describe('Genesis Protocol v0.3.1',()=>{
   expect(worldSnapshot(r.world).workers[0].name).toBe('Adam');
   const next=applyCommands(r.world,[{action:'seed_population',founders}]);
   expect(next.world).toEqual(r.world);
-  expect(next.messages.some(x=>x.includes('Genesis rejected'))).toBe(true);
+  expect(next.messages.some(x=>x.includes('Rejected command:'))).toBe(true);
  });
  it('rejects malformed batches atomically, capacity limit and dormant requests',()=>{
   const w=genesis();

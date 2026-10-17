@@ -42,7 +42,7 @@ const catalogDocs:DocArticle[]=(['material','item','recipe','entity','module'] a
  CONTENT.list(type).map(def=>({
   id:'catalog-'+def.id.replace(':','-'),scope:'game' as const,category:'Registered '+type+'s',
   title:def.display_name+' ('+def.id+')',summary:def.description??'Registered '+type+' definition.',
-  body:definitionBody(def),example:'',tip:'This article is generated from the actual validated content registry.',
+  body:definitionBody(def)+'\n\nContent definitions are described by [[Python dictionaries|python:dicts]] and [[lists|python:lists]].',example:'',tip:'This article is generated from the actual validated content registry.',
   returns:'',related:[]
  })));
 export const GAME_DOCUMENTS:DocArticle[]=[...API.map(e=>({
