@@ -114,3 +114,20 @@ test('Game API language links open the Python Reference without closing the API'
  await expect(python.locator('.documentation-article h2')).toContainText('Lists');
  await expect(game.locator('.documentation-tab')).toHaveCount(1);
 });
+
+test('navigation scrollbars use the Code Empire theme',async({page})=>{
+ await enterWorkbench(page);
+ const rail=page.locator('.sidebar');
+ const railThumb=await rail.evaluate(el=>{
+  const s=getComputedStyle(el,'::-webkit-scrollbar-thumb');
+  return {background:s.backgroundColor,radius:s.borderTopLeftRadius};
+ });
+ expect(railThumb).toEqual({background:'rgb(81, 141, 115)',radius:'0px'});
+ await page.getByRole('button',{name:'Python Reference'}).click();
+ const directory=page.locator('.documentation-directory');
+ const topicThumb=await directory.evaluate(el=>{
+  const s=getComputedStyle(el,'::-webkit-scrollbar-thumb');
+  return {background:s.backgroundColor,radius:s.borderTopLeftRadius};
+ });
+ expect(topicThumb).toEqual({background:'rgb(81, 141, 115)',radius:'0px'});
+});
