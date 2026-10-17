@@ -121,7 +121,7 @@ add({action:'craft',scope:'global',target:()=> 'global-stockpile',
   const e=active(w);if(e)return e;
   if(typeof c.recipeId!=='string')return 'Recipe ID required';
   if(!Number.isSafeInteger(c.amount)||c.amount!<1||c.amount!>100)return 'Craft amount must be 1–100';
-  try{craftRecipe(w.stocks,c.recipeId,c.amount,CONTENT);}catch(e){return String(e instanceof Error?e.message:e);}
+  try{craftRecipe(w.stocks,c.recipeId,c.amount!,CONTENT);}catch(e){return String(e instanceof Error?e.message:e);}
   return null;
  },
  apply:(w,c)=>{

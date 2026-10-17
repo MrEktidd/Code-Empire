@@ -159,7 +159,6 @@ export function worldSnapshot(world: WorldState) {
     tick: world.tick, day: 1 + Math.floor(world.tick / 24), hour: world.tick % 24,
     phase: world.phase, housing_capacity: world.housingCapacity,
     stocks: { ...world.stocks },
-    signals:world.signals.map(e=>({...e,payload:{...e.payload}})),
     workers: world.workers.map(w => ({
       id: w.id,definition_id:w.definitionId,modules:w.installedModules, name: w.name, role: w.role, sex:w.sex??null, x: w.x, y: w.y,
       carried: w.carried, carrying: w.carried, cargo_type: w.carrying,
