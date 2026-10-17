@@ -4,7 +4,7 @@
 
 Code-Empire is an open-source browser-based Python coding game. Program individual settlers, learn Python through real simulation challenges, and eventually build automated organizations, kingdoms, industries and interstellar civilizations.
 
-**Current release:** v0.3.34 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
+**Current release:** v0.3.35 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
 
 ## Play
 
@@ -139,3 +139,7 @@ Restores the previously working v0.3.31 stylesheet after reports of blank pages 
 The centralized [`src/theme/theme.css`](src/theme/theme.css) defines the workbench's reusable color, border, spacing, radius, and scrollbar tokens. Changing a token there changes all participating UI elements. New content uses the `ce-scroll` class or `ScrollArea` React wrapper, rather than copy-pasting browser-specific scrollbar declarations. Sidebar, documentation, terminal status pane, colony overview, game panels, code editor scroll area, and taskbar now opt into the shared scrollbar theme. Reusable `ce-button`, `ce-panel`, `ce-input`, and `ce-badge` primitives are also available for future UI. This is an underlying theme configuration file, not an in-game visual editor yet.
 
 Scroll styles are limited to explicitly scrollable UI elements to avoid the broad global selector introduced and subsequently rolled back in v0.3.32. CI includes a production-built GitHub Pages route smoke test after the build as protection against blank-page asset path regressions. No gameplay or save changes.
+
+## v0.3.35 — Player theme editor
+
+Open **Settings → Theme** to customize colors, borders, panel/control rounding, and scrollbars. Colors have native pickers and hex text fields; dimensional settings have sliders. Changes preview live, with a representative sample panel and contrast warnings. Undo/redo, Revert to Saved, Reset Defaults, and built-in presets help experimentation. **Save Theme** persists only validated values to local browser storage, independent of civilization saves; closing the Settings window reverts unsaved edits. Share/import validated versioned JSON theme settings without loading executable scripts. The theme editor itself uses the same central theme tokens. Settings → General retains the existing beginner prompts and workspace reset.

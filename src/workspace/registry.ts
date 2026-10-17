@@ -23,7 +23,7 @@ export function upsertWindow(state:WorkspaceState,kind:WindowKind,controllerId?:
  const existing=state.windows.find(w=>w.id===id);
  if(existing)return {nextZ:state.nextZ+1,focus:id,windows:state.windows.map(w=>w.id===id?{...w,minimized:false,z:state.nextZ}:w)};
  const w:WindowState={id,kind,controllerId,x:65+state.windows.length*22,y:44+state.windows.length*20,
-  width:kind==='controller'?650:kind==='python'?785:kind==='docs'?550:410,height:kind==='controller'?530:kind==='python'?600:420,
+  width:kind==='controller'?650:kind==='python'?785:kind==='settings'?820:kind==='docs'?550:410,height:kind==='controller'?530:kind==='python'?600:kind==='settings'?625:420,
   minimized:false,maximized:false,z:state.nextZ,tab:'code',docScope:kind==='docs'?'game':'python',docTabs:kind==='python'?['python:python-start']:kind==='docs'?['game:print']:[],activeDoc:kind==='python'?'python:python-start':kind==='docs'?'game:print':''};
  return {nextZ:state.nextZ+1,focus:id,windows:[...state.windows,w]};
 }

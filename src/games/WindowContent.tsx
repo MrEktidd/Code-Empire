@@ -1,7 +1,7 @@
 import type {Dispatch,ReactNode,SetStateAction} from 'react';
 import type {Controller,ExecutionEntry,WorldState,ScriptCommand} from '../engine/types';
 import type {WindowKind,WindowState,WorkspaceState} from '../workspace/registry';
-import {newWorkspace,updateWindow} from '../workspace/registry';
+import {updateWindow} from '../workspace/registry';
 import PythonEditor from '../platform/editor/PythonEditor';
 import '../platform/editor/editor.css';
 import DocumentationBrowser from '../platform/documentation/DocumentationBrowser';
@@ -14,6 +14,7 @@ import WorldView from './code-empire/WorldView';
 import {GenesisOverview,GenesisArchive} from './code-empire/GenesisViews';
 import {GENESIS_CONTROLLER_ID} from '../defaults';
 import {ScrollArea} from '../theme/ScrollArea';
+import SettingsWindow from './SettingsWindow';
 const LESSON_REFERENCE=['printing','variables','functions','if-elif','if-elif','for-loops','dicts','while-loops'];
 export type WindowContext={
  world:WorldState;controllers:Controller[];entries:ExecutionEntry[];selection:string;lesson:number;
@@ -88,5 +89,5 @@ export type WindowContext={
     if(win.kind==='console')return <ScrollArea className="window-content scroll-pane console-lines">{entries.length===0?<p className="muted">Execution and errors will appear here.</p>:entries.slice().reverse().map((e,i)=><div key={i} className={e.success?'log-line':'log-line error'}><b>Tick {e.tick} · {e.filename} {e.success?'✓':'✕'}</b>{e.output.map((s,j)=><pre key={j}>{s}</pre>)}{e.error&&<pre>{e.error}</pre>}</div>)}</ScrollArea>;
   if(win.kind==='archive')return <GenesisArchive world={world} openGenesis={()=>open('controller',GENESIS_CONTROLLER_ID)} openEntity={openEntity}/>;
   if(win.kind==='overview')return <GenesisOverview world={world} openGenesis={()=>open('controller',GENESIS_CONTROLLER_ID)} openEntity={openEntity} openArchive={()=>open('archive')}/>;
-  return <div className="window-content ce-scroll"><h2>Settings</h2><label className="setting-row"><input type="checkbox" checked={beginner} onChange={e=>setBeginner(e.target.checked)}/> Show beginner learning prompts</label><button onClick={()=>setWorkspace(newWorkspace())}>RESET WORKSPACE LAYOUT</button><p className="muted">Scripts and simulation state are saved in IndexedDB. Window layouts are saved in local browser preferences.</p></div>;
+  return <SettingsWindow beginner={beginner} setBeginner={setBeginner} setWorkspace={setWorkspace}/>;
  };
