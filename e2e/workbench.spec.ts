@@ -25,6 +25,11 @@ test('genesis rejects incomplete list then creates three archived founders',asyn
  await editor.fill('founders = [\n    {"name": "Adam", "sex": "male"},\n    {"name": "Eve", "sex": "female"},\n    {"name": "Ada", "sex": "female"},\n]\n\nEmpire.seed_population(founders)\n');
  await page.getByRole('button',{name:/RUN SCRIPT/}).click();
  await expect(page.locator('.founder-card')).toHaveCount(3,{timeout:75000});
+ await page.locator('.founder-card').first().click();
+ await page.getByRole('button',{name:'INSTALL CARRYING BASKET'}).click();
+ await expect(page.getByText('0 / 12',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'REMOVE CARRYING BASKET'}).click();
+ await expect(page.getByText('0 / 6',{exact:true})).toBeVisible();
  await page.locator('.sidebar').getByRole('button',{name:'Genesis Archive',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Genesis Archive'})).toBeVisible();
  await expect(page.locator('.genesis-archive .founder-card')).toHaveCount(3);
@@ -53,7 +58,7 @@ test('continuous simulation saves progress before returning to menu',async({page
  await page.waitForTimeout(1400);
  const current=await page.evaluate(async()=>{
    const db=await new Promise<IDBDatabase>((resolve,reject)=>{
-     const r=indexedDB.open('code-empire-v2');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+     const r=indexedDB.open('code-empire-v032');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    const tick=await new Promise<number>((resolve,reject)=>{
      const tx=db.transaction('campaigns','readonly');const req=tx.objectStore('campaigns').get('autosave');
