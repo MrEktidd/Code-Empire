@@ -54,7 +54,7 @@ export class PythonRuntime {
    const timer=setTimeout(()=>{
     this.reset();reject(new Error('Continuous program exceeded its CPU budget; Python worker restarted.'));
    },2000);
-   this.pending.set(id,{resolve:resolve as (value:PythonResult)=>void,reject,timer});
+   this.pending.set(id,{resolve:resolve as unknown as (value:PythonResult)=>void,reject,timer});
    this.worker!.postMessage({type:'continuous',id,programId,operation,snapshot,source,ownerEntityId,response});
   });
  }
