@@ -285,7 +285,7 @@ export default function App(){
       onArrange={(mode,bounds)=>setWorkspace(s=>arrangeWorkspace(s,mode,bounds))}
       onPreset={(preset,bounds)=>setWorkspace(s=>applyWorkspacePreset(s,preset,bounds))}/>
       <button className="quick-open-trigger" title="Quick Open (Ctrl+K)" onClick={()=>setPaletteOpen(true)}>⌕ Find</button>
-      {workspace.windows.map(w=><button key={w.id} className={workspace.focus===w.id&&!w.minimized?'focused':''} onClick={()=>setWorkspace(s=>w.minimized?focusWindow(s,w.id):updateWindow(s,w.id,{minimized:true}))}>{title(w)}</button>)}</div></div></div>
+      {workspace.windows.map(w=><button key={w.id} className={workspace.focus===w.id&&!w.minimized?'focused':''} onClick={()=>setWorkspace(s=>(w.minimized||s.focus!==w.id)?focusWindow(s,w.id):updateWindow(s,w.id,{minimized:true}))}>{title(w)}</button>)}</div></div></div>
    <footer className="game-footer"><span className="footer-notice">{status} · {saveStatus}{offline>0?' · +'+offline+'h offline progress':''}</span>{world.workers.length>0&&beginner&&lesson<LESSONS.length&&<button className="lesson-shortcut" onClick={()=>open('learn')}>✧ Lesson {lesson+1}: {LESSONS[lesson].title}</button>}<button onClick={()=>downloadCampaign(world,controllers,lesson)}>⇩ EXPORT</button><button onClick={()=>fileInput.current?.click()}>⇧ IMPORT</button><button onClick={async()=>{setSpeed(0);await saver.current?.flush().catch(()=>{});setScreen('menu');}}>⌂ MENU</button></footer>
    </div>}
   {screen==='game'&&<NotificationCenter notice={notice} onDismiss={()=>setNotice(null)}/>}

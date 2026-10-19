@@ -225,7 +225,8 @@ test('Quick Open, workspace presets and saved layouts are accessible from the wo
   const mobile=await page.evaluate(()=>window.matchMedia('(max-width: 760px)').matches);
   if(mobile){
    await expect(page.locator('.taskbar')).toContainText('Game API');
-   await page.locator('.taskbar').getByRole('button',{name:'Game API'}).click();
+   const api=page.locator('.taskbar').getByRole('button',{name:'Game API'});
+   if(!(await api.getAttribute('class'))?.includes('focused'))await api.click();
   }
   await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
  });
