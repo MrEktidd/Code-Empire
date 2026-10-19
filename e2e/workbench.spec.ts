@@ -263,6 +263,8 @@ test('a continuous Python founder follows an explicit route and performs timed h
  await editor.fill('founders = [\n    {"name": "Adam", "sex": "male"},\n    {"name": "Eve", "sex": "female"},\n    {"name": "Ada", "sex": "female"},\n]\nEmpire.seed_population(founders)\n');
  await page.getByRole('button',{name:/RUN SCRIPT/}).click();
  await expect(page.locator('.founder-card')).toHaveCount(3,{timeout:75000});
+ // The editor stays above Overview on desktop; close it to expose the cards.
+ await page.getByRole('button',{name:'Close genesis.py'}).click();
  await page.locator('.founder-card').first().click();
  await page.getByRole('combobox',{name:'Execution mode'}).selectOption('continuous');
  await page.locator('.controller-view .cm-content').fill(
