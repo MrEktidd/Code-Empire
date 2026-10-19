@@ -1,6 +1,8 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {ChangeEvent} from 'react';
 import MainMenu from './app/MainMenu';
+import {applyTheme,persistTheme,themeDefaults} from './theme/themeState';
+import {saveUiScale} from './theme/uiPreferences';
 import {renderGameWindow} from './games/WindowContent';
 import {createPendingWorld,catchUp} from './engine/world';
 import {applyCommands} from './engine/commands/registry';
@@ -17,10 +19,14 @@ import type {Campaign,Controller,ExecutionEntry,WorldState,ScriptCommand} from '
 import {initialControllers,ensureGenesisController,ensureFounderControllers} from './defaults';
 import {PythonRuntime} from './platform/python/PythonRuntime';
 import {loadCampaign,saveCampaign,downloadCampaign,validCampaign,migrateCampaign} from './storage/db';
-import {loadWorkspace,saveWorkspace} from './storage/workspace';
-import {startupWorkspace,activeWorkspace,upsertWindow,focusWindow,updateWindow,windowTitle} from './workspace/registry';
+import {loadWorkspace,saveWorkspace,hasSavedWorkspace} from './storage/workspace';
+import {startupWorkspace,activeWorkspace,upsertWindow,focusWindow,updateWindow,windowTitle,arrangeWorkspace,applyWorkspacePreset,resumeWorkspace} from './workspace/registry';
 import type {WindowKind,WindowState,WorkspaceState} from './workspace/registry';
 import {WindowManager} from './workspace/WindowManager';
+import WorkspaceControls from './workspace/WorkspaceControls';
+import CommandPalette from './workspace/CommandPalette';
+import NotificationCenter from './workspace/NotificationCenter';
+import type {WorkbenchNotice} from './workspace/NotificationCenter';
 import {LESSONS,lessonCompleted} from './learning/lessons';
 import './styles.css';
 const SPEED=[0,1100,420,140];
@@ -56,6 +62,8 @@ export default function App(){
  const [beginner,setBeginner]=useState(true);
  const [selection,setSelection]=useState('');
  const [saveExists,setSaveExists]=useState(false);
+ const [paletteOpen,setPaletteOpen]=useState(false);
+ const [notice,setNotice]=useState<WorkbenchNotice|null>(null);
  const runtime=useRef<PythonRuntime|null>(null);
  const [saveStatus,setSaveStatus]=useState('Saved');
  const saver=useRef<SaveCoordinator<{world:WorldState;controllers:Controller[];lesson:number}>|null>(null);
@@ -113,10 +121,24 @@ export default function App(){
    if(sessionAtStart!==sessionVersion.current)return;
    applyState(result.world,result.controllers,result.entries,c);
    if(w.phase==='dormant'&&result.world.phase==='active'){setLoadingStep(0);setSpeed(0);}
-   if(result.entries.some(x=>!x.success))setStatus('Python error — inspect the controller Output tab.');
-   else if(result.entries.some(x=>x.output.some(s=>s.startsWith('Rejected command:'))))setStatus('Command rejected — inspect the controller Output tab.');
-   else setStatus(manualId?'Script executed.':'Simulation advanced.');
-  }catch(error){setStatus('Runtime issue: '+String(error));setSpeed(0);}
+   const failed=result.entries.find(x=>!x.success);
+   const rejected=result.entries.find(x=>x.output.some(message=>message.startsWith('Rejected command:')));
+   if(failed||rejected){
+    const entry=failed??rejected!;
+    const body=failed?(entry.error??entry.output.join(' · ')):entry.output.find(msg=>msg.startsWith('Rejected command:'))??'Command rejected';
+    setStatus(failed?'Python error — inspect controller Output.':'Command rejected — inspect controller Output.');
+    setNotice({id:Date.now(),kind:failed?'error':'warning',title:failed?'Python execution failed':'Command rejected',
+      detail:body.slice(0,250),actionLabel:'Open controller output',
+      onAction:()=>setWorkspace(s=>{
+       const opened=upsertWindow(s,'controller',entry.controllerId);
+       return updateWindow(opened,'controller:'+entry.controllerId,{tab:'output'});
+      })});
+   }else{
+    setStatus(manualId?'Script executed.':'Simulation advanced.');
+    if(manualId)setNotice({id:Date.now(),kind:'success',title:'Script executed',detail:'Python ran successfully. Review the Output tab for details.'});
+   }
+  }catch(error){setStatus('Runtime issue: '+String(error));setSpeed(0);
+   setNotice({id:Date.now(),kind:'error',title:'Runtime issue',detail:String(error).slice(0,240)});}
   finally{gate.current=false;setBusy(false);}
  },[screen,applyState,loadingStep]);
  useEffect(()=>{if(screen!=='game'||!speed)return;
@@ -142,7 +164,9 @@ export default function App(){
    setWorld(result.world);
    setControllers(ensureFounderControllers(ensureGenesisController(value.controllers,result.world.phase==='active'&&result.world.workers.length===0),result.world));
    setLesson(value.lessonIndex);
-   setWorkspace(result.world.phase==='dormant'?startupWorkspace():activeWorkspace());setLoadingStep(-1);
+   const saved=hasSavedWorkspace()?loadWorkspace():null;
+   setWorkspace(saved?resumeWorkspace(saved,result.world.phase,value.controllers.map(c=>c.id)):
+     result.world.phase==='dormant'?startupWorkspace():activeWorkspace());setLoadingStep(-1);
    setOffline(result.hours);setEntries([]);setStatus('Welcome back to First Light!');
    setScreen('game');
   }catch(e){setStatus('Could not load campaign: '+String(e));}
@@ -152,9 +176,27 @@ export default function App(){
   const outcome=applyCommands(latest.current.world,[command]);
   setWorld(outcome.world);
   setStatus(outcome.messages.join(' · ')||'Command processed.');
+  const isRejected=outcome.messages.some(message=>message.startsWith('Rejected'));
+  setNotice({id:Date.now(),kind:isRejected?'warning':'success',
+   title:isRejected?'Command rejected':'Command completed',
+   detail:outcome.messages.join(' · ').slice(0,230)});
   if(outcome.messages.length)setEntries(old=>[...old,{tick:world.tick,controllerId:'engine',filename:'Interface',success:!outcome.messages[0].startsWith('Rejected'),output:outcome.messages,commands:1}].slice(-130));
  };
  const open=(kind:WindowKind,id?:string)=>setWorkspace(s=>upsertWindow(s,kind,id));
+ useEffect(()=>{
+  if(screen!=='game')return;
+  const shortcut=(e:KeyboardEvent)=>{
+   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){
+    e.preventDefault();setPaletteOpen(x=>!x);return;
+   }
+   if(e.key==='Escape')setPaletteOpen(false);
+   if(e.key==='F1'&&!['INPUT','TEXTAREA','SELECT'].includes((e.target as HTMLElement)?.tagName??'')){
+    e.preventDefault();setWorkspace(s=>upsertWindow(s,'python'));
+   }
+  };
+  document.addEventListener('keydown',shortcut,true);
+  return()=>document.removeEventListener('keydown',shortcut,true);
+ },[screen]);
  const editController=(id:string,change:Partial<Controller>)=>setControllers(c=>c.map(x=>x.id===id?{...x,...change}:x));
  const checkpointController=(id:string)=>{
   setControllers(current=>current.map(c=>{
@@ -208,13 +250,20 @@ export default function App(){
  const render=(win:WindowState)=>renderGameWindow(win,{world,controllers,entries,selection,lesson,
   showHint,setShowHint,beginner,busy,editController,execute,issueCommand,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController});
 
+ const resetAppearance=()=>{
+  const defaults=themeDefaults();
+  applyTheme(defaults);saveUiScale(1);
+  try{persistTheme(defaults);setStatus('Appearance and interface size reset to defaults.');}
+  catch{setStatus('Appearance reset for this session; browser storage is unavailable.');}
+ };
  const submitBoot=()=>{
   if(bootInput.trim()==='Empire.boot()'){setBootError('');setScreen('game');setWorkspace(startupWorkspace());}
   else setBootError('Unrecognized command. Enter Empire.boot() to launch the simulation software.');
  };
  return <>
   {screen==='menu'?<MainMenu loaded={loaded} saveExists={saveExists}
-  onNew={()=>void newGame()} onContinue={()=>void continueGame()} onImport={()=>fileInput.current?.click()} status={status}/>:
+  onNew={()=>void newGame()} onContinue={()=>void continueGame()} onImport={()=>fileInput.current?.click()}
+  onResetAppearance={resetAppearance} status={status}/>:
    screen==='terminal'?<main className="boot-terminal"><section className="boot-screen" aria-label="Simulation terminal">
     <p className="boot-heading">CIVILIZATION INITIATIVE // UNIVERSAL TERMINAL</p>
     <h1>WELCOME TO YOUR SIMULATION</h1>
@@ -232,9 +281,19 @@ export default function App(){
     {loadingStep>=0&&<div className="initialization-overlay" role="status" aria-live="polite"><div className="initialization-box ce-scroll"><p className="eyebrow">CIVILIZATION INITIATIVE // WORLD GENERATOR</p><h2>INITIALIZING SIMULATION</h2>
      <div className="initialization-progress"><span style={{width:(100*Math.min(loadingStep,BOOT_MESSAGES.length)/BOOT_MESSAGES.length)+'%'}}/></div>
      {BOOT_MESSAGES.slice(0,loadingStep+1).map((m,i)=><p className={i===loadingStep?'initialization-current':''} key={i}>{i===loadingStep?'› ':'✓ '}{m}</p>)}</div></div>}
-    <div className="taskbar ce-scroll">{workspace.windows.map(w=><button key={w.id} className={workspace.focus===w.id&&!w.minimized?'focused':''} onClick={()=>setWorkspace(s=>w.minimized?focusWindow(s,w.id):updateWindow(s,w.id,{minimized:true}))}>{title(w)}</button>)}</div></div></div>
+    <div className="taskbar ce-scroll"><WorkspaceControls
+      onArrange={(mode,bounds)=>setWorkspace(s=>arrangeWorkspace(s,mode,bounds))}
+      onPreset={(preset,bounds)=>setWorkspace(s=>applyWorkspacePreset(s,preset,bounds))}/>
+      <button className="quick-open-trigger" title="Quick Open (Ctrl+K)" onClick={()=>setPaletteOpen(true)}>⌕ Find</button>
+      {workspace.windows.map(w=><button key={w.id} className={workspace.focus===w.id&&!w.minimized?'focused':''} onClick={()=>setWorkspace(s=>(w.minimized||s.focus!==w.id)?focusWindow(s,w.id):updateWindow(s,w.id,{minimized:true}))}>{title(w)}</button>)}</div></div></div>
    <footer className="game-footer"><span className="footer-notice">{status} · {saveStatus}{offline>0?' · +'+offline+'h offline progress':''}</span>{world.workers.length>0&&beginner&&lesson<LESSONS.length&&<button className="lesson-shortcut" onClick={()=>open('learn')}>✧ Lesson {lesson+1}: {LESSONS[lesson].title}</button>}<button onClick={()=>downloadCampaign(world,controllers,lesson)}>⇩ EXPORT</button><button onClick={()=>fileInput.current?.click()}>⇧ IMPORT</button><button onClick={async()=>{setSpeed(0);await saver.current?.flush().catch(()=>{});setScreen('menu');}}>⌂ MENU</button></footer>
    </div>}
+  {screen==='game'&&<NotificationCenter notice={notice} onDismiss={()=>setNotice(null)}/>}
+  {screen==='game'&&paletteOpen&&<CommandPalette controllers={controllers} world={world} workspace={workspace}
+   onClose={()=>setPaletteOpen(false)} openWindow={kind=>open(kind)}
+   openController={id=>open('controller',id)} openEntity={openEntity}
+   focusExisting={id=>setWorkspace(s=>focusWindow(s,id))}
+   openDocs={()=>open('python')} run={()=>{void execute();}}/>}
   <input ref={fileInput} type="file" hidden accept=".json,application/json" onChange={e=>void importGame(e)}/>
  </>;
 }

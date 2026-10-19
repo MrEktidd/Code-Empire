@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {closeWindow,focusWindow,newWorkspace,parseWorkspace,popoutDocument,updateWindow,upsertWindow} from './registry';
+import {closeWindow,focusWindow,newWorkspace,parseWorkspace,popoutDocument,updateWindow,upsertWindow,applyWorkspacePreset,arrangeWorkspace,resumeWorkspace} from './registry';
 describe('workspace windows',()=>{
  it('opens and restores the same controller instead of duplicating windows',()=>{
   let s=upsertWindow(newWorkspace(),'controller','ctrl_000001');
@@ -21,4 +21,45 @@ describe('workspace windows',()=>{
   expect(s.focus).toBe('document:python:lists');
  });
  it('rejects corrupt preferences',()=>expect(parseWorkspace({foo:'bar'})).toEqual(newWorkspace()));
+});
+
+describe('Workbench organization',()=>{
+ it('tiles windows without changing identities or document tabs',()=>{
+  const original=upsertWindow(newWorkspace(),'python');
+  const doc=original.windows.find(w=>w.id==='python')!;
+  const layout=arrangeWorkspace(original,'tile',{width:1200,height:850});
+  expect(layout.windows).toHaveLength(original.windows.length);
+  expect(layout.windows.find(w=>w.id==='python')?.docTabs).toEqual(doc.docTabs);
+  expect(layout.windows.filter(w=>!w.minimized).every(w=>w.x>=0&&w.y>=0)).toBe(true);
+ });
+ it('presets keep scripts and other windows rather than closing them',()=>{
+  const base=upsertWindow(newWorkspace(),'controller','ctrl_example');
+  const next=applyWorkspacePreset(base,'research',{width:1200,height:800});
+  expect(next.windows.find(w=>w.id==='controller:ctrl_example')?.minimized).toBe(true);
+  expect(next.windows.filter(w=>!w.minimized).map(w=>w.kind)).toEqual(['docs','python']);
+ });
+ it('restores good windows and discards stale controller refs',()=>{
+  const saved=upsertWindow(newWorkspace(),'controller','ctrl_deleted');
+  const restored=resumeWorkspace(saved,'active',[]);
+  expect(restored.windows.some(w=>w.id==='controller:ctrl_deleted')).toBe(false);
+  expect(restored.windows.some(w=>w.id==='world')).toBe(true);
+ });
+});
+
+describe('narrow viewport workspace persistence',()=>{
+ it('restores all Research windows after applying a mobile preset and tiling',()=>{
+  let layout=applyWorkspacePreset(newWorkspace(),'research',{width:320,height:520});
+  layout=arrangeWorkspace(layout,'tile',{width:320,height:520});
+  expect(layout.windows.find(w=>w.id==='docs')?.width).toBeGreaterThanOrEqual(260);
+  const restored=resumeWorkspace(parseWorkspace(JSON.parse(JSON.stringify(layout))),'active',[]);
+  expect(restored.windows.filter(w=>!w.minimized).map(w=>w.kind)).toEqual(['docs','python']);
+  expect(restored.focus).toBe('docs');
+  expect(restored.windows.find(w=>w.id==='docs')?.docTabs).toEqual(layout.windows.find(w=>w.id==='docs')?.docTabs);
+ });
+ it('normalizes already-persisted small window sizes instead of discarding them',()=>{
+  const saved=upsertWindow(newWorkspace(),'docs');
+  const corruptSize={...saved,windows:saved.windows.map(w=>w.id==='docs'?{...w,width:160,height:100}:w)};
+  const recovered=parseWorkspace(corruptSize);
+  expect(recovered.windows.find(w=>w.id==='docs')).toMatchObject({width:260,height:180});
+ });
 });

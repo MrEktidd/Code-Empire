@@ -4,7 +4,7 @@
 
 Code-Empire is an open-source browser-based Python coding game. Program individual settlers, learn Python through real simulation challenges, and eventually build automated organizations, kingdoms, industries and interstellar civilizations.
 
-**Current release:** v0.3.35 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
+**Current release:** v0.3.36 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
 
 ## Play
 
@@ -143,3 +143,11 @@ Scroll styles are limited to explicitly scrollable UI elements to avoid the broa
 ## v0.3.35 — Player theme editor
 
 Open **Settings → Theme** to customize colors, borders, panel/control rounding, and scrollbars. Colors have native pickers and hex text fields; dimensional settings have sliders. Changes preview live, with a representative sample panel and contrast warnings. Undo/redo, Revert to Saved, Reset Defaults, and built-in presets help experimentation. **Save Theme** persists only validated values to local browser storage, independent of civilization saves; closing the Settings window reverts unsaved edits. Share/import validated versioned JSON theme settings without loading executable scripts. The theme editor itself uses the same central theme tokens. Settings → General retains the existing beginner prompts and workspace reset.
+
+## v0.3.36 — Workbench OS polish (combined 0.3.3x UI milestone)
+
+Combines window-manager refinement, developer ergonomics, and accessibility into one release. The taskbar Layout menu can tile/cascade windows or switch to Programming, Management and Research presets; scripts and document tabs remain open when changing presets. Campaign continuation restores valid previously saved workspaces. Title bars support double-click maximize, and resize grips are keyboard accessible.
+
+Ctrl/⌘+K opens a command palette searching scripts, windows, characters and documentation. F1 opens Python help. Python errors and command rejections now show actionable notifications that open the appropriate controller Output tab; the editor scrolls to the error line. General Settings adds UI size options (85–130%), shortcut reference, and a safe Restore Default Theme button, while retaining the existing Theme Editor. Reduced-motion accessibility and keyboard focus styles are included.
+
+The engine, scenario definitions and save schema are unchanged. All changes are restricted to workbench UI and independent browser preferences.
