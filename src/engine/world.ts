@@ -80,8 +80,8 @@ export function establishFounders(previous:WorldState,raw:unknown):WorldState {
   }));
   const spawn:[[number,number],[number,number],[number,number]]=[[3,6],[4,5],[4,6]];
   const workers:Worker[]=records.map((f,i)=>({
-    id:f.id,definitionId:'core:founder',installedModules:i===0?{tool:['core:starter_axe']}:
-     i===1?{tool:['core:starter_pickaxe']}:{},name:f.name,sex:f.sex,role:'Founder',x:spawn[i][0],y:spawn[i][1],
+    id:f.id,definitionId:'core:founder',installedModules:(i===0?{tool:['core:starter_axe']}:
+     i===1?{tool:['core:starter_pickaxe']}:{}) as Record<string,string[]>,name:f.name,sex:f.sex,role:'Founder',x:spawn[i][0],y:spawn[i][1],
     carried:0,carrying:null,capacity:6,policy:null,task:null,
     organizationId:null,controlMode:'independent'
   }));

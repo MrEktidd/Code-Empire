@@ -1,5 +1,5 @@
 import type {Controller,ExecutionEntry,WorldState} from './types';
-import type {ContinuousRequest,ContinuousStep} from '../platform/python/PythonRuntime';
+import type {ContinuousStep} from '../platform/python/PythonRuntime';
 import {worldSnapshot} from './world';
 import {startPhysicalAction} from './automation';
 
@@ -83,10 +83,11 @@ export class ContinuousScheduler{
       break;
      }
     }else if(request.kind==='wait_ticks'){
-     if(!Number.isSafeInteger(request.ticks)||request.ticks!<0||request.ticks!>1000000)
+     const ticks=request.ticks??-1;
+     if(!Number.isSafeInteger(ticks)||ticks<0||ticks>1000000)
       response={ok:false,reason:'invalid_wait'};
-     else if(request.ticks===0)response={ok:true};
-     else{session.waiting={kind:'ticks',until:current.tick+request.ticks,response:{ok:true}};break;}
+     else if(ticks===0)response={ok:true};
+     else{session.waiting={kind:'ticks',until:current.tick+ticks,response:{ok:true}};break;}
     }else if(request.kind==='job_completed'){
      const job=current.jobs.find(j=>j.id===request.jobId&&j.ownerId===c.ownerEntityId);
      if(!job)response={ok:false,reason:'job_not_found'};

@@ -39,7 +39,7 @@ export class PythonRuntime {
   return new Promise<PythonResult<TCommand>>((resolve,reject)=>{
    const id=++this.counter;
    const timer=setTimeout(()=>{this.reset();reject(new Error('Script exceeded its 2-second execution budget. Python runtime restarted.'));},2000);
-   this.pending.set(id,{resolve:resolve as (value:PythonResult)=>void,reject,timer});
+   this.pending.set(id,{resolve:resolve as unknown as (value:PythonResult)=>void,reject,timer});
    this.worker!.postMessage({type:'run',id,source,snapshot,memory,ownerEntityId,adapterSource});
   });
  }

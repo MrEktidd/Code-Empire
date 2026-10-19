@@ -9,7 +9,7 @@ describe('Continuous physical programs',()=>{
    {...x,enabled:true,executionMode:'continuous' as const}:x);
   const engine=new ContinuousScheduler();
   const calls:string[]=[];
-  const execute:ContinuousExecutor=async(id,operation)=>{
+  const execute:ContinuousExecutor=async(_id,operation)=>{
    calls.push(operation);
    return operation==='start'?{kind:'request',request:{kind:'move',entityId:'npc_000001',direction:'east'},output:[]}:
     {kind:'request',request:{kind:'wait_ticks',ticks:3},output:[]};
