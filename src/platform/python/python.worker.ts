@@ -21,11 +21,11 @@ self.onmessage=async(event:MessageEvent)=>{
    if(msg.operation==='start'){
     vm.globals.set('_ce_source',msg.source);
     vm.globals.set('_ce_owner',msg.ownerEntityId);
-   }else vm.globals.set('_ce_response',msg.response??null);
+   }else vm.globals.set('_ce_response',JSON.stringify(msg.response??null));
    const expression=msg.operation==='start'
     ? '_ce_start(_ce_program_id, _ce_source, _ce_snapshot, _ce_owner)'
     : msg.operation==='stop'?'_ce_stop(_ce_program_id)'
-    : '_ce_resume(_ce_program_id, _ce_snapshot, _ce_response)';
+    : '_ce_resume(_ce_program_id, _ce_snapshot, json.loads(_ce_response))';
    await vm.runPythonAsync('import json\n_ce_continuous_result = json.dumps('+expression+')');
    self.postMessage({type:'result',id:msg.id,value:JSON.parse(String(vm.globals.get('_ce_continuous_result')))});
    return;
