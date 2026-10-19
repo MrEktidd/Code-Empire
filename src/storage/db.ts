@@ -2,7 +2,7 @@ import {WORLD_SCHEMA,WIDTH,HEIGHT} from '../engine/types';
 import type {Campaign,Controller,WorldState} from '../engine/types';
 import {CONTENT} from '../games/code-empire/content/base';
 import {entityRefs} from '../engine/entities/identity';
-const NAME='code-empire-v032',STORE='campaigns',SLOT='autosave';
+const NAME='code-empire-v0340',STORE='campaigns',SLOT='autosave';
 async function open():Promise<IDBDatabase>{
  return new Promise((resolve,reject)=>{
   const r=indexedDB.open(NAME,1);
@@ -43,7 +43,7 @@ export function validCampaign(value:unknown):value is Campaign{
  if(!w||w.schema!==WORLD_SCHEMA||!['dormant','active'].includes(w.phase)||!nat(w.tick)||!Number.isSafeInteger(w.seed)||
   !nat(w.housingCapacity)||w.housingCapacity<3||!Array.isArray(w.workers)||!Array.isArray(w.buildings)||
   !Array.isArray(w.entities)||!Array.isArray(w.relationships)||!Array.isArray(w.signals)||
-  !Array.isArray(w.genesisArchive)||!Array.isArray(w.events)||!Array.isArray(w.tiles)||
+  !Array.isArray(w.genesisArchive)||!Array.isArray(w.events)||!Array.isArray(w.tiles)||!Array.isArray(w.jobs)||
   w.tiles.length!==(w.phase==='active'?WIDTH*HEIGHT:0)||w.workers.length>w.housingCapacity||
   w.workers.length>100000||w.entities.length>100000||w.buildings.length>100000||
   w.genesisArchive.length>10000||w.relationships.length>100000||w.signals.length>128||
@@ -51,6 +51,10 @@ export function validCampaign(value:unknown):value is Campaign{
   !nat(w.totalHarvested)||w.events.some(e=>typeof e!=='string'||e.length>2000))return false;
  const ground=new Set(['meadow','forest','quarry','farm','stockpile','water']);
  const grid=(x:number,y:number)=>nat(x)&&nat(y)&&x<WIDTH&&y<HEIGHT;
+ if(w.jobs.length>256||!w.jobs.every(j=>j&&typeof j.id==='string'&&
+  typeof j.ownerId==='string'&&['move','harvest','deposit'].includes(j.kind)&&
+  ['active','completed','failed'].includes(j.status)&&nat(j.startedTick)&&nat(j.finishTick)&&
+  j.startedTick<=j.finishTick&&j.startedTick<=w.tick))return false;
  if(!w.tiles.every((tile,i)=>tile&&grid(tile.x,tile.y)&&tile.y*WIDTH+tile.x===i&&ground.has(tile.ground)&&nat(tile.remaining)))return false;
  if([...w.workers,...w.buildings,...w.entities].some(e=>!e||typeof e!=='object'||typeof e.id!=='string'||typeof e.definitionId!=='string'))return false;
  const all=entityRefs(w),ids=new Set<string>();
@@ -106,6 +110,6 @@ export function validCampaign(value:unknown):value is Campaign{
 export function downloadCampaign(world:WorldState,controllers:Controller[],lessonIndex:number){
  const payload:Campaign={schema:WORLD_SCHEMA,savedAt:Date.now(),world,controllers,lessonIndex};
  const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
- const a=document.createElement('a');a.href=url;a.download='code-empire-v0.3.2.json';a.click();
+ const a=document.createElement('a');a.href=url;a.download='code-empire-v0.3.40.json';a.click();
  setTimeout(()=>URL.revokeObjectURL(url),3000);
 }

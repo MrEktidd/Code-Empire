@@ -1,6 +1,7 @@
 import { HEIGHT, WIDTH, WORLD_SCHEMA } from './types';
 import type { Building, FounderRecord, Tile, Worker, WorldState } from './types';
 import {emitSignal} from './events/bus';
+import {advancePhysicalJobs,harvestEligibility} from './automation';
 export {applyCommands} from './commands/registry';
 
 function random01(seed: number, x: number, y: number): number {
@@ -11,7 +12,7 @@ function random01(seed: number, x: number, y: number): number {
 /** Before Empire.initialize() runs, no terrain or people have been generated. */
 export function createPendingWorld(seed = 2048): WorldState {
   return {schema:WORLD_SCHEMA,seed,tick:0,phase:'dormant',housingCapacity:3,tiles:[],
-    workers:[],buildings:[],entities:[],relationships:[],signals:[],genesisArchive:[],stocks:{wood:0,stone:0,food:0},totalHarvested:0,events:[]};
+    workers:[],buildings:[],entities:[],jobs:[],relationships:[],signals:[],genesisArchive:[],stocks:{wood:0,stone:0,food:0},totalHarvested:0,events:[]};
 }
 
 /** includePrototypeEntities keeps existing v0.2 fixtures and saves testable.
@@ -37,7 +38,7 @@ export function createWorld(seed = 2048, includePrototypeEntities = true): World
   const farm: Building = { id: 'farm_000001', definitionId:'core:farm',installedModules:{}, name: 'First Light Farm', type: 'farm', x: 4, y: 7, mode: 'food',
     organizationId: null, controlMode: 'independent' };
   return { schema: WORLD_SCHEMA, seed, tick: 0, phase:'active', housingCapacity:3, tiles,
-    buildings: includePrototypeEntities ? [farm] : [],entities:[],relationships:[],signals:[],genesisArchive:[],
+    buildings: includePrototypeEntities ? [farm] : [],entities:[],jobs:[],relationships:[],signals:[],genesisArchive:[],
     workers: includePrototypeEntities ? [worker('npc_000001', 'Ada', 'Forester', 3, 5),
       worker('npc_000002', 'Bram', 'Miner', 4, 5),
       worker('npc_000003', 'Cora', 'Generalist', 3, 6)] : [],
@@ -79,7 +80,8 @@ export function establishFounders(previous:WorldState,raw:unknown):WorldState {
   }));
   const spawn:[[number,number],[number,number],[number,number]]=[[3,6],[4,5],[4,6]];
   const workers:Worker[]=records.map((f,i)=>({
-    id:f.id,definitionId:'core:founder',installedModules:{},name:f.name,sex:f.sex,role:'Founder',x:spawn[i][0],y:spawn[i][1],
+    id:f.id,definitionId:'core:founder',installedModules:i===0?{utility:['core:starter_axe']}:
+     i===1?{utility:['core:starter_pickaxe']}:{},name:f.name,sex:f.sex,role:'Founder',x:spawn[i][0],y:spawn[i][1],
     carried:0,carrying:null,capacity:6,policy:null,task:null,
     organizationId:null,controlMode:'independent'
   }));
@@ -133,19 +135,22 @@ export function stepWorld(previous: WorldState): WorldState {
     tiles: previous.tiles.map(t => ({ ...t })),
     workers: previous.workers.map(w => ({ ...w, task: w.task ? { ...w.task } : null })),
     buildings: previous.buildings.map(b => ({ ...b })),
-    stocks: { ...previous.stocks }, events: [...previous.events]
+    stocks: { ...previous.stocks }, jobs:previous.jobs.map(j=>({...j})), events: [...previous.events]
   };
-  for (const worker of state.workers) progressWorker(state, worker);
-  if (state.tick % 24 === 0) {
+  const withJobs=advancePhysicalJobs(state);
+  // Legacy scheduled workers continue using their original task-policy system;
+  // continuous controllers use explicit, one-cell physical requests instead.
+  for (const worker of withJobs.workers) progressWorker(withJobs, worker);
+  if (withJobs.tick % 24 === 0) {
     for (const farm of state.buildings) if (farm.mode === 'food') state.stocks.food += 9;
     state.stocks.food = Math.max(0, state.stocks.food - state.workers.length * 2);
     if (state.stocks.food === 0 && state.tick % 48 === 0) state.events.push('Food shortage: your settlers are going hungry.');
   }
   if (state.stocks.wood >= 60 && state.stocks.stone >= 24 && !state.events.some(e => e.startsWith('Milestone:')))
     state.events.push('Milestone: First Stockpiles — 60 wood and 24 stone secured.');
-  if(Object.keys(state.stocks).some(key=>state.stocks[key]!==previous.stocks[key]))
-    return emitSignal(state,'inventory.changed',{tick:state.tick});
-  return state;
+  if(Object.keys(withJobs.stocks).some(key=>withJobs.stocks[key]!==previous.stocks[key]))
+    return emitSignal(withJobs,'inventory.changed',{tick:withJobs.tick});
+  return withJobs;
 }
 /** Offline progress executes established engine-owned policies, not player Python. */
 export function catchUp(previous: WorldState, elapsedMs: number): { world: WorldState; hours: number } {
@@ -162,9 +167,15 @@ export function worldSnapshot(world: WorldState) {
     workers: world.workers.map(w => ({
       id: w.id,definition_id:w.definitionId,modules:w.installedModules, name: w.name, role: w.role, sex:w.sex??null, x: w.x, y: w.y,
       carried: w.carried, carrying: w.carried, cargo_type: w.carrying,
-      capacity: w.capacity, policy: w.policy, control_mode: w.controlMode
+      capacity: w.capacity, policy: w.policy, control_mode: w.controlMode,
+      current_job:world.jobs.find(j=>j.ownerId===w.id&&j.status==='active')?.id??null,
+      harvest_ready:harvestEligibility(world,w)===null,
+      near_storage:w.x===3&&w.y===5?'stockpile_001':null
     })),
     signals:world.signals.slice(-40).map(s=>({...s,payload:{...s.payload}})),
+    jobs:world.jobs.map(j=>({...j})),
+    resource_nodes:world.tiles.filter(t=>t.ground==='forest'||t.ground==='quarry')
+      .map(t=>({x:t.x,y:t.y,kind:t.ground,remaining:t.remaining})),
     entities:world.entities.map(e=>({id:e.id,name:e.name,kind:e.kind,definition_id:e.definitionId,modules:e.installedModules})),
     buildings: world.buildings.map(b => ({
       id: b.id,definition_id:b.definitionId,modules:b.installedModules, name: b.name, type: b.type, x: b.x, y: b.y, mode: b.mode

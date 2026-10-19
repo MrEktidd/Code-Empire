@@ -1,5 +1,5 @@
 import type {WorldState} from '../types';
-export type SimSignalType='entity.created'|'population.seeded'|'module.installed'|'module.removed'|'inventory.changed'|'recipe.completed';
+export type SimSignalType='entity.created'|'population.seeded'|'module.installed'|'module.removed'|'inventory.changed'|'recipe.completed'|'job.completed';
 export type SimSignal={tick:number;sequence:number;type:SimSignalType;entityId?:string;payload:Record<string,string|number|boolean>};
 export function emitSignal(world:WorldState,type:SimSignalType,payload:SimSignal['payload'],entityId?:string):WorldState{
  const last=world.signals[world.signals.length-1];
