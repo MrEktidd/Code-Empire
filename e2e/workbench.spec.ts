@@ -19,8 +19,8 @@ test('genesis rejects incomplete list then creates three archived founders',asyn
  await expect(page.getByText('Founding Population')).toBeVisible();
  await page.getByRole('button',{name:/RUN SCRIPT/}).click();
  await page.getByRole('button',{name:'OUTPUT',exact:true}).click();
- await expect(page.getByText(/Define exactly three founders/)).toBeVisible({timeout:75000});
- await expect(page.getByText('Command rejected',{exact:true}).first()).toBeVisible();
+ await expect(page.getByRole('region',{name:'genesis.py'}).getByText(/Define exactly three founders/)).toBeVisible({timeout:75000});
+ await expect(page.locator('.workbench-notice-warning')).toContainText('Command rejected');
  await page.getByRole('button',{name:/Open controller output/}).click();
  await expect(page.getByRole('button',{name:'OUTPUT',exact:true})).toHaveClass(/selected/);
  await page.getByRole('button',{name:'CODE',exact:true}).click();
@@ -222,6 +222,11 @@ test('Quick Open, workspace presets and saved layouts are accessible from the wo
   await page.getByRole('button',{name:/MENU/}).last().click();
   await expect(page.getByRole('button',{name:/CONTINUE CAMPAIGN/})).toBeEnabled();
   await page.getByRole('button',{name:/CONTINUE CAMPAIGN/}).click();
+  const mobile=await page.evaluate(()=>window.matchMedia('(max-width: 760px)').matches);
+  if(mobile){
+   await expect(page.locator('.taskbar')).toContainText('Game API');
+   await page.locator('.taskbar').getByRole('button',{name:'Game API'}).click();
+  }
   await expect(page.locator('.desktop-window[aria-label="Game API"]')).toBeVisible();
  });
 });

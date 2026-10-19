@@ -45,3 +45,21 @@ describe('Workbench organization',()=>{
   expect(restored.windows.some(w=>w.id==='world')).toBe(true);
  });
 });
+
+describe('narrow viewport workspace persistence',()=>{
+ it('restores all Research windows after applying a mobile preset and tiling',()=>{
+  let layout=applyWorkspacePreset(newWorkspace(),'research',{width:320,height:520});
+  layout=arrangeWorkspace(layout,'tile',{width:320,height:520});
+  expect(layout.windows.find(w=>w.id==='docs')?.width).toBeGreaterThanOrEqual(260);
+  const restored=resumeWorkspace(parseWorkspace(JSON.parse(JSON.stringify(layout))),'active',[]);
+  expect(restored.windows.filter(w=>!w.minimized).map(w=>w.kind)).toEqual(['docs','python']);
+  expect(restored.focus).toBe('docs');
+  expect(restored.windows.find(w=>w.id==='docs')?.docTabs).toEqual(layout.windows.find(w=>w.id==='docs')?.docTabs);
+ });
+ it('normalizes already-persisted small window sizes instead of discarding them',()=>{
+  const saved=upsertWindow(newWorkspace(),'docs');
+  const corruptSize={...saved,windows:saved.windows.map(w=>w.id==='docs'?{...w,width:160,height:100}:w)};
+  const recovered=parseWorkspace(corruptSize);
+  expect(recovered.windows.find(w=>w.id==='docs')).toMatchObject({width:260,height:180});
+ });
+});

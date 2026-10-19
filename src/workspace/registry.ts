@@ -43,7 +43,8 @@ export function parseWorkspace(value:unknown):WorkspaceState{
  const kinds=['world','scripts','controller','learn','docs','python','console','overview','archive','settings','document'];
  const valid=v.windows.filter(w=>w&&typeof w.id==='string'&&kinds.includes(w.kind)
   &&['x','y','width','height','z'].every(k=>Number.isFinite(w[k as keyof WindowState]))
-  &&w.width>=240&&w.height>=180&&w.width<=3000&&w.height<=2200).slice(0,40);
+  &&w.width>0&&w.height>0&&w.width<=3000&&w.height<=2200)
+  .slice(0,40).map(w=>({...w,width:Math.max(260,w.width),height:Math.max(180,w.height)}));
  return {...newWorkspace(),windows:valid,nextZ:Math.max(5,v.nextZ!),focus:typeof v.focus==='string'?v.focus:null};
 }
 
@@ -74,8 +75,10 @@ export function arrangeWorkspace(state:WorkspaceState,arrangement:WorkspaceArran
   if(index<0)return w;
   if(arrangement==='tile'){
    const cellW=width/cols,cellH=height/rows;
+   // Mobile displays one window at a time. Its small tile cells must still
+   // serialize to a valid desktop-size window so Continue can restore tabs.
    return {...w,maximized:false,x:Math.round(index%cols*cellW),y:Math.round(Math.floor(index/cols)*cellH),
-    width:Math.round(cellW),height:Math.round(cellH)};
+    width:Math.max(260,Math.round(cellW)),height:Math.max(180,Math.round(cellH))};
   }
   return {...w,maximized:false,x:clamp(28+index*38,0,Math.max(0,width-300)),
    y:clamp(28+index*30,0,Math.max(0,height-180)),
@@ -102,7 +105,8 @@ export function applyWorkspacePreset(state:WorkspaceState,preset:WorkspacePreset
   else rect=i===0?{x:0,y:0,width:Math.round(width*mainSize),height}:
    {x:Math.round(width*mainSize),y:Math.round((i-1)*height/2),
     width:Math.round(width*(1-mainSize)),height:Math.round(height/2)};
-  return {...w,...rect,maximized:false,minimized:false,z:next.nextZ+i};
+  return {...w,...rect,width:Math.max(260,rect.width),height:Math.max(180,rect.height),
+   maximized:false,minimized:false,z:next.nextZ+i};
  })};
  const focus=selected[0]?.id??next.focus;
  return {...next,focus,nextZ:next.nextZ+selected.length};
