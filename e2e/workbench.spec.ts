@@ -253,3 +253,24 @@ test('main menu can recover default appearance even with an unreadable saved the
  await page.getByRole('button',{name:/RESET APPEARANCE/}).click();
  await expect(page.locator('html')).toHaveCSS('--ce-color-text','#d6e5e5');
 });
+
+test('a continuous Python founder follows an explicit route and performs timed harvests',async({page})=>{
+ test.setTimeout(150000);
+ await enterWorkbench(page);
+ await initializeWorld(page);
+ await page.getByRole('button',{name:/OPEN GENESIS.PY/}).click();
+ const editor=page.locator('.controller-view .cm-content');
+ await editor.fill('founders = [\n    {"name": "Adam", "sex": "male"},\n    {"name": "Eve", "sex": "female"},\n    {"name": "Ada", "sex": "female"},\n]\nEmpire.seed_population(founders)\n');
+ await page.getByRole('button',{name:/RUN SCRIPT/}).click();
+ await expect(page.locator('.founder-card')).toHaveCount(3,{timeout:75000});
+ await page.locator('.founder-card').first().click();
+ await page.getByRole('combobox',{name:'Execution mode'}).selectOption('continuous');
+ await page.locator('.controller-view .cm-content').fill(
+  'while True:\n    if self.x < 7:\n        self.move("east")\n    elif self.y > 4:\n        self.move("north")\n    elif self.can_harvest():\n        job = self.harvest()\n        await world.job_completed(job["job_id"])\n    else:\n        await world.wait_ticks(2)\n'
+ );
+ await page.getByRole('button',{name:/START \/ STEP/}).click();
+ await page.getByRole('button',{name:'3×'}).click();
+ await expect(page.locator('.inspector-stat').filter({hasText:'Location'})).toContainText('7, 4',{timeout:30000});
+ await expect(page.locator('.inspector-stat').filter({hasText:'Carrying'})).toContainText('6 / 6',{timeout:30000});
+ await page.getByRole('button',{name:'Ⅱ'}).click();
+});
