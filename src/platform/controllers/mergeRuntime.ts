@@ -8,6 +8,7 @@ export function mergeRuntimeControllers<T extends ControllerBase>(current:T[],ex
   if(!next||!before)return live;
   return {...live,
    memory:next.memory,
+   enabled:live.enabled===before.enabled?next.enabled:live.enabled,
    lastStatus:next.lastStatus,
    lastError:next.lastError,
    lastOutput:next.lastOutput,

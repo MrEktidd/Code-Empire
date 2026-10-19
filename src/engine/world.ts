@@ -80,8 +80,8 @@ export function establishFounders(previous:WorldState,raw:unknown):WorldState {
   }));
   const spawn:[[number,number],[number,number],[number,number]]=[[3,6],[4,5],[4,6]];
   const workers:Worker[]=records.map((f,i)=>({
-    id:f.id,definitionId:'core:founder',installedModules:i===0?{utility:['core:starter_axe']}:
-     i===1?{utility:['core:starter_pickaxe']}:{},name:f.name,sex:f.sex,role:'Founder',x:spawn[i][0],y:spawn[i][1],
+    id:f.id,definitionId:'core:founder',installedModules:i===0?{tool:['core:starter_axe']}:
+     i===1?{tool:['core:starter_pickaxe']}:{},name:f.name,sex:f.sex,role:'Founder',x:spawn[i][0],y:spawn[i][1],
     carried:0,carrying:null,capacity:6,policy:null,task:null,
     organizationId:null,controlMode:'independent'
   }));
@@ -142,12 +142,12 @@ export function stepWorld(previous: WorldState): WorldState {
   // continuous controllers use explicit, one-cell physical requests instead.
   for (const worker of withJobs.workers) progressWorker(withJobs, worker);
   if (withJobs.tick % 24 === 0) {
-    for (const farm of state.buildings) if (farm.mode === 'food') state.stocks.food += 9;
-    state.stocks.food = Math.max(0, state.stocks.food - state.workers.length * 2);
-    if (state.stocks.food === 0 && state.tick % 48 === 0) state.events.push('Food shortage: your settlers are going hungry.');
+    for (const farm of withJobs.buildings) if (farm.mode === 'food') withJobs.stocks.food += 9;
+    withJobs.stocks.food = Math.max(0, withJobs.stocks.food - withJobs.workers.length * 2);
+    if (withJobs.stocks.food === 0 && withJobs.tick % 48 === 0) withJobs.events.push('Food shortage: your settlers are going hungry.');
   }
-  if (state.stocks.wood >= 60 && state.stocks.stone >= 24 && !state.events.some(e => e.startsWith('Milestone:')))
-    state.events.push('Milestone: First Stockpiles — 60 wood and 24 stone secured.');
+  if (withJobs.stocks.wood >= 60 && withJobs.stocks.stone >= 24 && !withJobs.events.some(e => e.startsWith('Milestone:')))
+    withJobs.events.push('Milestone: First Stockpiles — 60 wood and 24 stone secured.');
   if(Object.keys(withJobs.stocks).some(key=>withJobs.stocks[key]!==previous.stocks[key]))
     return emitSignal(withJobs,'inventory.changed',{tick:withJobs.tick});
   return withJobs;

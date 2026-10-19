@@ -68,7 +68,7 @@
     "id": "core:starter_axe",
     "display_name": "Stone Axe",
     "description": "A starter tool allowing physical timber harvesting.",
-    "slot": "utility",
+    "slot": "tool",
     "allowed_kinds": [
       "person"
     ],
@@ -84,7 +84,7 @@
     "id": "core:starter_pickaxe",
     "display_name": "Stone Pickaxe",
     "description": "A starter tool allowing physical quarry harvesting.",
-    "slot": "utility",
+    "slot": "tool",
     "allowed_kinds": [
       "person"
     ],

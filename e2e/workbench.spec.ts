@@ -63,7 +63,7 @@ test('continuous simulation saves progress before returning to menu',async({page
  await page.waitForTimeout(1400);
  const current=await page.evaluate(async()=>{
    const db=await new Promise<IDBDatabase>((resolve,reject)=>{
-     const r=indexedDB.open('code-empire-v032');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+     const r=indexedDB.open('code-empire-v0340');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    const tick=await new Promise<number>((resolve,reject)=>{
      const tx=db.transaction('campaigns','readonly');const req=tx.objectStore('campaigns').get('autosave');
