@@ -59,7 +59,7 @@ export type WindowContext={
        <button className="inspector-action" onClick={()=>open('archive')}>OPEN GENESIS ARCHIVE ↗</button></>:
        worker?<><p className="eyebrow">CHARACTER INFORMATION</p><h3>{worker.name}</h3><p className="muted">{worker.role} · {founder?'Genesis founder':'Settler'}</p>
        {founder&&<div className="inspector-stat"><span>Sex</span><strong>{founder.sex}</strong></div>}
-       <div className="inspector-stat"><span>Current task</span><strong>{worker.policy??'Idle'}</strong></div>
+       <div className="inspector-stat"><span>Current task</span><strong>{world.jobs.find(j=>j.ownerId===worker.id&&j.status==='active')?.kind??worker.policy??'Idle'}</strong></div>
        <div className="inspector-stat"><span>Carrying</span><strong>{worker.carried} / {worker.capacity}</strong></div>
        <div className="inspector-stat"><span>Utility Slot</span><strong>{worker.installedModules.utility?.[0]?'Carrying Basket':'Empty'}</strong></div>
        <button className="inspector-action" disabled={busy} onClick={()=>issueCommand({
@@ -73,7 +73,10 @@ export type WindowContext={
        <div className="inspector-stat"><span>Executions</span><strong>{c.executions}</strong></div>
        <div className="inspector-stat"><span>Status</span><strong>{c.lastStatus}</strong></div></>}
     </aside></div>
-    <div className="controller-footer">{!isGenesis&&<><label><input type="checkbox" checked={c.enabled} onChange={e=>editController(c.id,{enabled:e.target.checked,nextRunTick:world.tick+1})}/> AUTO-RUN</label><label>EVERY <input aria-label="Run interval hours" type="number" min="1" max="999" value={c.intervalTicks} onChange={e=>editController(c.id,{intervalTicks:Math.max(1,Math.min(999,Number(e.target.value)||1))})}/> HOURS</label></>}<button className="accent-btn" disabled={busy} onClick={()=>{checkpointController(c.id);void execute(c.id);}}>{busy?'EXECUTING…':'▶ RUN SCRIPT'}</button></div>
+    <div className="controller-footer">{worker&&!isGenesis&&<label>MODE <select aria-label="Execution mode"
+      value={c.executionMode??'scheduled'} onChange={e=>editController(c.id,{executionMode:e.target.value as 'scheduled'|'continuous',enabled:false})}>
+      <option value="scheduled">Scheduled (legacy)</option><option value="continuous">Continuous while True</option>
+     </select></label>}{!isGenesis&&<><label><input type="checkbox" checked={c.enabled} onChange={e=>editController(c.id,{enabled:e.target.checked,nextRunTick:world.tick+1})}/> {c.executionMode==='continuous'?'RUNNING':'AUTO-RUN'}</label>{c.executionMode!=='continuous'&&<label>EVERY <input aria-label="Run interval hours" type="number" min="1" max="999" value={c.intervalTicks} onChange={e=>editController(c.id,{intervalTicks:Math.max(1,Math.min(999,Number(e.target.value)||1))})}/> HOURS</label>}</>}<button className="accent-btn" disabled={busy} onClick={()=>{checkpointController(c.id);void execute(c.id);}}>{busy?'EXECUTING…':c.executionMode==='continuous'?'▶ START / STEP':'▶ RUN SCRIPT'}</button></div>
     <div className="rename-row"><label>FILE <input aria-label="Controller filename" value={c.filename} onChange={e=>{const v=e.target.value;if(v.length<=60)editController(c.id,{filename:v});}} onBlur={()=>{if(!/^[\w.-]+\.py$/.test(c.filename)||controllers.some(x=>x.id!==c.id&&x.filename===c.filename))editController(c.id,{filename:c.id+'.py'});}}/></label><span>ID {c.id}</span></div>
    </div>;
   }
