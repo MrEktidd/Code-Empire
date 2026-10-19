@@ -4,7 +4,7 @@
 
 Code-Empire is an open-source browser-based Python coding game. Program individual settlers, learn Python through real simulation challenges, and eventually build automated organizations, kingdoms, industries and interstellar civilizations.
 
-**Current release:** v0.3.36 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
+**Current release:** v0.3.40 — **The Programmer's Workbench** with a dedicated, ungated Python Reference handbook. Kingdoms, industrial research and galactic exploration are future goals.
 
 ## Play
 
@@ -151,3 +151,11 @@ Combines window-manager refinement, developer ergonomics, and accessibility into
 Ctrl/⌘+K opens a command palette searching scripts, windows, characters and documentation. F1 opens Python help. Python errors and command rejections now show actionable notifications that open the appropriate controller Output tab; the editor scrolls to the error line. General Settings adds UI size options (85–130%), shortcut reference, and a safe Restore Default Theme button, while retaining the existing Theme Editor. Reduced-motion accessibility and keyboard focus styles are included.
 
 The engine, scenario definitions and save schema are unchanged. All changes are restricted to workbench UI and independent browser preferences.
+
+## v0.3.40 — Continuous Python and physical automation (first vertical slice)
+
+The first v0.3.4x milestone introduces opt-in **Continuous while True** execution on NPC controller Code windows. Existing Genesis, tutorials and scheduled `on_tick()` controllers remain usable. Continuous scripts are transformed with Python AST into resumable generators: `self.move(direction)`, `self.harvest()`, and `self.deposit("stockpile_001")` automatically suspend at authoritative physical actions, and explicit `await world.wait_ticks(n)`, `await world.job_completed(job_id)`, and `await world.signal(name)` suspend for game time or events. No `async def` or repeated `await` is needed for movement. Functions called from scripts can suspend, and a Python loop budget plus a separate worker watchdog handles pathological loops.
+
+Physical jobs now advance with the simulation clock: movement is one cell per request, harvesting uses data-defined resource output and duration, tools are represented by capabilities, and carrying/deposit is location-dependent. The first and second founders receive starter axe/pickaxe tool modules in a separate tool slot, allowing the utility basket to remain available. These are foundational prototype mechanics, **not a complete general inventory, construction, recruitment or industry release**. The basic stockpile location is still fixed, and detailed inventories and universal storage capacities remain upcoming. New save schema 6 and database `code-empire-v0340` deliberately do not migrate earlier prototype saves.
+
+For a founder, choose `Continuous while True` in the controller Mode menu, replace the script with your own `while True` loop, press `START / STEP`, and advance simulation time. Physical actions do not solve paths automatically. A movement call attempts one adjacent tile only. `can_harvest()` is an immediate eligibility query, while `harvest()` starts a timed job and returns a result containing `job_id`. Use `await world.job_completed(job_id)` when you want to wait for that job.
