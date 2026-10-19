@@ -1,4 +1,12 @@
 import type {PythonResult} from '../controllers/types';
+export type ContinuousRequest={
+ kind:'move'|'harvest'|'deposit'|'wait_ticks'|'job_completed'|'signal';
+ direction?:string;entityId?:string;storageId?:string;ticks?:number;jobId?:string;signal?:string;
+};
+export type ContinuousStep={
+ kind:'request'|'done'|'error'|'stopped';request?:ContinuousRequest;
+ output:string[];error?:string;
+};
 type Pending={resolve:(value:PythonResult)=>void;reject:(reason:Error)=>void;timer:ReturnType<typeof setTimeout>};
 export class PythonRuntime {
  private worker:Worker|null=null;
@@ -33,6 +41,21 @@ export class PythonRuntime {
    const timer=setTimeout(()=>{this.reset();reject(new Error('Script exceeded its 2-second execution budget. Python runtime restarted.'));},2000);
    this.pending.set(id,{resolve:resolve as (value:PythonResult)=>void,reject,timer});
    this.worker!.postMessage({type:'run',id,source,snapshot,memory,ownerEntityId,adapterSource});
+  });
+ }
+ /** Resume an actual persistent Python generator, not a re-run of its source.
+  * Every call has its own watchdog; the engine drives each yield explicitly. */
+ async stepContinuous(programId:string,operation:'start'|'resume'|'stop',
+  snapshot:unknown,source?:string,ownerEntityId?:string|null,
+  response?:Record<string,unknown>|null):Promise<ContinuousStep>{
+  await this.initialize();
+  return new Promise<ContinuousStep>((resolve,reject)=>{
+   const id=++this.counter;
+   const timer=setTimeout(()=>{
+    this.reset();reject(new Error('Continuous program exceeded its CPU budget; Python worker restarted.'));
+   },2000);
+   this.pending.set(id,{resolve:resolve as (value:PythonResult)=>void,reject,timer});
+   this.worker!.postMessage({type:'continuous',id,programId,operation,snapshot,source,ownerEntityId,response});
   });
  }
  private reset(){
