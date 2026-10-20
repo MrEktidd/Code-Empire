@@ -10,7 +10,8 @@
       "programmable"
     ],
     "module_slots": {
-      "utility": 1
+      "utility": 1,
+      "tool": 1
     }
   },
   {

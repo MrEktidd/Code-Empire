@@ -6,11 +6,13 @@ export type MaterialDefinition=DefinitionBase&{type:'material';properties?:Recor
 export type ItemDefinition=DefinitionBase&{type:'item';stack_size:number;material?:string;inventory_key?:string};
 export type Ingredient={item:string;amount:number};
 export type RecipeDefinition=DefinitionBase&{type:'recipe';inputs:Ingredient[];outputs:Ingredient[];duration:number};
+export type ResourceNodeDefinition=DefinitionBase&{type:'resource_node';ground:'forest'|'quarry';
+ output_item:string;yield_per_action:number;harvest_duration_ticks:number;required_capability?:string};
 export type EntityKind='person'|'workplace'|'vehicle'|'organization'|'workforce'|'location'|'machine'|'celestial';
 export type EntityDefinition=DefinitionBase&{type:'entity';kind:EntityKind;technical_components:CoreComponent[];module_slots?:Record<string,number>};
 export type ModuleEffect={kind:'carry_capacity'|'inventory_capacity'|'capability';amount?:number;capability?:string};
 export type ModuleDefinition=DefinitionBase&{type:'module';slot:string;allowed_kinds:EntityKind[];effects:ModuleEffect[]};
-export type Definition=MaterialDefinition|ItemDefinition|RecipeDefinition|EntityDefinition|ModuleDefinition;
+export type Definition=MaterialDefinition|ItemDefinition|RecipeDefinition|EntityDefinition|ModuleDefinition|ResourceNodeDefinition;
 export type DefinitionType=Definition['type'];
 export type ContentManifest={id:string;version:string;dependencies?:string[]};
 export type ContentPack={manifest:ContentManifest;definitions:unknown[]};

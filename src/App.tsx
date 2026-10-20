@@ -15,6 +15,7 @@ import {findDoc} from './platform/documentation/types';
 import {PYTHON_TOPICS} from './content/python/topics';
 import {GAME_DOCUMENTS} from './games/code-empire/docs';
 import {advanceTick,runControllers} from './engine/scheduler';
+import {ContinuousScheduler} from './engine/continuousScheduler';
 import type {Campaign,Controller,ExecutionEntry,WorldState,ScriptCommand} from './engine/types';
 import {initialControllers,ensureGenesisController,ensureFounderControllers} from './defaults';
 import {PythonRuntime} from './platform/python/PythonRuntime';
@@ -65,6 +66,7 @@ export default function App(){
  const [paletteOpen,setPaletteOpen]=useState(false);
  const [notice,setNotice]=useState<WorkbenchNotice|null>(null);
  const runtime=useRef<PythonRuntime|null>(null);
+ const continuous=useRef(new ContinuousScheduler());
  const [saveStatus,setSaveStatus]=useState('Saved');
  const saver=useRef<SaveCoordinator<{world:WorldState;controllers:Controller[];lesson:number}>|null>(null);
  const latest=useRef({world,controllers,lesson});
@@ -113,11 +115,17 @@ export default function App(){
   const sessionAtStart=sessionVersion.current;
   try{
    const {world:w,controllers:c}=latest.current;
-   const result=manualId?
+   const isContinuous=!!manualId&&c.some(x=>x.id===manualId&&x.executionMode==='continuous');
+   const activeControllers=isContinuous?c.map(x=>x.id===manualId?{...x,enabled:true}:x):c;
+   const first=manualId&&!isContinuous?
     await runControllers(w,c,c.filter(x=>x.id===manualId),(source,snapshot,memory,ownerId)=>
       runtime.current!.run<ScriptCommand>(source,snapshot,memory,ownerId,CODE_EMPIRE_PYTHON_BRIDGE),true):
-    await advanceTick(w,c,(source,snapshot,memory,ownerId)=>
+    await advanceTick(w,activeControllers,(source,snapshot,memory,ownerId)=>
       runtime.current!.run<ScriptCommand>(source,snapshot,memory,ownerId,CODE_EMPIRE_PYTHON_BRIDGE));
+   const physical=first.world.phase==='active'?await continuous.current.pulse(first.world,first.controllers,
+    (id,operation,snapshot,source,owner,response)=>
+     runtime.current!.stepContinuous(id,operation,snapshot,source,owner,response)):null;
+   const result=physical?{world:physical.world,controllers:physical.controllers,entries:[...first.entries,...physical.entries]}:first;
    if(sessionAtStart!==sessionVersion.current)return;
    applyState(result.world,result.controllers,result.entries,c);
    if(w.phase==='dormant'&&result.world.phase==='active'){setLoadingStep(0);setSpeed(0);}
@@ -149,6 +157,7 @@ export default function App(){
   await saver.current?.flush().catch(()=>{});
   sessionVersion.current++;
   if(saveExists&&!window.confirm('Start a new campaign? The existing autosave will be replaced. Export your save first if needed.'))return;
+  continuous.current.reset();
   setSpeed(0);setWorld(createPendingWorld());setControllers(initialControllers());setLesson(0);setEntries([]);
   setWorkspace(startupWorkspace());setStatus('Awaiting simulation startup.');
   setOffline(0);setSelection('');setBootInput('');setBootError('');setLoadingStep(-1);setScreen('terminal');
@@ -157,6 +166,7 @@ export default function App(){
   if(gate.current){setStatus('A Python execution is still running.');return;}
   await saver.current?.flush().catch(()=>{});
   sessionVersion.current++;
+  continuous.current.reset();
   try{
    const value=await loadCampaign();
    if(!validCampaign(value)){setStatus('No valid campaign to continue.');return;}
@@ -227,6 +237,7 @@ export default function App(){
    const c=imported as Campaign;
    await saveCampaign(c.world,c.controllers,c.lessonIndex);
    sessionVersion.current++;
+   continuous.current.reset();
    setWorld(c.world);
    setControllers(ensureFounderControllers(ensureGenesisController(c.controllers,c.world.phase==='active'&&c.world.workers.length===0),c.world));
    setLesson(c.lessonIndex);setEntries([]);

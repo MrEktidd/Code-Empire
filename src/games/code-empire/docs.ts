@@ -36,9 +36,11 @@ const definitionBody=(def:Definition):string=>{
  if(def.type==='entity')return 'Entity kind: '+def.kind+'. Technical components: '+def.technical_components.join(', ')+'. Slots: '+JSON.stringify(def.module_slots??{})+'.';
  if(def.type==='module')return 'Slot: '+def.slot+'. Effects: '+def.effects.map(x=>x.kind+(x.amount?' '+x.amount:'')+(x.capability?' '+x.capability:'')).join(', ')+'.';
  if(def.type==='item')return 'Stack size: '+def.stack_size+'. Material: '+(def.material??'not specified')+'.';
+ if(def.type==='resource_node')return 'Produces '+def.yield_per_action+' × '+def.output_item+
+  ' in '+def.harvest_duration_ticks+' ticks. Tool capability: '+(def.required_capability??'none')+'.';
  return 'Properties: '+JSON.stringify(def.properties??{})+'.';
 };
-const catalogDocs:DocArticle[]=(['material','item','recipe','entity','module'] as const).flatMap(type=>
+const catalogDocs:DocArticle[]=(['material','item','recipe','entity','module','resource_node'] as const).flatMap(type=>
  CONTENT.list(type).map(def=>({
   id:'catalog-'+def.id.replace(':','-'),scope:'game' as const,category:'Registered '+type+'s',
   title:def.display_name+' ('+def.id+')',summary:def.description??'Registered '+type+' definition.',

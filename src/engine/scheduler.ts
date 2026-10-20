@@ -8,7 +8,7 @@ export type TickResult={world:WorldState;controllers:Controller[];entries:Execut
 export function dueControllers(world:WorldState,controllers:Controller[],limit=16):Controller[]{
  if(world.phase==='dormant')return [];
  const entities=new Map([...world.workers,...world.buildings].map(e=>[e.id,e.controlMode]));
- return controllers.filter(c=>c.id!==GENESIS_CONTROLLER_ID && c.enabled && c.nextRunTick<=world.tick &&
+ return controllers.filter(c=>c.id!==GENESIS_CONTROLLER_ID && c.executionMode!=='continuous' && c.enabled && c.nextRunTick<=world.tick &&
   (c.ownerEntityId===null||entities.get(c.ownerEntityId)==='independent'))
   .sort((a,b)=>a.nextRunTick-b.nextRunTick||a.id.localeCompare(b.id)).slice(0,limit);
 }

@@ -1,4 +1,4 @@
-import type {ContentPack,Definition,DefinitionId,DefinitionType,EntityDefinition,ItemDefinition,ModuleDefinition,RecipeDefinition} from './types';
+import type {ContentPack,Definition,DefinitionId,DefinitionType,EntityDefinition,ItemDefinition,ModuleDefinition,RecipeDefinition,ResourceNodeDefinition} from './types';
 import {CORE_COMPONENTS,ENTITY_KINDS} from './types';
 
 const idPattern=/^[a-z][a-z0-9_-]*:[a-z][a-z0-9_-]*$/;
@@ -28,6 +28,11 @@ function validate(raw:unknown):Definition{
    for(const ingredient of a)if(!obj(ingredient)||!string(ingredient.item)||!positive(ingredient.amount))fail(id,`invalid ${field} ingredient`);
    if(!unique(a.map(v=>(v as {item:string}).item)))fail(id,`duplicate ${field} item`);
   }
+ }else if(type==='resource_node'){
+  if(!['forest','quarry'].includes(String(raw.ground)))fail(id,'invalid resource ground');
+  if(!string(raw.output_item))fail(id,'resource output_item required');
+  if(!positive(raw.yield_per_action)||!positive(raw.harvest_duration_ticks))fail(id,'resource yields and duration must be positive');
+  if(raw.required_capability!==undefined&&!string(raw.required_capability))fail(id,'invalid capability requirement');
  }else if(type==='entity'){
   if(!ENTITY_KINDS.includes(raw.kind as typeof ENTITY_KINDS[number]))fail(id,'unknown entity kind');
   if(!list(raw.technical_components)||!unique(raw.technical_components)||raw.technical_components.some(c=>!CORE_COMPONENTS.includes(c as typeof CORE_COMPONENTS[number])))fail(id,'invalid technical components');
@@ -97,6 +102,7 @@ export class DefinitionRegistry {
   };
   if(def.type==='item'&&def.material)ref(def.material,'material');
   if(def.type==='recipe')for(const entry of [...def.inputs,...def.outputs])ref(entry.item,'item');
+  if(def.type==='resource_node')ref(def.output_item,'item');
   if(def.type==='module'&&def.effects.some(x=>x.kind==='carry_capacity')&&!def.allowed_kinds.includes('person'))
    fail(def.id,'carry_capacity requires a person-compatible module');
  }
@@ -113,6 +119,7 @@ export class DefinitionRegistry {
  recipe(id:string):RecipeDefinition{return this.require(id,'recipe');}
  entity(id:string):EntityDefinition{return this.require(id,'entity');}
  module(id:string):ModuleDefinition{return this.require(id,'module');}
+ resourceNode(id:string):ResourceNodeDefinition{return this.require(id,'resource_node');}
  inventoryKey(id:string):string{return this.item(id).inventory_key??id;}
  packageVersions():Readonly<Record<string,string>>{return Object.fromEntries(this.packages);}
 }

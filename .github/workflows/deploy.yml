@@ -27,6 +27,8 @@ jobs:
         run: npm run check
       - name: Verify every Python documentation example
         run: python3 scripts/check_python_docs.py
+      - name: Test cooperative Python programs
+        run: python3 scripts/test_cooperative_python.py
       - name: Install browser for smoke tests
         run: npx playwright install --with-deps chromium
       - name: Browser smoke tests

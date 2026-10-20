@@ -1,0 +1,22 @@
+[
+  {
+    "type": "resource_node",
+    "id": "core:timber",
+    "display_name": "Forest Timber",
+    "ground": "forest",
+    "output_item": "core:wood",
+    "yield_per_action": 2,
+    "harvest_duration_ticks": 3,
+    "required_capability": "harvest.wood"
+  },
+  {
+    "type": "resource_node",
+    "id": "core:stone_deposit",
+    "display_name": "Stone Deposit",
+    "ground": "quarry",
+    "output_item": "core:stone",
+    "yield_per_action": 2,
+    "harvest_duration_ticks": 4,
+    "required_capability": "harvest.stone"
+  }
+]

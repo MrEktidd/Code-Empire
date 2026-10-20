@@ -63,7 +63,7 @@ test('continuous simulation saves progress before returning to menu',async({page
  await page.waitForTimeout(1400);
  const current=await page.evaluate(async()=>{
    const db=await new Promise<IDBDatabase>((resolve,reject)=>{
-     const r=indexedDB.open('code-empire-v032');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+     const r=indexedDB.open('code-empire-v0340');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    const tick=await new Promise<number>((resolve,reject)=>{
      const tx=db.transaction('campaigns','readonly');const req=tx.objectStore('campaigns').get('autosave');
@@ -252,4 +252,27 @@ test('main menu can recover default appearance even with an unreadable saved the
  await expect(page.locator('html')).toHaveCSS('--ce-color-text','#ffffff');
  await page.getByRole('button',{name:/RESET APPEARANCE/}).click();
  await expect(page.locator('html')).toHaveCSS('--ce-color-text','#d6e5e5');
+});
+
+test('a continuous Python founder follows an explicit route and performs timed harvests',async({page})=>{
+ test.setTimeout(150000);
+ await enterWorkbench(page);
+ await initializeWorld(page);
+ await page.getByRole('button',{name:/OPEN GENESIS.PY/}).click({timeout:12000});
+ const editor=page.locator('.controller-view .cm-content');
+ await editor.fill('founders = [\n    {"name": "Adam", "sex": "male"},\n    {"name": "Eve", "sex": "female"},\n    {"name": "Ada", "sex": "female"},\n]\nEmpire.seed_population(founders)\n');
+ await page.getByRole('button',{name:/RUN SCRIPT/}).click({timeout:12000});
+ await expect(page.locator('.founder-card')).toHaveCount(3,{timeout:75000});
+ // The editor stays above Overview on desktop; close it to expose the cards.
+ await page.getByRole('button',{name:'Close genesis.py'}).click({timeout:12000});
+ await page.locator('.founder-card').first().click({timeout:12000});
+ await page.getByRole('combobox',{name:'Execution mode'}).selectOption('continuous',{timeout:12000});
+ await page.locator('.controller-view .cm-content').fill(
+  'while True:\n    if self.x < 7:\n        self.move("east")\n    elif self.y > 4:\n        self.move("north")\n    elif self.can_harvest():\n        job = self.harvest()\n        await world.job_completed(job["job_id"])\n    else:\n        await world.wait_ticks(2)\n'
+ );
+ await page.getByRole('button',{name:/START \/ STEP/}).click({timeout:12000});
+ await page.getByRole('button',{name:'3×'}).click({timeout:12000});
+ await expect(page.locator('.inspector-stat').filter({hasText:'Location'})).toContainText('7, 4',{timeout:30000});
+ await expect(page.locator('.inspector-stat').filter({hasText:'Carrying'})).toContainText('6 / 6',{timeout:30000});
+ await page.getByRole('button',{name:'Ⅱ'}).click({timeout:12000});
 });
