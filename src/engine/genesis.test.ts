@@ -52,10 +52,10 @@ describe('Genesis Protocol v0.3.1',()=>{
   expect(invalid.entries[0].output.join(' ')).toMatch(/Only a global controller/);
   expect(dueControllers(world,[{...cs[0],enabled:true,nextRunTick:0}])).toEqual([]);
  });
- it('validates schema 6 and deliberately rejects older campaigns',()=>{
+ it('validates schema 7 and deliberately rejects older campaigns',()=>{
   const world=applyCommands(genesis(),[{action:'seed_population',founders}]).world;
   const records=ensureFounderControllers([genesisController(),...initialControllers()],world);
-  const campaign={schema:6,savedAt:Date.now(),world,controllers:records,lessonIndex:0};
+  const campaign={schema:7,savedAt:Date.now(),world,controllers:records,lessonIndex:0};
   expect(validCampaign(campaign)).toBe(true);
   expect(validCampaign({...campaign,world:{...world,genesisArchive:[...world.genesisArchive,world.genesisArchive[0]]}})).toBe(false);
   const old={schema:3,savedAt:Date.now(),world:{...createCivilizationWorld(),schema:3,genesisArchive:undefined},controllers:initialControllers(),lessonIndex:0};
