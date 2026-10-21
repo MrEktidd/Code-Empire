@@ -58,19 +58,19 @@ export function ensureGenesisController(controllers:Controller[],active:boolean)
  * so a def on_tick wrapper is neither required nor taught to new players. */
 export function founderController(index:number,ownerId:string,name:string):Controller {
  const id='ctrl_'+String(index).padStart(6,'0');
- const clean=name.replace(/[\\r\\n]/g,' ');
+ const clean=name.replace(/[\r\n]/g,' ');
  const slug=name.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')||'founder';
- const intro='# '+clean+' — programmable settler.\\n# Try self.assign("berries") for simple automatic gathering.\\n# Switch to Continuous mode for movement and harvesting loops.\\n\\n';
- return npc(id,ownerId,slug+'_'+index+'.py',intro+(index===1?'print("Hello, Empire!")\\n':''));
+ const intro='# '+clean+' — programmable settler.\n# Try self.assign("berries") for simple automatic gathering.\n# Switch to Continuous mode for movement and harvesting loops.\n\n';
+ return npc(id,ownerId,slug+'_'+index+'.py',intro+(index===1?'print("Hello, Empire!")\n':''));
 }
 /** Upgrade only the untouched v0.3.5 boilerplate; never overwrite player edits. */
 function migratePristineFounderSource(controller:Controller,worker:import('./engine/types').Worker):Controller {
  if(controller.ownerType!=='npc'||controller.ownerEntityId!==worker.id)return controller;
- const name=worker.name.replace(/[\\r\\n]/g,' ');
+ const name=worker.name.replace(/[\r\n]/g,' ');
  const index=Number(worker.id.replace('npc_',''));
  const legacy=index===1
-  ?'# Your first founder: '+name+'\\n\\ndef on_tick(self, world, memory):\\n    print("Hello, Empire!")\\n'
-  :'# Program the actions of '+name+'\\n\\ndef on_tick(self, world, memory):\\n    pass\\n';
+  ?'# Your first founder: '+name+'\n\ndef on_tick(self, world, memory):\n    print("Hello, Empire!")\n'
+  :'# Program the actions of '+name+'\n\ndef on_tick(self, world, memory):\n    pass\n';
  return controller.source===legacy?{...controller,source:founderController(index,worker.id,worker.name).source}:controller;
 }
 export function ensureFounderControllers(controllers:Controller[],world:import('./engine/types').WorldState):Controller[] {
