@@ -1,1 +1,19 @@
 .platform-editor{display:flex;flex-direction:column;height:100%;min-height:0}.platform-editor-toolbar{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 9px;border-bottom:1px solid #26434d;background:#122532;color:#8cb5ab;font-size:9px;letter-spacing:.5px;flex-shrink:0}.platform-editor-toolbar button{background:#24453e;border:1px solid #446c62;color:#c2e5d4;padding:3px 8px;cursor:pointer}.platform-editor-code{flex:1;min-height:0;overflow:hidden}.platform-editor-code .cm-editor{height:100%}
+/* Keep CodeMirror suggestion text legible with the dark in-game palette. */
+.platform-editor-code .cm-tooltip,.platform-editor-code .cm-tooltip-autocomplete{
+  color:var(--ce-color-text,#d6e5e5)!important;background:var(--ce-color-surface,#111e2b)!important;
+  border:1px solid var(--ce-color-border,#41616b)!important;box-shadow:0 12px 30px #000a;
+}
+.platform-editor-code .cm-tooltip-autocomplete ul li{
+  color:var(--ce-color-text,#d6e5e5)!important;background:transparent!important;
+}
+.platform-editor-code .cm-tooltip-autocomplete ul li[aria-selected="true"]{
+  background:var(--ce-color-surface-raised,#23404a)!important;color:#fff!important;
+}
+.platform-editor-code .cm-completionDetail{color:var(--ce-color-text-muted,#9eb5bb)!important}
+.platform-editor-code .cm-completionMatchedText{color:#b8ffd5!important;text-decoration:underline}
+.platform-editor-code .cm-completionInfo{
+ color:var(--ce-color-text,#d6e5e5)!important;
+ background:var(--ce-color-surface-muted,#142734)!important;
+ border:1px solid var(--ce-color-border,#41616b)!important
+}

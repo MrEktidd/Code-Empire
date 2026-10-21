@@ -31,9 +31,10 @@ test('genesis rejects incomplete list then creates three archived founders',asyn
  await page.locator('.sidebar').getByRole('button',{name:'Genesis Archive',exact:true}).click();
  await expect(page.locator('.genesis-archive .founder-card')).toHaveCount(3);
  await page.locator('.genesis-archive .founder-card').first().click();
- await page.getByRole('button',{name:'INSTALL CARRYING BASKET'}).click();
- await expect(page.getByText('0 / 12',{exact:true})).toBeVisible();
- await page.getByRole('button',{name:'REMOVE CARRYING BASKET'}).click();
+ await expect(page.getByRole('button',{name:'INSTALL CARRYING BASKET'})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Move north'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Harvest here'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Deposit at camp'})).toBeVisible();
  await expect(page.getByText('0 / 6',{exact:true})).toBeVisible();
  await page.locator('.sidebar').getByRole('button',{name:'Genesis Archive',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Genesis Archive'})).toBeVisible();
@@ -85,6 +86,9 @@ test('Python worker initializes a zero-population world end-to-end',async({page}
  await expect(page.getByText('0 / 3',{exact:false}).first()).toBeVisible();
  await page.getByRole('button',{name:'World'}).click();
  await expect(page.getByText('THE FRONTIER',{exact:false})).toBeVisible();
+ const icons=page.locator('.stockpile-goal-items img');
+ await expect(icons).toHaveCount(3);
+ await expect.poll(async()=>icons.evaluateAll(images=>images.every(el=>(el as HTMLImageElement).complete && (el as HTMLImageElement).naturalWidth>0))).toBe(true);
 });
 
 test('in-article Python links open and reuse tabs without losing the source',async({page})=>{

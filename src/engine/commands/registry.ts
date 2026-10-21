@@ -105,7 +105,9 @@ add({action:'order',scope:'all',target:c=>c.workerId,
   return {world:state,messages:message?[message]:[]};
  }});
 add({action:'module.install',scope:'owner-or-global',target:c=>c.entityId,
- validate:(w,c)=>validateModuleChange(w,c.entityId,c.moduleId,'install',CONTENT),
+ validate:(w,c)=>c.moduleId==='core:carrying_basket'
+   ?'Carrying Basket is locked until equipment crafting becomes available'
+   :validateModuleChange(w,c.entityId,c.moduleId,'install',CONTENT),
  apply:(w,c)=>{
   const next=emitSignal(changeModule(w,c.entityId!,c.moduleId!,'install',CONTENT),'module.installed',{moduleId:c.moduleId!},c.entityId);
   return result(next,'Installed '+c.moduleId+' on '+c.entityId);
