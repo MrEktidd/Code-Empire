@@ -6,6 +6,7 @@ import {saveUiScale} from './theme/uiPreferences';
 import {renderGameWindow} from './games/WindowContent';
 import {createPendingWorld,catchUp} from './engine/world';
 import {applyCommands} from './engine/commands/registry';
+import {startPhysicalAction} from './engine/automation';
 import {CODE_EMPIRE_PYTHON_BRIDGE} from './games/code-empire/pythonBridge';
 import {SaveCoordinator} from './platform/persistence/SaveCoordinator';
 import {mergeRuntimeControllers} from './platform/controllers/mergeRuntime';
@@ -192,6 +193,12 @@ export default function App(){
    detail:outcome.messages.join(' · ').slice(0,230)});
   if(outcome.messages.length)setEntries(old=>[...old,{tick:world.tick,controllerId:'engine',filename:'Interface',success:!outcome.messages[0].startsWith('Rejected'),output:outcome.messages,commands:1}].slice(-130));
  };
+ const manualAction=(id:string,kind:'move'|'harvest'|'deposit',direction?:string)=>{
+  if(gate.current||busy||world.phase!=='active')return;
+  const action=startPhysicalAction(latest.current.world,id,{entityId:id,kind,direction,storageId:'stockpile_001'});
+  if(action.response.ok){latest.current={...latest.current,world:action.world};setWorld(action.world);setStatus('Manual '+kind+' started. Advance game time to complete it.');}
+  else setStatus('Action unavailable: '+action.response.reason);
+ };
  const open=(kind:WindowKind,id?:string)=>setWorkspace(s=>upsertWindow(s,kind,id));
  useEffect(()=>{
   if(screen!=='game')return;
@@ -259,7 +266,7 @@ export default function App(){
   findDoc([...PYTHON_TOPICS,...GAME_DOCUMENTS],win.activeDoc??'')?.title??'Reference Page':
   windowTitle(win,controllers.find(c=>c.id===win.controllerId)?.filename);
  const render=(win:WindowState)=>renderGameWindow(win,{world,controllers,entries,selection,lesson,
-  showHint,setShowHint,beginner,busy,editController,execute,issueCommand,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController});
+  showHint,setShowHint,beginner,busy,editController,execute,issueCommand,manualAction,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController});
 
  const resetAppearance=()=>{
   const defaults=themeDefaults();
@@ -287,7 +294,7 @@ export default function App(){
     <p className="boot-footnote">Press ENTER to execute · <button type="button" onClick={()=>setScreen('menu')}>RETURN TO MENU</button></p>
    </section></main>:
    <div className="game-shell"><header className="game-header"><button className="brand-button" onClick={async()=>{setSpeed(0);await saver.current?.flush().catch(()=>{});setScreen('menu');}}>⌘ <b>CODE<span>EMPIRE</span></b></button><span>{world.phase==='dormant'?'SIMULATION OFFLINE':'FIRST LIGHT'} <span className="divider">/</span> {world.phase==='dormant'?'AWAITING INITIALIZATION':'SETTLEMENT AGE'}</span><span>DAY {1+Math.floor(world.tick/24)} · {String(world.tick%24).padStart(2,'0')}:00</span><div className="clock-actions"><button disabled={world.phase==='dormant'||loadingStep>=0} className={speed===0?'active':''} onClick={()=>setSpeed(0)}>Ⅱ</button><button disabled={busy||world.phase==='dormant'||loadingStep>=0} onClick={()=>void execute()}>⏭</button>{[1,2,3].map(v=><button key={v} disabled={world.phase==='dormant'||loadingStep>=0} className={speed===v?'active':''} onClick={()=>setSpeed(v)}>{v}×</button>)}</div></header>
-   <div className="game-row"><aside className="sidebar ce-scroll">{(world.phase==='dormant'?[['scripts','⌘','Scripts'],['python','Py','Python Reference'],['docs','▤','Game API']]:[['overview','◫','Overview'],['world','◇','World'],['archive','▤','Genesis Archive'],['scripts','⌘','Scripts'],['learn','✧','Learn Python'],['python','Py','Python Reference'],['docs','▤','Game API'],['console','>_','Console'],['settings','⚙','Settings']] as const).map(([kind,icon,label])=><button key={kind} title={label} aria-label={label} onClick={()=>open(kind as WindowKind)}><span>{icon}</span><small>{label}</small></button>)}</aside>
+   <div className="game-row"><aside className="sidebar ce-scroll">{(world.phase==='dormant'?[['scripts','⌘','Scripts'],['python','Py','Python Reference'],['docs','▤','Game API']]:[['overview','◫','Overview'],['world','◇','World'],...(world.settlementUnlocked?[['settlement','⌂','Settlement'] as const]:[]),['archive','▤','Genesis Archive'],['scripts','⌘','Scripts'],['learn','✧','Learn Python'],['python','Py','Python Reference'],['docs','▤','Game API'],['console','>_','Console'],['settings','⚙','Settings']] as const).map(([kind,icon,label])=><button key={kind} title={label} aria-label={label} onClick={()=>open(kind as WindowKind)}><span>{icon}</span><small>{label}</small></button>)}</aside>
    <div className="desktop-area"><WindowManager state={workspace} setState={setWorkspace} title={title} render={render}/>
     {loadingStep>=0&&<div className="initialization-overlay" role="status" aria-live="polite"><div className="initialization-box ce-scroll"><p className="eyebrow">CIVILIZATION INITIATIVE // WORLD GENERATOR</p><h2>INITIALIZING SIMULATION</h2>
      <div className="initialization-progress"><span style={{width:(100*Math.min(loadingStep,BOOT_MESSAGES.length)/BOOT_MESSAGES.length)+'%'}}/></div>
