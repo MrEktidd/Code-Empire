@@ -18,5 +18,34 @@
     "yield_per_action": 2,
     "harvest_duration_ticks": 4,
     "required_capability": "harvest.stone"
+  },
+  {
+    "type": "resource_node",
+    "id": "core:fallen_branches",
+    "display_name": "Fallen Branches",
+    "ground": "fallen_branches",
+    "output_item": "core:sticks",
+    "yield_per_action": 2,
+    "harvest_duration_ticks": 2
+  },
+  {
+    "type": "resource_node",
+    "id": "core:loose_stones",
+    "display_name": "Loose Surface Stones",
+    "ground": "loose_stones",
+    "output_item": "core:stone",
+    "yield_per_action": 2,
+    "harvest_duration_ticks": 3
+  },
+  {
+    "type": "resource_node",
+    "id": "core:berry_bush",
+    "display_name": "Wild Berry Bush",
+    "ground": "berry_bush",
+    "output_item": "core:berries",
+    "yield_per_action": 2,
+    "harvest_duration_ticks": 2,
+    "regrow_per_day": 8,
+    "max_yield": 24
   }
 ]
