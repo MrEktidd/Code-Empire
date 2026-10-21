@@ -2,7 +2,7 @@
  * The simulation clock is authoritative; commands and queries share validation.
  */
 import {HEIGHT,WIDTH} from './types';
-import type {WorldState,PhysicalJob,Worker} from './types';
+import type {WorldState,PhysicalJob,Worker,Resource} from './types';
 import type {ContinuousRequest} from '../platform/python/PythonRuntime';
 import {CONTENT} from '../games/code-empire/content/base';
 import {moduleEffects} from './components/modules';
@@ -12,7 +12,7 @@ export type ActionResponse={ok:boolean;reason?:string;job_id?:string};
 const direction:Record<string,[number,number]>={north:[0,-1],south:[0,1],east:[1,0],west:[-1,0]};
 const fail=(reason:string):ActionResponse=>({ok:false,reason});
 const at=(world:WorldState,x:number,y:number)=>world.tiles[y*WIDTH+x];
-const nodeId=(ground:string)=>ground==='forest'?'core:timber':ground==='quarry'?'core:stone_deposit':null;
+const nodeId=(ground:string)=>CONTENT.list('resource_node').find(def=>def.ground===ground)?.id??null;
 export function harvestEligibility(world:WorldState,person:Worker):string|null {
  if(world.phase!=='active')return 'not_initialized';
  if(person.task||world.jobs.some(j=>j.ownerId===person.id&&j.status==='active'))return 'busy';
@@ -47,7 +47,7 @@ export function startPhysicalAction(world:WorldState,ownerId:string,request:Cont
   if(reason)return {world,response:fail(reason),waitForJob:false};
   const tile=at(world,person.x,person.y),node=CONTENT.resourceNode(nodeId(tile.ground)!);
   job={id,ownerId,kind:'harvest',status:'active',startedTick:world.tick,finishTick:world.tick+node.harvest_duration_ticks,
-   x:person.x,y:person.y,resource:CONTENT.item(node.output_item).inventory_key as 'wood'|'stone',amount:node.yield_per_action};
+   x:person.x,y:person.y,resource:CONTENT.item(node.output_item).inventory_key as Resource,amount:node.yield_per_action};
  }else{
   if(request.storageId!=='stockpile_001')return {world,response:fail('unknown_storage'),waitForJob:false};
   const store=at(world,3,5);
@@ -78,7 +78,7 @@ export function advancePhysicalJobs(world:WorldState):WorldState{
    const amount=Math.min(tile.remaining,job.amount!,worker.capacity-worker.carried);
    tile.remaining-=amount;worker.carried+=amount;worker.carrying=job.resource!;
    next.totalHarvested+=amount;
-   if(tile.remaining===0)tile.ground='meadow';
+   if(tile.remaining===0&&!CONTENT.resourceNode(nodeId(tile.ground)!).regrow_per_day)tile.ground='meadow';
   }else{
    if(worker.x!==3||worker.y!==5||!worker.carrying||!worker.carried){
     job.status='failed';job.reason='transfer_unavailable';continue;
