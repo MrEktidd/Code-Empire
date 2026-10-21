@@ -33,7 +33,7 @@ describe('v0.3.2 modules, recipes, commands and signals',()=>{
   expect(moduleEffects(w.entities[0],CONTENT).storageCapacity).toBe(500);
  });
  it('uses generic inventory operations to craft content data and rejects unaffordable recipes',()=>{
-  const w=createCivilizationWorld();
+  const original=createCivilizationWorld();const w={...original,stocks:{...original.stocks,wood:12,stone:6}};
   expect(quantity(w.stocks,'core:wood',CONTENT)).toBe(12);
   const next=craftRecipe(w.stocks,'core:make_stone_axe',1,CONTENT);
   expect(next.wood).toBe(10);expect(next.stone).toBe(3);expect(next['core:stone_axe']).toBe(1);
