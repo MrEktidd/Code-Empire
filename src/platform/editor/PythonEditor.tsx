@@ -11,6 +11,8 @@ export type Suggestion={label:string;detail?:string;info?:string;type?:string};
 type Props={id:string;source:string;error?:string|null;completions?:Suggestion[];onChange:(source:string)=>void;onRun?:()=>void};
 const editorStateCache=new Map<string,EditorState>();
 const handlers=new Map<string,{onChange:(source:string)=>void;onRun?:()=>void}>();
+// Completion scopes may change when a controller switches between Scheduled and Continuous.
+const completionSets=new Map<string,Suggestion[]>();
 const FONT_STORAGE='programming-platform-editor-font-size';
 function fontSize():number{try{return Math.max(11,Math.min(22,Number(localStorage.getItem(FONT_STORAGE))||13));}catch{return 13;}}
 const BUILTINS=['print','len','range','int','float','str','list','dict','set','tuple','sum','min','max',
@@ -19,11 +21,11 @@ export default function PythonEditor({id,source,error,completions=[],onChange,on
  const host=useRef<HTMLDivElement>(null),view=useRef<EditorView|null>(null);
  const [size,setSize]=useState(fontSize);
  handlers.set(id,{onChange,onRun});
+ completionSets.set(id,completions);
  useEffect(()=>{
   handlers.set(id,{onChange,onRun});
   if(!host.current)return;
   const saved=editorStateCache.get(id);
-  const options=[...completions,...BUILTINS];
   const extensions=[
    EditorState.tabSize.of(4),indentUnit.of('    '),
    lineNumbers(),highlightActiveLine(),drawSelection(),history(),indentOnInput(),bracketMatching(),
@@ -32,7 +34,7 @@ export default function PythonEditor({id,source,error,completions=[],onChange,on
    autocompletion({override:[ctx=>{
     const word=ctx.matchBefore(/[\w.]*/);
     if(!word||(!ctx.explicit&&word.from===word.to))return null;
-    return {from:word.from,options};
+    return {from:word.from,options:[...(completionSets.get(id)??[]),...BUILTINS]};
    }]}),
    EditorView.updateListener.of(update=>{if(update.docChanged)handlers.get(id)?.onChange(update.state.doc.toString());}),
    EditorView.theme({
@@ -45,7 +47,7 @@ export default function PythonEditor({id,source,error,completions=[],onChange,on
   ];
   const state=saved&&saved.doc.toString()===source?saved:EditorState.create({doc:source,extensions});
   const editor=new EditorView({state,parent:host.current});view.current=editor;
-  return()=>{editorStateCache.set(id,editor.state);while(editorStateCache.size>40)editorStateCache.delete(editorStateCache.keys().next().value!);handlers.delete(id);view.current=null;editor.destroy();};
+  return()=>{editorStateCache.set(id,editor.state);while(editorStateCache.size>40)editorStateCache.delete(editorStateCache.keys().next().value!);handlers.delete(id);completionSets.delete(id);view.current=null;editor.destroy();};
  // Preserve the editor between tab switches. Source updates are applied below.
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[id]);
