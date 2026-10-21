@@ -4,6 +4,8 @@ import MainMenu from './app/MainMenu';
 import {applyTheme,persistTheme,themeDefaults} from './theme/themeState';
 import {saveUiScale} from './theme/uiPreferences';
 import {renderGameWindow} from './games/WindowContent';
+import WorldView from './games/code-empire/WorldView';
+import SettlementView from './games/code-empire/SettlementView';
 import {createPendingWorld,catchUp} from './engine/world';
 import {applyCommands} from './engine/commands/registry';
 import {startPhysicalAction} from './engine/automation';
@@ -63,6 +65,7 @@ export default function App(){
  const [showHint,setShowHint]=useState(false);
  const [beginner,setBeginner]=useState(true);
  const [selection,setSelection]=useState('');
+ const [discipline,setDiscipline]=useState<'world'|'settlement'>('world');
  const [saveExists,setSaveExists]=useState(false);
  const [paletteOpen,setPaletteOpen]=useState(false);
  const [notice,setNotice]=useState<WorkbenchNotice|null>(null);
@@ -161,7 +164,7 @@ export default function App(){
   continuous.current.reset();
   setSpeed(0);setWorld(createPendingWorld());setControllers(initialControllers());setLesson(0);setEntries([]);
   setWorkspace(startupWorkspace());setStatus('Awaiting simulation startup.');
-  setOffline(0);setSelection('');setBootInput('');setBootError('');setLoadingStep(-1);setScreen('terminal');
+  setOffline(0);setSelection('');setDiscipline('world');setBootInput('');setBootError('');setLoadingStep(-1);setScreen('terminal');
  };
  const continueGame=async()=>{
   if(gate.current){setStatus('A Python execution is still running.');return;}
@@ -294,8 +297,8 @@ export default function App(){
     <p className="boot-footnote">Press ENTER to execute · <button type="button" onClick={()=>setScreen('menu')}>RETURN TO MENU</button></p>
    </section></main>:
    <div className="game-shell"><header className="game-header"><button className="brand-button" onClick={async()=>{setSpeed(0);await saver.current?.flush().catch(()=>{});setScreen('menu');}}>⌘ <b>CODE<span>EMPIRE</span></b></button><span>{world.phase==='dormant'?'SIMULATION OFFLINE':'FIRST LIGHT'} <span className="divider">/</span> {world.phase==='dormant'?'AWAITING INITIALIZATION':'SETTLEMENT AGE'}</span><span>DAY {1+Math.floor(world.tick/24)} · {String(world.tick%24).padStart(2,'0')}:00</span><div className="clock-actions"><button disabled={world.phase==='dormant'||loadingStep>=0} className={speed===0?'active':''} onClick={()=>setSpeed(0)}>Ⅱ</button><button disabled={busy||world.phase==='dormant'||loadingStep>=0} onClick={()=>void execute()}>⏭</button>{[1,2,3].map(v=><button key={v} disabled={world.phase==='dormant'||loadingStep>=0} className={speed===v?'active':''} onClick={()=>setSpeed(v)}>{v}×</button>)}</div></header>
-   <div className="game-row"><aside className="sidebar ce-scroll">{(world.phase==='dormant'?[['scripts','⌘','Scripts'],['python','Py','Python Reference'],['docs','▤','Game API']]:[['overview','◫','Overview'],['world','◇','World'],...(world.settlementUnlocked?[['settlement','⌂','Settlement'] as const]:[]),['archive','▤','Genesis Archive'],['scripts','⌘','Scripts'],['learn','✧','Learn Python'],['python','Py','Python Reference'],['docs','▤','Game API'],['console','>_','Console'],['settings','⚙','Settings']] as const).map(([kind,icon,label])=><button key={kind} title={label} aria-label={label} onClick={()=>open(kind as WindowKind)}><span>{icon}</span><small>{label}</small></button>)}</aside>
-   <div className="desktop-area"><WindowManager state={workspace} setState={setWorkspace} title={title} render={render}/>
+   <div className="game-row"><aside className="sidebar ce-scroll">{(world.phase==='dormant'?[['scripts','⌘','Scripts'],['python','Py','Python Reference'],['docs','▤','Game API']]:[['overview','◫','Overview'],['world','◇','World'],...(world.settlementUnlocked?[['settlement','⌂','Settlement'] as const]:[]),['archive','▤','Genesis Archive'],['scripts','⌘','Scripts'],['learn','✧','Learn Python'],['python','Py','Python Reference'],['docs','▤','Game API'],['console','>_','Console'],['settings','⚙','Settings']] as const).map(([kind,icon,label])=><button key={kind} title={label} aria-label={label} onClick={()=>kind==='world'||kind==='settlement'?setDiscipline(kind):open(kind as WindowKind)}><span>{icon}</span><small>{label}</small></button>)}</aside>
+   <div className="desktop-area"><div className="discipline-background">{world.phase==='active'?(discipline==='settlement'&&world.settlementUnlocked?<SettlementView world={world} onCommand={issueCommand}/>:<WorldView world={world} selection={selection} onSelect={openEntity} onAction={manualAction}/>):<div className="window-content"><p className="muted">Initialize the simulation to display your world.</p></div>}</div><WindowManager state={workspace} setState={setWorkspace} title={title} render={render}/>
     {loadingStep>=0&&<div className="initialization-overlay" role="status" aria-live="polite"><div className="initialization-box ce-scroll"><p className="eyebrow">CIVILIZATION INITIATIVE // WORLD GENERATOR</p><h2>INITIALIZING SIMULATION</h2>
      <div className="initialization-progress"><span style={{width:(100*Math.min(loadingStep,BOOT_MESSAGES.length)/BOOT_MESSAGES.length)+'%'}}/></div>
      {BOOT_MESSAGES.slice(0,loadingStep+1).map((m,i)=><p className={i===loadingStep?'initialization-current':''} key={i}>{i===loadingStep?'› ':'✓ '}{m}</p>)}</div></div>}
