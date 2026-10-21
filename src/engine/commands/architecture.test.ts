@@ -12,14 +12,14 @@ describe('v0.3.2 modules, recipes, commands and signals',()=>{
  it('validates an individual module slot and reversible capacity effects',()=>{
   const w=world();const first=w.workers[0];
   expect(first.capacity).toBe(6);
-  const installed=applyCommands(w,[{action:'module.install',entityId:first.id,moduleId:'core:carrying_basket'}]).world;
+  const installed=changeModule(w,first.id,'core:carrying_basket','install',CONTENT);
   expect(installed.workers[0].capacity).toBe(12);
   expect(w.workers[0].capacity).toBe(6);
-  expect(installed.signals.at(-1)?.type).toBe('module.installed');
+  expect(installed.workers[0].installedModules.utility).toEqual(['core:carrying_basket']);
   expect(validateModuleChange(installed,first.id,'core:carrying_basket','install',CONTENT)).toMatch(/already/);
-  const removed=applyCommands(installed,[{action:'module.remove',entityId:first.id,moduleId:'core:carrying_basket'}]).world;
+  const removed=changeModule(installed,first.id,'core:carrying_basket','remove',CONTENT);
   expect(removed.workers[0].capacity).toBe(6);
-  expect(removed.signals.at(-1)?.type).toBe('module.removed');
+  expect(removed.workers[0].installedModules.utility).toEqual([]);
  });
  it('calculates the same capacity effects on an entirely different entity kind',()=>{
   let w=world();
@@ -42,17 +42,26 @@ describe('v0.3.2 modules, recipes, commands and signals',()=>{
   expect(crafted.world.signals.at(-1)?.type).toBe('recipe.completed');
   expect(()=>craftRecipe({wood:0,stone:0},'core:make_stone_axe',1,CONTENT)).toThrow(/Not enough/);
  });
- it('shares command validation between UI and Python and supports bounded ordered signals',()=>{
+ it('prevents free basket installation through UI and scripts',()=>{
   const w=world();
   const cmd={action:'module.install' as const,entityId:'npc_000001',moduleId:'core:carrying_basket'};
+  expect(COMMANDS.validate(w,cmd)).toMatch(/locked/);
+  const attempt=COMMANDS.execute(w,[cmd]);
+  expect(attempt.messages[0]).toMatch(/Rejected.*locked/);
+  expect(attempt.world).toEqual(w);
+ });
+ it('shares command validation between UI and Python and supports bounded ordered signals',()=>{
+  const camp=createGenericEntity('camp_001','Lumber Camp','core:logging_camp',CONTENT);
+  const w={...world(),entities:[camp]};
+  const cmd={action:'module.install' as const,entityId:'camp_001',moduleId:'core:log_storage'};
   expect(COMMANDS.validate(w,cmd)).toBeNull();
-  expect(COMMANDS.authorized(cmd,'npc','npc_000001')).toBe(true);
-  expect(COMMANDS.authorized(cmd,'npc','npc_000002')).toBe(false);
+  expect(COMMANDS.authorized(cmd,'global',null)).toBe(true);
+  expect(COMMANDS.authorized(cmd,'npc','npc_000001')).toBe(false);
   const next=COMMANDS.execute(w,[cmd]).world;
   const seen:string[]=[];const bus=new SignalBus();
   const unsubscribe=bus.subscribe('module.installed',event=>seen.push(event.entityId??''));
   bus.publish(next.signals);
-  expect(seen).toEqual(['npc_000001']);
+  expect(seen).toEqual(['camp_001']);
   unsubscribe();bus.publish(next.signals);expect(seen).toHaveLength(1);
   expect(next.signals.map(s=>s.sequence)).toEqual([...next.signals.map(s=>s.sequence)].sort((a,b)=>a-b));
  });
