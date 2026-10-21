@@ -72,3 +72,13 @@
 .discipline-background{position:absolute;inset:0 0 36px;overflow:auto;z-index:0}
 .desktop-root{pointer-events:none;z-index:1}
 .desktop-window{pointer-events:auto}
+
+/* Manual actions belong in the selected entity's inspector, not on World. */
+.inspector-manual-controls{margin-top:16px;padding-top:10px;border-top:1px solid var(--ce-color-border-soft)}
+.inspector-manual-controls .manual-pad{
+ width:100%;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:8px 0;
+}
+.inspector-manual-controls .manual-pad button{min-width:0;height:36px;padding:3px}
+.inspector-manual-controls .manual-pad button:disabled{opacity:.4}
+.inspector-manual-controls .inspector-action{width:100%;text-align:center}
+@media(max-width:650px){.controller-inspector{max-height:min(48vh,360px)}}
