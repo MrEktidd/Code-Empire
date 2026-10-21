@@ -8,7 +8,7 @@ import DocumentationBrowser from '../platform/documentation/DocumentationBrowser
 import {PYTHON_TOPICS} from '../content/python/topics';
 import {GAME_DOCUMENTS} from './code-empire/docs';
 import type {DocScope} from '../platform/documentation/types';
-import {contextApi} from '../docs/api';
+import {controllerApi} from '../docs/api';
 import {LESSONS} from '../learning/lessons';
 import WorldView from './code-empire/WorldView';
 import SettlementView from './code-empire/SettlementView';
@@ -39,12 +39,13 @@ export type WindowContext={
    const founder=world.genesisArchive.find(x=>x.id===c.ownerEntityId);
    const worker=world.workers.find(x=>x.id===c.ownerEntityId);
    const isGenesis=c.id===GENESIS_CONTROLLER_ID;
+   const relevantApi=controllerApi(c.ownerType,c.executionMode??'scheduled',isGenesis);
    return <div className="controller-view">
     <div className="controller-meta"><span className="eyebrow">OWNER: {owner?.name??'WORLD'} · {c.ownerEntityId??'global'}</span><span className={'status-pill '+c.lastStatus}>{c.lastStatus.toUpperCase()}</span></div>
     <nav className="controller-tabs">{(['code','docs','notes','output','history'] as const).map(t=><button key={t} className={win.tab===t?'selected':''} onClick={()=>setWorkspace(s=>updateWindow(s,win.id,{tab:t}))}>{t.toUpperCase()}</button>)}</nav>
     <div className="controller-main"><div className="controller-content">
-    {win.tab==='code'&&<div className="code-area"><PythonEditor id={c.id} source={c.source} error={c.lastError} completions={contextApi(c.ownerType).map(a=>({label:a.name,type:'method',detail:a.signature,info:a.description}))} onChange={source=>editController(c.id,{source})} onRun={()=>{checkpointController(c.id);void execute(c.id);}}/></div>}
-    {win.tab==='docs'&&<div className="scroll-pane ce-scroll">{contextApi(c.ownerType).map(api=><article className="api-card" key={api.name}><code>{api.signature}</code><p>{api.description}</p><small>{api.note}</small><pre>{api.example}</pre><button onClick={()=>{checkpointController(c.id);editController(c.id,{source:c.source+'\n'+api.example+'\n'});setWorkspace(s=>updateWindow(s,win.id,{tab:'code'}));}}>APPEND EXAMPLE TO CODE</button></article>)}</div>}
+    {win.tab==='code'&&<div className="code-area"><PythonEditor id={c.id} source={c.source} error={c.lastError} completions={relevantApi.map(a=>({label:a.name,type:'method',detail:a.signature,info:a.description}))} onChange={source=>editController(c.id,{source})} onRun={()=>{checkpointController(c.id);void execute(c.id);}}/></div>}
+    {win.tab==='docs'&&<div className="scroll-pane ce-scroll"><p className="muted">Relevant API for {isGenesis?'Genesis':worker?'this worker':c.ownerType==='farm'?'this farm':'this controller'}{worker?' · '+(c.executionMode==='continuous'?'Continuous':'Scheduled')+' mode':''}. For the complete reference, open Game API.</p>{relevantApi.map(api=><article className="api-card" key={api.name}><code>{api.signature}</code><p>{api.description}</p><small>{api.note}</small><pre>{api.example}</pre><button onClick={()=>{checkpointController(c.id);editController(c.id,{source:c.source+'\n'+api.example+'\n'});setWorkspace(s=>updateWindow(s,win.id,{tab:'code'}));}}>APPEND EXAMPLE TO CODE</button></article>)}</div>}
     {win.tab==='notes'&&<div className="notes-area"><p className="muted">Private notes for this controller. Autosaved independently of execution state.</p><textarea aria-label="Script notes" value={c.notes} onChange={e=>editController(c.id,{notes:e.target.value})} placeholder="What should this script do? What can be improved?"/></div>}
     {win.tab==='output'&&<div className="scroll-pane ce-scroll output-pane">{c.lastError&&<div className="error-box">{c.lastError}
       <button className="quiet-btn" onClick={()=>setWorkspace(s=>updateWindow(s,win.id,{tab:'code'}))}>OPEN ERROR IN EDITOR ↗</button>
@@ -63,13 +64,21 @@ export type WindowContext={
        {founder&&<div className="inspector-stat"><span>Sex</span><strong>{founder.sex}</strong></div>}
        <div className="inspector-stat"><span>Current task</span><strong>{world.jobs.find(j=>j.ownerId===worker.id&&j.status==='active')?.kind??worker.policy??'Idle'}</strong></div>
        <div className="inspector-stat"><span>Carrying</span><strong>{worker.carried} / {worker.capacity}</strong></div>
-       <div className="inspector-stat"><span>Utility Slot</span><strong>{worker.installedModules.utility?.[0]?'Carrying Basket':'Empty'}</strong></div>
-       <button className="inspector-action" disabled={busy} onClick={()=>issueCommand({
-         action:worker.installedModules.utility?.includes('core:carrying_basket')?'module.remove':'module.install',
-         entityId:worker.id,moduleId:'core:carrying_basket'
-       })}>{worker.installedModules.utility?.includes('core:carrying_basket')?'REMOVE CARRYING BASKET':'INSTALL CARRYING BASKET'}</button>
+       <div className="inspector-stat"><span>Utility Slot</span><strong>{worker.installedModules.utility?.[0]??'Empty'}</strong></div>
        <div className="inspector-progress"><span style={{width:(worker.carried/worker.capacity*100)+'%'}}/></div>
        <div className="inspector-stat"><span>Location</span><strong>{worker.x}, {worker.y}</strong></div>
+       <div className="inspector-manual-controls" aria-label="Manual worker controls">
+        <p className="eyebrow">MANUAL CONTROL</p>
+        <p className="muted">Move one tile at a time or collect at your current location. Actions take simulation time.</p>
+        <div className="manual-pad">
+         <span/><button aria-label="Move north" title={'self.move("north")'} disabled={busy||!!worker.task||world.jobs.some(j=>j.ownerId===worker.id&&j.status==='active')} onClick={()=>manualAction(worker.id,'move','north')}>↑</button><span/>
+         <button aria-label="Move west" title={'self.move("west")'} disabled={busy||!!worker.task||world.jobs.some(j=>j.ownerId===worker.id&&j.status==='active')} onClick={()=>manualAction(worker.id,'move','west')}>←</button>
+         <button aria-label="Harvest here" title="self.harvest()" disabled={busy||!!worker.task||world.jobs.some(j=>j.ownerId===worker.id&&j.status==='active')} onClick={()=>manualAction(worker.id,'harvest')}>HARVEST</button>
+         <button aria-label="Move east" title={'self.move("east")'} disabled={busy||!!worker.task||world.jobs.some(j=>j.ownerId===worker.id&&j.status==='active')} onClick={()=>manualAction(worker.id,'move','east')}>→</button>
+         <span/><button aria-label="Move south" title={'self.move("south")'} disabled={busy||!!worker.task||world.jobs.some(j=>j.ownerId===worker.id&&j.status==='active')} onClick={()=>manualAction(worker.id,'move','south')}>↓</button><span/>
+        </div>
+        <button className="inspector-action" aria-label="Deposit at camp" title={'self.deposit("stockpile_001")'} disabled={busy||!!worker.task||world.jobs.some(j=>j.ownerId===worker.id&&j.status==='active')} onClick={()=>manualAction(worker.id,'deposit')}>DEPOSIT AT CAMP</button>
+       </div>
        {founder&&<button className="inspector-action" onClick={()=>open('archive')}>VIEW GENESIS ARCHIVE ↗</button>}</>:
        <><p className="eyebrow">CONTROLLER INFORMATION</p><h3>{c.filename}</h3><p className="muted">Global simulation controller.</p>
        <div className="inspector-stat"><span>Executions</span><strong>{c.executions}</strong></div>
