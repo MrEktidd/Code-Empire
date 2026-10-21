@@ -2,10 +2,11 @@
   {
     "type": "item",
     "id": "core:wood",
-    "display_name": "Wood",
+    "display_name": "Logs",
     "stack_size": 100,
     "inventory_key": "wood",
-    "material": "core:wood_material"
+    "material": "core:wood_material",
+    "icon": "01-materials/logs.png"
   },
   {
     "type": "item",
@@ -13,7 +14,8 @@
     "display_name": "Stone",
     "stack_size": 100,
     "inventory_key": "stone",
-    "material": "core:stone_material"
+    "material": "core:stone_material",
+    "icon": "01-materials/stone.png"
   },
   {
     "type": "item",
@@ -33,5 +35,27 @@
     "id": "core:plank",
     "display_name": "Plank",
     "stack_size": 100
+  },
+  {
+    "type": "item",
+    "id": "core:sticks",
+    "display_name": "Sticks",
+    "description": "Fallen branches gathered by hand.",
+    "stack_size": 100,
+    "inventory_key": "sticks",
+    "icon": "01-materials/sticks.png"
+  },
+  {
+    "type": "item",
+    "id": "core:berries",
+    "display_name": "Berries",
+    "description": "Edible wild berries gathered by hand.",
+    "stack_size": 100,
+    "inventory_key": "berries",
+    "icon": "02-food/berries.png",
+    "nutrition": {
+      "hunger": 25,
+      "fruit": 20
+    }
   }
 ]
