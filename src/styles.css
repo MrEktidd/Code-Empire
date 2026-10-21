@@ -66,3 +66,9 @@
 .settlement-card h3{margin-top:0}.settlement-card label{display:flex;gap:9px;align-items:center;margin:12px 0}
 .settlement-card input,.settlement-card select{background:var(--ce-color-surface-muted);border:1px solid var(--ce-color-border);color:var(--ce-color-text);padding:7px}
 @media(max-width:560px){.manual-pad{grid-template-columns:repeat(3,57px)}.stockpile-goal-items{grid-template-columns:1fr}}
+
+/* Discipline pages are persistent backgrounds; scripts/docs stay floating. */
+.desktop-area{position:relative}
+.discipline-background{position:absolute;inset:0 0 36px;overflow:auto;z-index:0}
+.desktop-root{pointer-events:none;z-index:1}
+.desktop-window{pointer-events:auto}
