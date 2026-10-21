@@ -1,8 +1,8 @@
-export type WindowKind='world'|'scripts'|'controller'|'learn'|'docs'|'python'|'console'|'overview'|'archive'|'settings'|'document';
+export type WindowKind='world'|'settlement'|'scripts'|'controller'|'learn'|'docs'|'python'|'console'|'overview'|'archive'|'settings'|'document';
 export type ViewTab='code'|'docs'|'notes'|'output'|'history';
 export type WindowState={id:string;kind:WindowKind;controllerId?:string;x:number;y:number;width:number;height:number;minimized:boolean;maximized:boolean;z:number;tab:ViewTab;docScope?:'python'|'game';docId?:string;docTabs?:string[];activeDoc?:string};
 export type WorkspaceState={windows:WindowState[];focus:string|null;nextZ:number};
-const titles:Record<WindowKind,string>={world:'World View',scripts:'Script Explorer',controller:'Python Controller',learn:'Learn Python',docs:'Game API',python:'Python Reference',console:'Runtime Console',overview:'Colony Overview',archive:'Genesis Archive',settings:'Settings',document:'Reference Page'};
+const titles:Record<WindowKind,string>={world:'World View',settlement:'Settlement',scripts:'Script Explorer',controller:'Python Controller',learn:'Learn Python',docs:'Game API',python:'Python Reference',console:'Runtime Console',overview:'Colony Overview',archive:'Genesis Archive',settings:'Settings',document:'Reference Page'};
 export function windowTitle(w:WindowState,filename?:string){return w.kind==='controller'?filename??titles.controller:titles[w.kind];}
 export function startupWorkspace():WorkspaceState {
  return upsertWindow({nextZ:1,focus:null,windows:[]},'controller','ctrl_000005');
@@ -40,7 +40,7 @@ export function parseWorkspace(value:unknown):WorkspaceState{
  if(!value||typeof value!=='object')return newWorkspace();
  const v=value as Partial<WorkspaceState>;
  if(!Array.isArray(v.windows)||!Number.isInteger(v.nextZ))return newWorkspace();
- const kinds=['world','scripts','controller','learn','docs','python','console','overview','archive','settings','document'];
+ const kinds=['world','settlement','scripts','controller','learn','docs','python','console','overview','archive','settings','document'];
  const valid=v.windows.filter(w=>w&&typeof w.id==='string'&&kinds.includes(w.kind)
   &&['x','y','width','height','z'].every(k=>Number.isFinite(w[k as keyof WindowState]))
   &&w.width>0&&w.height>0&&w.width<=3000&&w.height<=2200)
