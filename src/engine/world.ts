@@ -1,4 +1,6 @@
 import { HEIGHT, WIDTH, WORLD_SCHEMA } from './types';
+import {CONTENT} from '../games/code-empire/content/base';
+import {moduleEffects} from './components/modules';
 import type { Building, FounderRecord, Tile, Worker, WorldState } from './types';
 import {emitSignal} from './events/bus';
 import {advancePhysicalJobs,harvestEligibility} from './automation';
@@ -112,6 +114,7 @@ function progressWorker(world: WorldState, unit: Worker): void {
   if (task.kind === 'gather') {
     const tile = world.tiles[task.y * WIDTH + task.x];
     const res=task.resource;
+    if(res==='wood'&&!moduleEffects(unit,CONTENT).capabilities.includes('harvest.wood')){unit.task=null;return;}
     const types:Record<string,Tile['ground']>={sticks:'fallen_branches',berries:'berry_bush',stone:'loose_stones',wood:'forest'};
     if(res&&tile&&tile.ground===types[res]&&tile.remaining>0&&(!unit.carrying||unit.carrying===res)&&unit.capacity>unit.carried){
       const amount = Math.min(unit.capacity - unit.carried, tile.remaining, 3);
