@@ -68,10 +68,10 @@ add({action:'log',scope:'all',target:()=>undefined,
  validate:(_w,c)=>typeof c.message==='string'&&c.message.length<=180?null:'Log message must be text under 181 characters',
  apply:(w,c)=>result(w,String(c.message).slice(0,180))});
 add({action:'assign',scope:'all',target:c=>c.workerId,
- validate:(w,c)=>active(w)??(!worker(w,c.workerId)?'Unknown worker':!['wood','stone','idle'].includes(c.resource??'')?'Unknown resource assignment':null),
+ validate:(w,c)=>active(w)??(!worker(w,c.workerId)?'Unknown worker':!['sticks','berries','stone','wood','idle'].includes(c.resource??'')?'Unknown resource assignment':null),
  apply:(w,c)=>{
   const name=worker(w,c.workerId)?.name??'Worker';
-  const policy=c.resource==='idle'?null:c.resource as 'wood'|'stone';
+  const policy=c.resource==='idle'?null:c.resource as import('../types').Resource;
   return result(cloneWorker(w,c.workerId!,unit=>{if(unit.policy!==policy){unit.policy=policy;unit.task=null;}}),name+': '+(policy??'idle'));
  }});
 add({action:'farm_mode',scope:'all',target:c=>c.buildingId,
@@ -87,7 +87,7 @@ add({action:'order',scope:'all',target:c=>c.workerId,
   const e=active(w);if(e)return e;
   if(!worker(w,c.workerId))return 'Unknown worker';
   if(c.task==='deposit')return null;
-  if(c.task==='gather')return c.resource==='wood'||c.resource==='stone'?null:'Invalid gathering resource';
+  if(c.task==='gather')return ['sticks','berries','stone','wood'].includes(c.resource??'')?null:'Invalid gathering resource';
   if(c.task==='move')return Number.isInteger(c.x)&&Number.isInteger(c.y)&&c.x!>=0&&c.y!>=0&&c.x!<16&&c.y!<11?null:'Invalid move destination';
   return 'Unsupported order';
  },
@@ -97,8 +97,8 @@ add({action:'order',scope:'all',target:c=>c.workerId,
    if(c.task==='deposit')unit.task={kind:'deposit',x:3,y:5};
    if(c.task==='move')unit.task={kind:'move',x:c.x!,y:c.y!};
    if(c.task==='gather'){
-    const target=nearestResource(w,unit,c.resource as 'wood'|'stone');
-    if(target)unit.task={kind:'gather',x:target.x,y:target.y,resource:c.resource as 'wood'|'stone'};
+    const target=nearestResource(w,unit,c.resource as import('../types').Resource);
+    if(target)unit.task={kind:'gather',x:target.x,y:target.y,resource:c.resource as import('../types').Resource};
     else message='No '+c.resource+' deposits remain.';
    }
   });
@@ -130,6 +130,18 @@ add({action:'craft',scope:'global',target:()=> 'global-stockpile',
   next=emitSignal(next,'inventory.changed',{recipeId:c.recipeId!,count:c.amount!});
   next=emitSignal(next,'recipe.completed',{recipeId:c.recipeId!,count:c.amount!});
   return result(next,'Crafted '+c.amount+' × '+c.recipeId);
+ }});
+add({action:'build_shelter',scope:'global',target:()=> 'settlement',
+ validate:w=>active(w)??(!w.settlementUnlocked?'Settlement is locked':w.leanToCount>=1?'Lean-to already built':w.stocks.sticks<12||w.stocks.stone<6?'Need 12 sticks and 6 stone':null),
+ apply:w=>result(emitSignal({...w,stocks:{...w.stocks,sticks:w.stocks.sticks-12,stone:w.stocks.stone-6},housingCapacity:w.housingCapacity+2,leanToCount:1},'settlement.shelter_built',{housingAdded:2}),'Lean-to constructed! Two housing places added.')});
+add({action:'recruit_worker',scope:'global',target:()=> 'settlement',
+ validate:(w,c)=>active(w)??(!w.leanToCount?'Build a lean-to first':w.workers.length>=w.housingCapacity?'Housing is full':typeof c.name!=='string'||!c.name.trim()||c.name.trim().length>32?'Name must be 1–32 characters':!['male','female'].includes(c.sex??'')?'Choose sex':w.workers.some(x=>x.name.toLowerCase()===c.name!.trim().toLowerCase())?'Name in use':null),
+ apply:(w,c)=>{
+  const max=Math.max(0,...w.workers.map(x=>Number(x.id.replace('npc_',''))||0));
+  const id='npc_'+String(max+1).padStart(6,'0');
+  const tile=w.tiles.find(t=>t.ground==='meadow'&&t.x>=2&&t.x<=5&&t.y>=3&&t.y<=7&&!w.workers.some(x=>x.x===t.x&&x.y===t.y));
+  const recruit:Worker={id,definitionId:'core:founder',installedModules:{},name:c.name!.trim(),sex:c.sex,role:'Settler',x:tile?.x??3,y:tile?.y??6,carried:0,carrying:null,capacity:6,hunger:80,policy:null,task:null,organizationId:null,controlMode:'independent'};
+  return result(emitSignal({...w,workers:[...w.workers,recruit]},'entity.created',{definitionId:'core:founder'},id),recruit.name+' joined the settlement.');
  }});
 export const validateCommand=(world:WorldState,command:ScriptCommand)=>COMMANDS.validate(world,command);
 export const applyCommands=(world:WorldState,commands:ScriptCommand[])=>COMMANDS.execute(world,commands);

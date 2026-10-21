@@ -45,3 +45,30 @@
 
 
 /* All scrollbar and UI foundation rules now live in theme/theme.css. */
+
+/* v0.3.5: the founder gathering controls and first Settlement discipline */
+.stockpile-goal{border:1px solid var(--ce-color-border);background:var(--ce-color-surface);padding:10px;margin:7px 0}
+.stockpile-goal>b{display:block;font-size:11px;color:var(--ce-color-accent);margin-bottom:10px}
+.stockpile-goal-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stockpile-goal-items>div{display:grid;grid-template-columns:24px 1fr;gap:3px 7px;align-items:center;font-size:11px}
+.stockpile-goal-items img{width:24px;height:24px;object-fit:contain;image-rendering:pixelated;grid-row:span 2}
+.stockpile-goal-items span{font-size:10px;color:var(--ce-color-text-muted)}
+.stockpile-goal-items progress{grid-column:2;width:100%;height:5px;accent-color:var(--ce-color-accent)}
+.worker-controls{margin-top:12px;padding:12px;border:1px solid var(--ce-color-border);background:var(--ce-color-surface)}
+.worker-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.worker-picker button{border:1px solid var(--ce-color-border);background:var(--ce-color-surface-muted);color:var(--ce-color-text);padding:7px;font-size:11px}
+.worker-picker button.active{border-color:var(--ce-color-accent)}
+.worker-control-info{font-size:12px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.manual-pad{display:grid;grid-template-columns:repeat(3,72px);gap:5px;margin:12px 0}
+.manual-pad button{height:43px;border:1px solid var(--ce-color-border);background:var(--ce-color-surface-muted);color:var(--ce-color-text);font-size:21px}
+.manual-pad button:nth-child(5){font-size:10px;color:var(--ce-color-accent);font-weight:bold}
+.settlement-view h2{font-size:22px}.settlement-card{padding:16px;border:1px solid var(--ce-color-border);margin:12px 0;background:var(--ce-color-surface)}
+.settlement-card h3{margin-top:0}.settlement-card label{display:flex;gap:9px;align-items:center;margin:12px 0}
+.settlement-card input,.settlement-card select{background:var(--ce-color-surface-muted);border:1px solid var(--ce-color-border);color:var(--ce-color-text);padding:7px}
+@media(max-width:560px){.manual-pad{grid-template-columns:repeat(3,57px)}.stockpile-goal-items{grid-template-columns:1fr}}
+
+/* Discipline pages are persistent backgrounds; scripts/docs stay floating. */
+.desktop-area{position:relative}
+.discipline-background{position:absolute;inset:0 0 36px;overflow:auto;z-index:0}
+.desktop-root{pointer-events:none;z-index:1}
+.desktop-window{pointer-events:auto}

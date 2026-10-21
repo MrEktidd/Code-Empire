@@ -11,6 +11,7 @@ import type {DocScope} from '../platform/documentation/types';
 import {contextApi} from '../docs/api';
 import {LESSONS} from '../learning/lessons';
 import WorldView from './code-empire/WorldView';
+import SettlementView from './code-empire/SettlementView';
 import {GenesisOverview,GenesisArchive} from './code-empire/GenesisViews';
 import {GENESIS_CONTROLLER_ID} from '../defaults';
 import {ScrollArea} from '../theme/ScrollArea';
@@ -22,12 +23,13 @@ export type WindowContext={
  setShowHint:Dispatch<SetStateAction<boolean>>;setBeginner:Dispatch<SetStateAction<boolean>>;
  setWorkspace:Dispatch<SetStateAction<WorkspaceState>>;
  editController:(id:string,change:Partial<Controller>)=>void;
- execute:(id?:string)=>Promise<void>;issueCommand:(command:ScriptCommand)=>void;open:(kind:WindowKind,id?:string)=>void;
+ execute:(id?:string)=>Promise<void>;issueCommand:(command:ScriptCommand)=>void;manualAction:(id:string,kind:'move'|'harvest'|'deposit',direction?:string)=>void;open:(kind:WindowKind,id?:string)=>void;
  openEntity:(id:string)=>void;beginLesson:()=>void;checkpointController:(id:string)=>void;openDoc:(scope:DocScope,id:string,popout?:boolean)=>void;
 };
  export function renderGameWindow(win:WindowState,ctx:WindowContext):ReactNode{
- const {world,controllers,entries,selection,lesson,showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController,issueCommand}=ctx;
-  if(win.kind==='world')return <WorldView world={world}selection={selection}onSelect={openEntity}/>;
+ const {world,controllers,entries,selection,lesson,showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController,issueCommand,manualAction}=ctx;
+  if(win.kind==='world')return <WorldView world={world}selection={selection}onSelect={openEntity} onAction={manualAction}/>;
+  if(win.kind==='settlement')return <SettlementView world={world} onCommand={issueCommand}/>;
   if(win.kind==='scripts')return <div className="window-content ce-scroll"><p className="eyebrow">PROJECT EXPLORER</p><p className="muted">Every programmable object gets its own controller automatically. Filenames are editable; IDs are permanent.</p>{controllers.map(c=><button key={c.id} className="file-row" onClick={()=>open('controller',c.id)}><span>⌘</span><span><b>{c.filename}</b><small>{c.ownerEntityId??'Global automation'} · {c.lastStatus}</small></span><span>↗</span></button>)}</div>;
   if(win.kind==='controller'){
    const c=controllers.find(x=>x.id===win.controllerId);

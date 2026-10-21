@@ -32,7 +32,7 @@ describe('v0.3 initialization lifecycle',()=>{
   expect(invalid.entries[0].output).toContain('Rejected command: Only a global controller can initialize or seed the simulation');
  });
  it('validates dormant campaigns and rejects legacy saves',()=>{
-  const waiting={schema:6,savedAt:Date.now(),world:createPendingWorld(),controllers:initialControllers(),lessonIndex:0};
+  const waiting={schema:7,savedAt:Date.now(),world:createPendingWorld(),controllers:initialControllers(),lessonIndex:0};
   expect(validCampaign(waiting)).toBe(true);
   const old=createWorld();
   const converted=migrateCampaign({schema:2,savedAt:Date.now(),world:{...old,schema:2,phase:undefined,housingCapacity:undefined},

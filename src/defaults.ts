@@ -66,13 +66,13 @@ export function ensureFounderControllers(controllers:Controller[],world:import('
   const existing=new Set(controllers.map(c=>c.ownerEntityId));
   const filenames=new Set(controllers.map(c=>c.filename));
   const additions:Controller[]=[];
-  for(const founder of world.genesisArchive){
-    if(existing.has(founder.id))continue;
-    const index=Number(founder.id.replace('npc_',''));
-    const c=founderController(index,founder.id,founder.name);
+  for(const worker of world.workers){
+    if(existing.has(worker.id))continue;
+    const index=Number(worker.id.replace('npc_',''));
+    const c=founderController(index,worker.id,worker.name);
     if(controllers.some(other=>other.id===c.id))continue;
     while(filenames.has(c.filename))c.filename='founder_'+index+'_'+filenames.size+'.py';
-    filenames.add(c.filename);existing.add(founder.id);additions.push(c);
+    filenames.add(c.filename);existing.add(worker.id);additions.push(c);
   }
   return [...controllers,...additions];
 }

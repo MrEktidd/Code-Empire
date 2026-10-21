@@ -21,6 +21,8 @@ function validate(raw:unknown):Definition{
   if(!positive(raw.stack_size))fail(id,'stack_size must be positive');
   if(raw.inventory_key!==undefined&&!string(raw.inventory_key))fail(id,'invalid inventory_key');
   if(raw.material!==undefined&&!string(raw.material))fail(id,'invalid material reference');
+  if(raw.icon!==undefined&&(!string(raw.icon)||!(/^[a-z0-9_-]+\/[a-z0-9_-]+\.png$/).test(raw.icon)))fail(id,'invalid icon path');
+  if(raw.nutrition!==undefined&&(!obj(raw.nutrition)||Object.values(raw.nutrition).some(x=>!integer(x))))fail(id,'invalid nutrition values');
  }else if(type==='recipe'){
   if(!positive(raw.duration))fail(id,'duration must be positive');
   for(const field of ['inputs','outputs']){
@@ -29,10 +31,13 @@ function validate(raw:unknown):Definition{
    if(!unique(a.map(v=>(v as {item:string}).item)))fail(id,`duplicate ${field} item`);
   }
  }else if(type==='resource_node'){
-  if(!['forest','quarry'].includes(String(raw.ground)))fail(id,'invalid resource ground');
+  if(!['forest','quarry','fallen_branches','loose_stones','berry_bush'].includes(String(raw.ground)))fail(id,'invalid resource ground');
   if(!string(raw.output_item))fail(id,'resource output_item required');
   if(!positive(raw.yield_per_action)||!positive(raw.harvest_duration_ticks))fail(id,'resource yields and duration must be positive');
   if(raw.required_capability!==undefined&&!string(raw.required_capability))fail(id,'invalid capability requirement');
+  if(raw.regrow_per_day!==undefined&&!positive(raw.regrow_per_day))fail(id,'regrow_per_day must be positive');
+  if(raw.max_yield!==undefined&&!positive(raw.max_yield))fail(id,'max_yield must be positive');
+  if(raw.regrow_per_day!==undefined&&raw.max_yield===undefined)fail(id,'renewable resource requires max_yield');
  }else if(type==='entity'){
   if(!ENTITY_KINDS.includes(raw.kind as typeof ENTITY_KINDS[number]))fail(id,'unknown entity kind');
   if(!list(raw.technical_components)||!unique(raw.technical_components)||raw.technical_components.some(c=>!CORE_COMPONENTS.includes(c as typeof CORE_COMPONENTS[number])))fail(id,'invalid technical components');

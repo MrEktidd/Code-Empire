@@ -16,19 +16,19 @@ describe('Code Empire deterministic simulation v0.2', () => {
     expect(world.tick).toBe(0);expect(next.tick).toBe(1);
     expect(next.workers).not.toBe(world.workers);
   });
-  it('automates forestry and mining with standing orders',()=>{
+  it('automates sticks and surface stone with standing orders',()=>{
     let w=applyCommands(createWorld(),[
-      {action:'assign',workerId:'npc_000001',resource:'wood'},
+      {action:'assign',workerId:'npc_000001',resource:'sticks'},
       {action:'assign',workerId:'npc_000002',resource:'stone'}]).world;
     for(let i=0;i<96;i++)w=stepWorld(w);
-    expect(w.stocks.wood).toBeGreaterThan(12);
+    expect(w.stocks.sticks).toBeGreaterThan(0);
     expect(w.stocks.stone).toBeGreaterThan(6);
   });
   it('controls the farm independently',()=>{
     let w=applyCommands(createWorld(),[{action:'farm_mode',buildingId:'farm_000001',mode:'rest'}]).world;
     expect(w.buildings[0].mode).toBe('rest');
     for(let i=0;i<24;i++)w=stepWorld(w);
-    expect(w.stocks.food).toBe(42);
+    expect(w.stocks.food).toBe(48);
   });
   it('caps offline progress and matches ordinary ticks',()=>{
     const initial=applyCommands(createWorld(),[{action:'assign',workerId:'npc_000001',resource:'wood'}]).world;

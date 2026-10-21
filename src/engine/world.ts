@@ -1,4 +1,6 @@
 import { HEIGHT, WIDTH, WORLD_SCHEMA } from './types';
+import {CONTENT} from '../games/code-empire/content/base';
+import {moduleEffects} from './components/modules';
 import type { Building, FounderRecord, Tile, Worker, WorldState } from './types';
 import {emitSignal} from './events/bus';
 import {advancePhysicalJobs,harvestEligibility} from './automation';
@@ -11,8 +13,8 @@ function random01(seed: number, x: number, y: number): number {
 }
 /** Before Empire.initialize() runs, no terrain or people have been generated. */
 export function createPendingWorld(seed = 2048): WorldState {
-  return {schema:WORLD_SCHEMA,seed,tick:0,phase:'dormant',housingCapacity:3,tiles:[],
-    workers:[],buildings:[],entities:[],jobs:[],relationships:[],signals:[],genesisArchive:[],stocks:{wood:0,stone:0,food:0},totalHarvested:0,events:[]};
+  return {schema:WORLD_SCHEMA,seed,tick:0,phase:'dormant',housingCapacity:3,settlementUnlocked:false,leanToCount:0,tiles:[],
+    workers:[],buildings:[],entities:[],jobs:[],relationships:[],signals:[],genesisArchive:[],stocks:{wood:0,stone:0,food:0,sticks:0,berries:0},totalHarvested:0,events:[]};
 }
 
 /** includePrototypeEntities keeps existing v0.2 fixtures and saves testable.
@@ -23,26 +25,24 @@ export function createWorld(seed = 2048, includePrototypeEntities = true): World
   for (let y = 0; y < HEIGHT; y++) for (let x = 0; x < WIDTH; x++) {
     const r = random01(seed, x, y);
     let ground: Tile['ground'] = 'meadow';
-    if (r < .22) ground = 'forest';
-    else if (r < .32) ground = 'quarry';
-    else if (r > .97) ground = 'water';
-    const remaining = ground === 'forest' ? 24 + Math.floor(r * 100) : ground === 'quarry' ? 28 + Math.floor(r * 90) : 0;
+    if(r<.10)ground='forest';else if(r<.17)ground='quarry';else if(r<.33)ground='fallen_branches';else if(r<.46)ground='loose_stones';else if(r<.60)ground='berry_bush';else if(r>.97)ground='water';
+    const remaining=ground==='forest'?72:ground==='quarry'?65:ground==='fallen_branches'?16:ground==='loose_stones'?16:ground==='berry_bush'?18:0;
     tiles.push({ x, y, ground, remaining });
   }
   const set = (x: number, y: number, ground: Tile['ground'], remaining = 0) => { tiles[y * WIDTH + x] = { x, y, ground, remaining }; };
   for (let y = 3; y <= 7; y++) for (let x = 2; x <= 5; x++) set(x, y, 'meadow');
-  set(3, 5, 'stockpile'); if (includePrototypeEntities) set(4, 7, 'farm'); set(7, 4, 'forest', 72); set(9, 7, 'quarry', 65);
+  set(3,5,'stockpile');if(includePrototypeEntities)set(4,7,'farm');set(5,5,'fallen_branches',24);set(5,6,'berry_bush',24);set(6,6,'loose_stones',20);set(6,4,'berry_bush',24);set(7,4,'forest',72);set(9,7,'quarry',65);
   const worker = (id: string, name: string, role: string, x: number, y: number): Worker =>
-    ({ id, definitionId:'core:founder',installedModules:{}, name, role, x, y, carried: 0, carrying: null, capacity: 6, policy: null,
+    ({ id, definitionId:'core:founder',installedModules:{}, name, role, x, y, carried: 0, carrying: null, capacity: 6,hunger:80, policy: null,
       task: null, organizationId: null, controlMode: 'independent' });
   const farm: Building = { id: 'farm_000001', definitionId:'core:farm',installedModules:{}, name: 'First Light Farm', type: 'farm', x: 4, y: 7, mode: 'food',
     organizationId: null, controlMode: 'independent' };
-  return { schema: WORLD_SCHEMA, seed, tick: 0, phase:'active', housingCapacity:3, tiles,
+  return { schema: WORLD_SCHEMA, seed, tick: 0, phase:'active', housingCapacity:3,settlementUnlocked:false,leanToCount:0, tiles,
     buildings: includePrototypeEntities ? [farm] : [],entities:[],jobs:[],relationships:[],signals:[],genesisArchive:[],
     workers: includePrototypeEntities ? [worker('npc_000001', 'Ada', 'Forester', 3, 5),
       worker('npc_000002', 'Bram', 'Miner', 4, 5),
       worker('npc_000003', 'Cora', 'Generalist', 3, 6)] : [],
-    stocks: { wood: 12, stone: 6, food: 48 }, totalHarvested: 0,
+    stocks:includePrototypeEntities?{wood:12,stone:6,food:48,sticks:0,berries:0}:{wood:0,stone:0,food:0,sticks:0,berries:0}, totalHarvested: 0,
     events: includePrototypeEntities
       ? ['First Light founded. Open Ada’s controller and begin your Python lessons.']
       : ['Simulation initialized. A habitable clearing awaits its first inhabitants.'] };
@@ -80,17 +80,16 @@ export function establishFounders(previous:WorldState,raw:unknown):WorldState {
   }));
   const spawn:[[number,number],[number,number],[number,number]]=[[3,6],[4,5],[4,6]];
   const workers:Worker[]=records.map((f,i)=>({
-    id:f.id,definitionId:'core:founder',installedModules:(i===0?{tool:['core:starter_axe']}:
-     i===1?{tool:['core:starter_pickaxe']}:{}) as Record<string,string[]>,name:f.name,sex:f.sex,role:'Founder',x:spawn[i][0],y:spawn[i][1],
-    carried:0,carrying:null,capacity:6,policy:null,task:null,
+    id:f.id,definitionId:'core:founder',installedModules:{},name:f.name,sex:f.sex,role:'Founder',x:spawn[i][0],y:spawn[i][1],
+    carried:0,carrying:null,capacity:6,hunger:80,policy:null,task:null,
     organizationId:null,controlMode:'independent'
   }));
   return {...previous,workers,genesisArchive:records,
     events:[...previous.events,`Genesis: ${records.map(x=>x.name).join(', ')} became the first inhabitants of First Light.`]};
 }
-export function nearestResource(world: WorldState, unit: Worker, resource: 'wood' | 'stone'): Tile | undefined {
-  const type = resource === 'wood' ? 'forest' : 'quarry';
-  return world.tiles.filter(t => t.ground === type && t.remaining > 0)
+export function nearestResource(world: WorldState, unit: Worker, resource: import('./types').Resource): Tile | undefined {
+  const type:Partial<Record<import('./types').Resource,Tile['ground']>>={sticks:'fallen_branches',berries:'berry_bush',stone:'loose_stones',wood:'forest'};
+  return world.tiles.filter(t => t.ground === type[resource] && t.remaining > 0)
     .sort((a, b) => (Math.abs(a.x - unit.x) + Math.abs(a.y - unit.y)) -
       (Math.abs(b.x - unit.x) + Math.abs(b.y - unit.y)) || a.y - b.y || a.x - b.x)[0];
 }
@@ -114,12 +113,14 @@ function progressWorker(world: WorldState, unit: Worker): void {
   }
   if (task.kind === 'gather') {
     const tile = world.tiles[task.y * WIDTH + task.x];
-    const res = task.resource === 'stone' ? 'stone' : 'wood';
-    if (tile && tile.ground === (res === 'wood' ? 'forest' : 'quarry') && tile.remaining > 0) {
+    const res=task.resource;
+    if(res==='wood'&&!moduleEffects(unit,CONTENT).capabilities.includes('harvest.wood')){unit.task=null;return;}
+    const types:Record<string,Tile['ground']>={sticks:'fallen_branches',berries:'berry_bush',stone:'loose_stones',wood:'forest'};
+    if(res&&tile&&tile.ground===types[res]&&tile.remaining>0&&(!unit.carrying||unit.carrying===res)&&unit.capacity>unit.carried){
       const amount = Math.min(unit.capacity - unit.carried, tile.remaining, 3);
       if (amount > 0 && (!unit.carrying || unit.carrying === res)) {
         tile.remaining -= amount; unit.carried += amount; unit.carrying = res; world.totalHarvested += amount;
-        if (tile.remaining === 0) tile.ground = 'meadow';
+        if(tile.remaining===0&&tile.ground!=='berry_bush')tile.ground='meadow';
       }
     }
   } else if (task.kind === 'deposit') {
@@ -141,13 +142,18 @@ export function stepWorld(previous: WorldState): WorldState {
   // Legacy scheduled workers continue using their original task-policy system;
   // continuous controllers use explicit, one-cell physical requests instead.
   for (const worker of withJobs.workers) progressWorker(withJobs, worker);
-  if (withJobs.tick % 24 === 0) {
-    for (const farm of withJobs.buildings) if (farm.mode === 'food') withJobs.stocks.food += 9;
-    withJobs.stocks.food = Math.max(0, withJobs.stocks.food - withJobs.workers.length * 2);
-    if (withJobs.stocks.food === 0 && withJobs.tick % 48 === 0) withJobs.events.push('Food shortage: your settlers are going hungry.');
+  if(withJobs.tick%24===0){
+    for(const tile of withJobs.tiles)if(tile.ground==='berry_bush')tile.remaining=Math.min(24,tile.remaining+8);
+    for(const settler of withJobs.workers){
+      if((withJobs.stocks.berries??0)>0){withJobs.stocks.berries--;settler.hunger=Math.min(100,settler.hunger+25);}
+      else settler.hunger=Math.max(0,settler.hunger-20);
+    }
+    if(withJobs.workers.some(x=>x.hunger<30)&&withJobs.tick%48===0)withJobs.events.push('Food shortage: gather more wild berries.');
+    for(const farm of withJobs.buildings)if(farm.mode==='food')withJobs.stocks.food=(withJobs.stocks.food??0)+9;
   }
-  if (withJobs.stocks.wood >= 60 && withJobs.stocks.stone >= 24 && !withJobs.events.some(e => e.startsWith('Milestone:')))
-    withJobs.events.push('Milestone: First Stockpiles — 60 wood and 24 stone secured.');
+  if(!withJobs.settlementUnlocked&&withJobs.stocks.sticks>=18&&withJobs.stocks.stone>=12&&withJobs.stocks.berries>=15){
+    withJobs.settlementUnlocked=true;withJobs.events.push('Milestone: First Stockpile — Settlement unlocked.');
+  }
   if(Object.keys(withJobs.stocks).some(key=>withJobs.stocks[key]!==previous.stocks[key]))
     return emitSignal(withJobs,'inventory.changed',{tick:withJobs.tick});
   return withJobs;
@@ -167,15 +173,16 @@ export function worldSnapshot(world: WorldState) {
     workers: world.workers.map(w => ({
       id: w.id,definition_id:w.definitionId,modules:w.installedModules, name: w.name, role: w.role, sex:w.sex??null, x: w.x, y: w.y,
       carried: w.carried, carrying: w.carried, cargo_type: w.carrying,
-      capacity: w.capacity, policy: w.policy, control_mode: w.controlMode,
+      capacity:w.capacity,hunger:w.hunger,policy:w.policy,control_mode:w.controlMode,
       current_job:world.jobs.find(j=>j.ownerId===w.id&&j.status==='active')?.id??null,
       harvest_ready:harvestEligibility(world,w)===null,
       near_storage:w.x===3&&w.y===5?'stockpile_001':null
     })),
     signals:world.signals.slice(-40).map(s=>({...s,payload:{...s.payload}})),
     jobs:world.jobs.map(j=>({...j})),
-    resource_nodes:world.tiles.filter(t=>t.ground==='forest'||t.ground==='quarry')
+    resource_nodes:world.tiles.filter(t=>['forest','quarry','fallen_branches','loose_stones','berry_bush'].includes(t.ground))
       .map(t=>({x:t.x,y:t.y,kind:t.ground,remaining:t.remaining})),
+    settlement:{unlocked:world.settlementUnlocked,lean_to_count:world.leanToCount},
     entities:world.entities.map(e=>({id:e.id,name:e.name,kind:e.kind,definition_id:e.definitionId,modules:e.installedModules})),
     buildings: world.buildings.map(b => ({
       id: b.id,definition_id:b.definitionId,modules:b.installedModules, name: b.name, type: b.type, x: b.x, y: b.y, mode: b.mode
