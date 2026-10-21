@@ -94,3 +94,51 @@ export const API:ApiEntry[]=[
   example:'print("Day", world.day, "Hour", world.hour)'}
 ];
 export const contextApi=(type:'npc'|'farm'|'global')=>API.filter(e=>e.contexts.includes(type));
+
+// These methods are exposed only by the cooperative (Continuous) worker runtime.
+const CONTINUOUS_API:ApiEntry[]=[
+ {name:'self.move',signature:'self.move(direction)',contexts:['npc'],returns:'Action response',
+  description:'Move one grid tile north, south, east or west. Automatically suspends until movement resolves in Continuous mode.',
+  note:'Movement consumes one game tick. Blocked terrain is rejected; use a loop to follow a route.',
+  example:'self.move("east")'},
+ {name:'self.can_harvest',signature:'self.can_harvest()',contexts:['npc'],returns:'bool',
+  description:'Check whether the worker can harvest the resource at their current position.',
+  note:'Checks resource availability, cargo, task state and tool requirements. A false result does not start a task.',
+  example:'if self.can_harvest():\n    self.harvest()'},
+ {name:'self.harvest',signature:'self.harvest()',contexts:['npc'],returns:'Action response',
+  description:'Start gathering from the resource under this worker. Automatically suspends until the action is accepted.',
+  note:'Harvesting itself takes the time defined by that resource. The result includes a job_id; wait for completion when needed.',
+  example:'if self.can_harvest():\n    job = self.harvest()\n    await world.job_completed(job["job_id"])'},
+ {name:'self.deposit',signature:'self.deposit(storage_id)',contexts:['npc'],returns:'Action response',
+  description:'Deposit carried resources into nearby storage.',
+  note:'At the starting camp, stand on tile (3, 5) and use the stockpile_001 identifier.',
+  example:'self.deposit("stockpile_001")'},
+ {name:'self.can_deposit',signature:'self.can_deposit(storage_id)',contexts:['npc'],returns:'bool',
+  description:'Check whether this worker has cargo and is at the target storage.',
+  note:'A query only; does not change cargo or issue a job.',
+  example:'if self.can_deposit("stockpile_001"):\n    self.deposit("stockpile_001")'},
+ {name:'world.wait_ticks',signature:'await world.wait_ticks(ticks)',contexts:['npc'],returns:'None',
+  description:'Suspend the running program for a specified number of game ticks.',
+  note:'Available in Continuous mode, without stopping the rest of the simulation.',
+  example:'await world.wait_ticks(2)'},
+ {name:'world.job_completed',signature:'await world.job_completed(job_id)',contexts:['npc'],returns:'Action response',
+  description:'Wait for the specified physical job to finish before continuing.',
+  note:'Use the job_id returned by harvesting or depositing.',
+  example:'job = self.harvest()\nawait world.job_completed(job["job_id"])'},
+ {name:'world.resource_at',signature:'world.resource_at(x, y)',contexts:['npc'],returns:'Resource | None',
+  description:'Inspect the discovered resource node at map coordinates.',
+  note:'This is a read-only query. Workers still need to physically reach and harvest a resource.',
+  example:'print(world.resource_at(self.x, self.y))'}
+];
+
+export type ControllerMode='scheduled'|'continuous';
+/** The controller Docs tab describes only APIs that the selected controller can use. */
+export function controllerApi(type:'npc'|'farm'|'global',mode:ControllerMode,genesis=false):ApiEntry[]{
+ if(type==='global'){
+  if(genesis)return API.filter(e=>['Empire.seed_population','print'].includes(e.name));
+  return API.filter(e=>e.contexts.includes('global'));
+ }
+ if(type==='farm')return API.filter(e=>['self.set_mode','world.tick','print','memory'].includes(e.name));
+ if(mode==='continuous')return CONTINUOUS_API;
+ return API.filter(e=>['self.assign','self.order','world.stockpile','world.tick','world.workers','world.get','print','memory'].includes(e.name));
+}
