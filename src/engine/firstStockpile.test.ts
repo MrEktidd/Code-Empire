@@ -3,6 +3,7 @@ import {createCivilizationWorld,establishFounders,stepWorld,worldSnapshot} from 
 import {startPhysicalAction} from './automation';
 import {applyCommands} from './commands/registry';
 import {CONTENT} from '../games/code-empire/content/base';
+import type {WorldState} from './types';
 const people=[{name:'Ada',sex:'female' as const},{name:'Bram',sex:'male' as const},{name:'Cora',sex:'female' as const}];
 const founded=()=>establishFounders(createCivilizationWorld(42),people);
 describe('0.3.5 First Stockpile',()=>{
@@ -24,7 +25,7 @@ describe('0.3.5 First Stockpile',()=>{
   expect(startPhysicalAction(w,w.workers[0].id,{kind:'harvest',entityId:w.workers[0].id}).response.reason).toBe('missing_tool');
  });
  it('requires stocks simultaneously and preserves the unlock after spending',()=>{
-  let w={...founded(),stocks:{...founded().stocks,sticks:18,stone:12,berries:14}};
+  let w:WorldState={...founded(),stocks:{...founded().stocks,sticks:18,stone:12,berries:14}};
   w=stepWorld(w);expect(w.settlementUnlocked).toBe(false);
   w={...w,stocks:{...w.stocks,berries:15}};w=stepWorld(w);
   expect(w.settlementUnlocked).toBe(true);
@@ -34,7 +35,7 @@ describe('0.3.5 First Stockpile',()=>{
   expect(built.world.settlementUnlocked).toBe(true);
  });
  it('recruits only after shelter and respects its housing capacity',()=>{
-  let w={...founded(),settlementUnlocked:true,stocks:{...founded().stocks,sticks:18,stone:12,berries:15}};
+  let w:WorldState={...founded(),settlementUnlocked:true,stocks:{...founded().stocks,sticks:18,stone:12,berries:15}};
   expect(applyCommands(w,[{action:'recruit_worker',name:'Dara',sex:'female'}]).messages[0]).toMatch(/Rejected/);
   w=applyCommands(w,[{action:'build_shelter'}]).world;
   w=applyCommands(w,[{action:'recruit_worker',name:'Dara',sex:'female'},{action:'recruit_worker',name:'Eran',sex:'male'}]).world;
