@@ -28,7 +28,7 @@ export type WindowContext={
 };
  export function renderGameWindow(win:WindowState,ctx:WindowContext):ReactNode{
  const {world,controllers,entries,selection,lesson,showHint,setShowHint,beginner,busy,editController,execute,open,openEntity,setWorkspace,setBeginner,openDoc,beginLesson,checkpointController,issueCommand,manualAction}=ctx;
-  if(win.kind==='world')return <WorldView world={world}selection={selection}onSelect={openEntity} onAction={manualAction}/>;
+  if(win.kind==='world')return <WorldView world={world} selection={selection} onSelect={openEntity}/>;
   if(win.kind==='settlement')return <SettlementView world={world} onCommand={issueCommand}/>;
   if(win.kind==='scripts')return <div className="window-content ce-scroll"><p className="eyebrow">PROJECT EXPLORER</p><p className="muted">Every programmable object gets its own controller automatically. Filenames are editable; IDs are permanent.</p>{controllers.map(c=><button key={c.id} className="file-row" onClick={()=>open('controller',c.id)}><span>⌘</span><span><b>{c.filename}</b><small>{c.ownerEntityId??'Global automation'} · {c.lastStatus}</small></span><span>↗</span></button>)}</div>;
   if(win.kind==='controller'){
