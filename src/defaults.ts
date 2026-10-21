@@ -72,7 +72,7 @@ export function ensureFounderControllers(controllers:Controller[],world:import('
     const c=founderController(index,worker.id,worker.name);
     if(controllers.some(other=>other.id===c.id))continue;
     while(filenames.has(c.filename))c.filename='founder_'+index+'_'+filenames.size+'.py';
-    filenames.add(c.filename);existing.add(founder.id);additions.push(c);
+    filenames.add(c.filename);existing.add(worker.id);additions.push(c);
   }
   return [...controllers,...additions];
 }
