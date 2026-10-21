@@ -189,6 +189,7 @@ export default function App(){
   if(gate.current||busy||world.phase!=='active')return;
   const outcome=applyCommands(latest.current.world,[command]);
   setWorld(outcome.world);
+  setControllers(c=>ensureFounderControllers(c,outcome.world));
   setStatus(outcome.messages.join(' · ')||'Command processed.');
   const isRejected=outcome.messages.some(message=>message.startsWith('Rejected'));
   setNotice({id:Date.now(),kind:isRejected?'warning':'success',
