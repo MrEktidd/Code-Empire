@@ -113,7 +113,7 @@ function progressWorker(world: WorldState, unit: Worker): void {
     const tile = world.tiles[task.y * WIDTH + task.x];
     const res=task.resource;
     const types:Record<string,Tile['ground']>={sticks:'fallen_branches',berries:'berry_bush',stone:'loose_stones',wood:'forest'};
-    if(res&&tile&&tile.ground===types[res]&&tile.remaining>0&&harvestEligibility(world,unit)===null){
+    if(res&&tile&&tile.ground===types[res]&&tile.remaining>0&&(!unit.carrying||unit.carrying===res)&&unit.capacity>unit.carried){
       const amount = Math.min(unit.capacity - unit.carried, tile.remaining, 3);
       if (amount > 0 && (!unit.carrying || unit.carrying === res)) {
         tile.remaining -= amount; unit.carried += amount; unit.carrying = res; world.totalHarvested += amount;
